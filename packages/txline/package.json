@@ -13,10 +13,17 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "verify": "node --import tsx src/verify.ts"
+    "verify": "node --import tsx src/verify.ts",
+    "subscribe": "node --import tsx src/cli-subscribe.ts",
+    "probe": "node --import tsx src/probe.ts"
   },
   "dependencies": {
-    "@copium/config": "workspace:*"
+    "@copium/config": "workspace:*",
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.2",
+    "dotenv": "^16.5.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

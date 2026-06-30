@@ -20,3 +20,19 @@ export function assertDevnetTxoracleIdl(): void {
     );
   }
 }
+
+export { startGuestSession, txlineHeaders } from "./auth.js";
+export type { GuestSession } from "./auth.js";
+export { fetchFixturesSnapshot } from "./snapshot.js";
+export type { FixturesSnapshotResult } from "./snapshot.js";
+export { subscribeDevnet } from "./subscribe.js";
+export type { SubscribeResult } from "./subscribe.js";
+export {
+  loadEnv,
+  loadServiceKeypair,
+  solanaRpcUrl,
+  subscriptionTier,
+  worldCupFreeServiceLevel,
+  txlineApiOrigin,
+  txlineGuestAuthUrl,
+} from "./env.js";

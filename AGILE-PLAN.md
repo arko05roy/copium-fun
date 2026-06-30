@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · 30 Jun 2026 — monorepo + `@copium/db` live + `@copium/txline` devnet IDL ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · 30 Jun 2026 — monorepo + `@copium/db` live + `@copium/txline` devnet subscribe + fixtures snapshot 200 ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
 
 ---
 
@@ -765,8 +765,12 @@ Redis events + odds
 - [x] Supabase `001_pulses.sql` migration (`@copium/db` — 11 tables live)
 - [ ] CI
 
-### EPIC B — TxLINE + simulator (D3–D7)
-Auth, SSE ingest, event detector, simulator session builder, health dashboard
+### EPIC B — TxLINE + simulator (D3–D7) — **D3 ✅**
+
+- [x] Guest auth (`POST /auth/guest/start`)
+- [x] Devnet on-chain `subscribe` (tier 1) + `POST /api/token/activate`
+- [x] `pnpm txline:subscribe` — fixtures snapshot HTTP 200 (17 fixtures, 30 Jun 2026)
+- [ ] SSE ingest, event detector, simulator session builder, health dashboard
 
 ### EPIC C — pulse-engine + settlement internal (D8–D10)
 Gap/labels tests, validate_stat spike, lock snapshot
@@ -814,7 +818,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 |-----|-------|------|
 | **D1 ✅** | Monorepo, web, mobile shell, docs sync | turbo build green ✅ |
 | **D2 ✅** | Supabase `001_pulses.sql`, tx-on-chain | DB live ✅ |
-| D3 | TxLINE auth + devnet subscribe | snapshot 200 |
+| **D3 ✅** | TxLINE auth + devnet subscribe | snapshot 200 ✅ |
 | D4 | SSE ingest + event detector | Redis events |
 | D5 | Simulator session from historical fixture | inject goal |
 | D6 | `pulse-engine` + tests | 15+ cases |
@@ -878,7 +882,7 @@ COPIUM_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 TXORACLE_PROGRAM_ID=6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J
 TXLINE_API_BASE=https://txline-dev.txodds.com
-TXLINE_SUBSCRIPTION_TIER=1
+# World Cup free tier locked in @copium/config (service level 1, devnet)
 NEXT_PUBLIC_SOLANA_CLUSTER=devnet
 OPENAI_API_KEY=...          # Spawner + Narrator
 ```
@@ -1014,4 +1018,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.2 — D1–D2 complete · 30 Jun 2026*
+*Document version: 4.3 — D1–D3 complete · 30 Jun 2026*

@@ -3,4 +3,5 @@ export {
   COPIUM_TAGLINE,
   SOLANA_DEVNET,
   TXLINE_DEVNET,
+  TXLINE_WORLDCUP_FREE_TIER,
 } from "./txline.js";

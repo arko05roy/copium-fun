@@ -1,8 +1,25 @@
 /**
- * TxLINE devnet — https://txline-docs.txodds.com/documentation/programs/addresses
- * World Cup free tier — https://txline-docs.txodds.com/documentation/worldcup (service level 1)
+ * TxLINE devnet — https://txline.txodds.com/documentation/programs/addresses
+ * World Cup free tier — https://txline.txodds.com/documentation/worldcup
+ * Subscription tiers — https://txline.txodds.com/documentation/subscription-tiers
  */
 export const COPIUM_NETWORK = "devnet" as const;
+
+/** Locked copium.fun TxLINE plan: World Cup free tier only (hackathon / Season 0). */
+export const TXLINE_WORLDCUP_FREE_TIER = {
+  /** World Cup & Int Friendlies · 60s delay · free (devnet + mainnet). */
+  serviceLevelDelayed: 1,
+  /** World Cup & Int Friendlies · real-time · free (mainnet only). */
+  serviceLevelRealtime: 12,
+  /** Docs: multiples of 4 weeks (28 days), min 4 weeks. */
+  durationWeeks: 4,
+  /** Standard bundle — empty, not custom league selection. */
+  selectedLeagues: [] as const,
+  bundle: "World Cup & Int Friendlies",
+  delayLabel: "60 seconds",
+  price: "free",
+  docUrl: "https://txline.txodds.com/documentation/worldcup",
+} as const;
 
 export const TXLINE_DEVNET = {
   programId: "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
@@ -12,7 +29,10 @@ export const TXLINE_DEVNET = {
   apiBase: "https://txline-dev.txodds.com/api/",
   guestAuth: "https://txline-dev.txodds.com/auth/guest/start",
   openApi: "https://txline-dev.txodds.com/docs/docs.yaml",
-  subscriptionTier: 1,
+  /** Devnet pricing matrix documents only WC free tier row 1. */
+  worldCupFreeServiceLevel: TXLINE_WORLDCUP_FREE_TIER.serviceLevelDelayed,
+  /** @deprecated use worldCupFreeServiceLevel */
+  subscriptionTier: TXLINE_WORLDCUP_FREE_TIER.serviceLevelDelayed,
 } as const;
 
 export const SOLANA_DEVNET = {

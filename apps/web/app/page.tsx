@@ -1,6 +1,6 @@
 "use client";
 
-import { COPIUM_TAGLINE, SOLANA_DEVNET, TXLINE_DEVNET } from "@copium/config";
+import { COPIUM_TAGLINE, SOLANA_DEVNET, TXLINE_DEVNET, TXLINE_WORLDCUP_FREE_TIER } from "@copium/config";
 import { useWalletConnection } from "@solana/react-hooks";
 
 import { DbStatus } from "./components/db-status";
@@ -39,9 +39,10 @@ export default function Home() {
               <dd className="text-right">{TXLINE_DEVNET.apiHost}</dd>
             </div>
             <div className="flex justify-between gap-4 py-2">
-              <dt className="text-muted">WC tier</dt>
+              <dt className="text-muted">TxLINE tier</dt>
               <dd className="text-right">
-                service level {TXLINE_DEVNET.subscriptionTier}
+                WC free · level {TXLINE_DEVNET.worldCupFreeServiceLevel} ·{" "}
+                {TXLINE_WORLDCUP_FREE_TIER.delayLabel}
               </dd>
             </div>
             <DbStatus />
