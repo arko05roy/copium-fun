@@ -12,6 +12,8 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
+**Progress:** D1 ✅ · 30 Jun 2026 — monorepo, web + mobile shell, `@copium/config`, `.env.example`, public GitHub ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
+
 ---
 
 ## Table of contents
@@ -257,11 +259,23 @@ copium.fun/
 ```bash
 mkdir copium.fun && cd copium.fun
 pnpm init && pnpm add -D turbo typescript
-pnpm create solana-dapp@latest apps/web -t gill-next-tailwind
+pnpm create solana-dapp@latest apps/web -t gh:solana-foundation/templates/kit/nextjs
 npx create-expo-app apps/mobile --template blank-typescript
 git clone https://github.com/txodds/tx-on-chain.git .vendor/tx-on-chain
 anchor init copium-pulses --no-git programs/copium-pulses
 ```
+
+**D1 status:**
+
+- [x] pnpm + turbo root monorepo
+- [x] `apps/web` — `@copium/web` (Kit / `@solana/react-hooks`)
+- [x] `apps/mobile` — `@copium/mobile` + `FeedScreen` shell
+- [x] `packages/config` — TxLINE devnet constants (doc-sourced)
+- [x] `.env.example`
+- [x] `submissions/t{1,2,3}-*/README.md`
+- [x] `.vendor/tx-on-chain` cloned locally (gitignored; clone per scaffold cmd)
+- [x] `pnpm build` green
+- [ ] `programs/copium-pulses` (`anchor init`)
 
 ### 3.4 Key dependencies
 
@@ -739,8 +753,17 @@ Redis events + odds
 
 ## 14. Epics & backlog
 
-### EPIC A — Foundation (D1–D2)
-Monorepo, web + mobile scaffold, Supabase migration, tx-on-chain, CI
+### EPIC A — Foundation (D1–D2) — **IN PROGRESS (D1 ✅)**
+
+- [x] Monorepo (pnpm + Turborepo)
+- [x] Web scaffold (`@copium/web`)
+- [x] Mobile shell (`@copium/mobile`, `FeedScreen`)
+- [x] `@copium/config` + `.env.example`
+- [x] Submission READMEs (`submissions/t1–t3/`)
+- [x] Public GitHub monorepo
+- [x] `.vendor/tx-on-chain` cloned locally
+- [ ] Supabase `001_pulses.sql` migration
+- [ ] CI
 
 ### EPIC B — TxLINE + simulator (D3–D7)
 Auth, SSE ingest, event detector, simulator session builder, health dashboard
@@ -770,7 +793,11 @@ OG templates, `/r/[id]`, verify badge link
 pulse-pick, copy-agent, join-room, dial.to
 
 ### EPIC K — Hackathon submit (D19–D21)
-JUDGE.md (3 paths), **3 Loom videos** (§17A/B/C), 3× Superteam forms
+
+- [x] `JUDGE.md` outline (repo root)
+- [ ] 3 judge paths wired in product
+- [ ] **3 Loom videos** (§17A/B/C)
+- [ ] 3× Superteam forms
 
 ### EPIC L — Post-hackathon
 MagicBlock live, mainnet, extra pulse types, Expo push prod
@@ -785,7 +812,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 
 | Day | Focus | Exit |
 |-----|-------|------|
-| D1 | Monorepo, web, mobile shell, docs sync | turbo build green |
+| **D1 ✅** | Monorepo, web, mobile shell, docs sync | turbo build green ✅ |
 | D2 | Supabase `001_pulses.sql`, tx-on-chain | DB live |
 | D3 | TxLINE auth + devnet subscribe | snapshot 200 |
 | D4 | SSE ingest + event detector | Redis events |
@@ -886,17 +913,18 @@ OPENAI_API_KEY=...          # Spawner + Narrator
 - [ ] **Loom §17B** (standalone)
 
 **Track 3**
-- [ ] React Native Feed
+- [x] React Native Feed (shell — `FeedScreen`, D1)
 - [ ] Pulse swipe + Room duel
 - [ ] Receipts + share
 - [ ] **Loom §17C** (phone only)
 
 ### 18.3 Shared deliverables
 
-- [ ] Public GitHub monorepo
-- [ ] Live URL + `JUDGE.md`
+- [x] Public GitHub monorepo
+- [ ] Live URL
+- [x] `JUDGE.md` (outline on repo)
 - [ ] Devnet badge all surfaces
-- [ ] No FIFA marks
+- [x] No FIFA marks
 - [ ] **Three videos — never combined**
 
 ### 18.4 JUDGE.md outline
@@ -986,4 +1014,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.0 — Pulse revamp · 29 Jun 2026*
+*Document version: 4.1 — D1 complete · 30 Jun 2026*
