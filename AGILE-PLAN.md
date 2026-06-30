@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · 30 Jun 2026 — monorepo, web + mobile shell, `@copium/config`, `.env.example`, public GitHub ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
+**Progress:** D1 ✅ · D2 ✅ · 30 Jun 2026 — monorepo + `@copium/db` live + `@copium/txline` devnet IDL ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
 
 ---
 
@@ -753,7 +753,7 @@ Redis events + odds
 
 ## 14. Epics & backlog
 
-### EPIC A — Foundation (D1–D2) — **IN PROGRESS (D1 ✅)**
+### EPIC A — Foundation (D1–D2) — **D2 ✅ (CI deferred)**
 
 - [x] Monorepo (pnpm + Turborepo)
 - [x] Web scaffold (`@copium/web`)
@@ -762,7 +762,7 @@ Redis events + odds
 - [x] Submission READMEs (`submissions/t1–t3/`)
 - [x] Public GitHub monorepo
 - [x] `.vendor/tx-on-chain` cloned locally
-- [ ] Supabase `001_pulses.sql` migration
+- [x] Supabase `001_pulses.sql` migration (`@copium/db` — 11 tables live)
 - [ ] CI
 
 ### EPIC B — TxLINE + simulator (D3–D7)
@@ -813,7 +813,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | Day | Focus | Exit |
 |-----|-------|------|
 | **D1 ✅** | Monorepo, web, mobile shell, docs sync | turbo build green ✅ |
-| D2 | Supabase `001_pulses.sql`, tx-on-chain | DB live |
+| **D2 ✅** | Supabase `001_pulses.sql`, tx-on-chain | DB live ✅ |
 | D3 | TxLINE auth + devnet subscribe | snapshot 200 |
 | D4 | SSE ingest + event detector | Redis events |
 | D5 | Simulator session from historical fixture | inject goal |
@@ -1014,4 +1014,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.1 — D1 complete · 30 Jun 2026*
+*Document version: 4.2 — D1–D2 complete · 30 Jun 2026*

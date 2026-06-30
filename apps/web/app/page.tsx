@@ -3,6 +3,8 @@
 import { COPIUM_TAGLINE, SOLANA_DEVNET, TXLINE_DEVNET } from "@copium/config";
 import { useWalletConnection } from "@solana/react-hooks";
 
+import { DbStatus } from "./components/db-status";
+
 export default function Home() {
   const { connectors, connect, disconnect, wallet, status } =
     useWalletConnection();
@@ -42,6 +44,7 @@ export default function Home() {
                 service level {TXLINE_DEVNET.subscriptionTier}
               </dd>
             </div>
+            <DbStatus />
           </dl>
         </section>
 
