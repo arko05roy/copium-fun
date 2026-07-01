@@ -36,3 +36,27 @@ export {
   txlineApiOrigin,
   txlineGuestAuthUrl,
 } from "./env.js";
+export {
+  parseSseBlock,
+  readSseMessages,
+  parseSseJson,
+  openTxlineStream,
+} from "./sse.js";
+export type { SseMessage, TxlineStreamKind } from "./sse.js";
+export {
+  detectFromScoreUpdate,
+  detectFromOddsUpdate,
+} from "./detect.js";
+export type {
+  DetectedEvent,
+  DetectedEventKind,
+  FixtureDetectState,
+  OddsUpdate,
+  ScoreUpdate,
+} from "./detect.js";
+export {
+  INGEST_META_KEY,
+  oddsChannel,
+  scoresChannel,
+  eventChannel,
+} from "./redis-channels.js";

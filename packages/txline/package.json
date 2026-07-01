@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "node --import tsx src/verify.ts",
     "subscribe": "node --import tsx src/cli-subscribe.ts",
-    "probe": "node --import tsx src/probe.ts"
+    "detect": "node --import tsx src/detect.ts"
   },
   "dependencies": {
     "@copium/config": "workspace:*",

@@ -12,9 +12,14 @@
     "txline:verify": "pnpm --filter @copium/txline verify",
     "txline:subscribe": "pnpm --filter @copium/txline subscribe",
     "txline:probe": "pnpm --filter @copium/txline probe",
-    "verify:d1-d3": "node --import tsx scripts/verify-d1-d3.ts"
+    "txline:detect": "pnpm --filter @copium/txline detect",
+    "txline:ingest": "pnpm --filter @copium/txline-ingest start",
+    "redis:up": "docker compose up -d redis",
+    "verify:d1-d3": "node --import tsx scripts/verify-d1-d3.ts",
+    "verify:d4": "node --import tsx scripts/verify-d4.ts"
   },
   "devDependencies": {
+    "ioredis": "^5.6.1",
     "tsx": "^4.20.3",
     "turbo": "^2.5.4",
     "typescript": "^5.9.3"

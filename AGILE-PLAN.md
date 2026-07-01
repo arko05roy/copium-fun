@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · 30 Jun 2026 — monorepo + `@copium/db` live + `@copium/txline` devnet subscribe + fixtures snapshot 200 ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · 1 Jul 2026 — monorepo + `@copium/db` live + `@copium/txline` devnet subscribe + `apps/txline-ingest` SSE → Redis (`pnpm verify:d4`) ([arko05roy/copium-fun](https://github.com/arko05roy/copium-fun))
 
 ---
 
@@ -515,12 +515,13 @@ solana airdrop 2 $(solana address -k service-wallet.json)
 pnpm txline:subscribe
 ```
 
-### 7.2 `apps/txline-ingest`
+### 7.2 `apps/txline-ingest` — **D4 ✅**
 
-- Fork odds + scores SSE
-- **Event detector:** goal (score delta), phase change, implied move >5pp
-- Publish to Redis: `event:{fixtureId}`, `odds:{fixtureId}`, `scores:{fixtureId}`
-- Health `:9090/health`
+- [x] Fork odds + scores SSE (devnet, real `TXLINE_API_TOKEN`)
+- [x] **Event detector:** goal (score delta), phase change, implied move >5pp (`packages/txline/src/detect.ts`)
+- [x] Publish to Redis: `event:{fixtureId}`, `odds:{fixtureId}`, `scores:{fixtureId}`
+- [x] Health `:9090/health` · verify: `pnpm verify:d4`
+- **Note:** devnet scores stream may heartbeat-only until live fixtures; odds + `odds_move` events verified 1 Jul 2026
 
 ### 7.3 Fixture simulator
 
@@ -765,12 +766,15 @@ Redis events + odds
 - [x] Supabase `001_pulses.sql` migration (`@copium/db` — 11 tables live)
 - [ ] CI
 
-### EPIC B — TxLINE + simulator (D3–D7) — **D3 ✅**
+### EPIC B — TxLINE + simulator (D3–D7) — **D4 ✅**
 
 - [x] Guest auth (`POST /auth/guest/start`)
 - [x] Devnet on-chain `subscribe` (tier 1) + `POST /api/token/activate`
 - [x] `pnpm txline:subscribe` — fixtures snapshot HTTP 200 (17 fixtures, 30 Jun 2026)
-- [ ] SSE ingest, event detector, simulator session builder, health dashboard
+- [x] SSE ingest (`apps/txline-ingest`) — odds + scores fork, Redis pub/sub, `:9090/health`
+- [x] Event detector (`@copium/txline/detect`) — goal, phase change, odds move >5pp → `event:{fixtureId}`
+- [ ] Simulator session builder (D5)
+- [ ] Health dashboard (D7 sim UI)
 
 ### EPIC C — pulse-engine + settlement internal (D8–D10)
 Gap/labels tests, validate_stat spike, lock snapshot
@@ -819,7 +823,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D1 ✅** | Monorepo, web, mobile shell, docs sync | turbo build green ✅ |
 | **D2 ✅** | Supabase `001_pulses.sql`, tx-on-chain | DB live ✅ |
 | **D3 ✅** | TxLINE auth + devnet subscribe | snapshot 200 ✅ |
-| D4 | SSE ingest + event detector | Redis events |
+| **D4 ✅** | SSE ingest + event detector | Redis events ✅ (`pnpm txline:ingest` + `pnpm verify:d4`) |
 | D5 | Simulator session from historical fixture | inject goal |
 | D6 | `pulse-engine` + tests | 15+ cases |
 | D7 | **M1:** event → log "would spawn pulse" | sim UI scrub |
@@ -856,6 +860,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 
 | ID | Test | Method |
 |----|------|--------|
+| T0 | txline ingest + Redis events | `pnpm redis:up` · `pnpm txline:ingest` · `pnpm verify:d4` |
 | T1 | pulse-engine unit | `pnpm --filter pulse-engine test` |
 | T2 | settlement lock/validate | integration historical fixture |
 | T3 | validate_stat | settlement package |
@@ -882,6 +887,8 @@ COPIUM_NETWORK=devnet
 SOLANA_RPC_URL=https://api.devnet.solana.com
 TXORACLE_PROGRAM_ID=6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J
 TXLINE_API_BASE=https://txline-dev.txodds.com
+REDIS_URL=redis://127.0.0.1:6379
+TXLINE_INGEST_PORT=9090
 # World Cup free tier locked in @copium/config (service level 1, devnet)
 NEXT_PUBLIC_SOLANA_CLUSTER=devnet
 OPENAI_API_KEY=...          # Spawner + Narrator
@@ -1018,4 +1025,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.3 — D1–D3 complete · 30 Jun 2026*
+*Document version: 4.4 — D1–D4 complete · 1 Jul 2026*
