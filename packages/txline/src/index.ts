@@ -60,3 +60,12 @@ export {
   scoresChannel,
   eventChannel,
 } from "./redis-channels.js";
+export {
+  parseSseRecording,
+  fetchScoresTimeline,
+  fetchOddsForFixture,
+  buildSimBundle,
+} from "./historical.js";
+export type { SimBundle, SimBundleEvent, SimStream } from "./historical.js";
+export { goalCursor, isSimBundle, replayStep, detectStateAtCursor } from "./replay.js";
+export type { ReplayResult } from "./replay.js";

@@ -15,10 +15,18 @@
     "txline:detect": "pnpm --filter @copium/txline detect",
     "txline:ingest": "pnpm --filter @copium/txline-ingest start",
     "redis:up": "docker compose up -d redis",
+    "sim:build": "pnpm --filter @copium/pulse-orchestrator build-session",
+    "sim:advance": "pnpm --filter @copium/pulse-orchestrator advance",
+    "anchor:build": "cd programs/copium-pulses && NO_DNA=1 anchor build",
+    "vendor:tx-on-chain": "git clone --depth 1 https://github.com/txodds/tx-on-chain.git .vendor/tx-on-chain",
     "verify:d1-d3": "node --import tsx scripts/verify-d1-d3.ts",
-    "verify:d4": "node --import tsx scripts/verify-d4.ts"
+    "verify:d4": "node --import tsx scripts/verify-d4.ts",
+    "verify:d5": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && node --import tsx scripts/verify-d5.ts",
+    "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts"
   },
   "devDependencies": {
+    "@copium/db": "workspace:*",
+    "@copium/txline": "workspace:*",
     "ioredis": "^5.6.1",
     "tsx": "^4.20.3",
     "turbo": "^2.5.4",

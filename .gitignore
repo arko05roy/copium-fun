@@ -14,6 +14,8 @@ service-wallet.json
 *-keypair.json
 
 .vendor/
+programs/copium-pulses/node_modules/
+programs/copium-pulses/package-lock.json
 apps/web/.agents/
 apps/web/skills-lock.json
 

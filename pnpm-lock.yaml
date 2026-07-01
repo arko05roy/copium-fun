@@ -8,6 +8,12 @@ importers:
 
   .:
     devDependencies:
+      '@copium/db':
+        specifier: workspace:*
+        version: link:packages/db
+      '@copium/txline':
+        specifier: workspace:*
+        version: link:packages/txline
       ioredis:
         specifier: ^5.6.1
         version: 5.11.1
@@ -46,6 +52,31 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
+  apps/pulse-orchestrator:
+    dependencies:
+      '@copium/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@copium/txline':
+        specifier: workspace:*
+        version: link:../../packages/txline
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.6.1
+      ioredis:
+        specifier: ^5.6.1
+        version: 5.11.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.20.0
+      tsx:
+        specifier: ^4.20.3
+        version: 4.22.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   apps/txline-ingest:
     dependencies:
       '@copium/txline':
@@ -76,12 +107,18 @@ importers:
       '@copium/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copium/txline':
+        specifier: workspace:*
+        version: link:../../packages/txline
       '@solana/client':
         specifier: ^1.2.0
         version: 1.7.0(@solana/sysvars@5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(@types/react@19.2.17)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(utf-8-validate@6.0.6)
       '@solana/react-hooks':
         specifier: ^1.1.5
         version: 1.4.1(@solana/sysvars@5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(@types/react@19.2.17)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react@19.2.3)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.3))(utf-8-validate@6.0.6)
+      ioredis:
+        specifier: ^5.6.1
+        version: 5.11.1
       next:
         specifier: 16.2.6
         version: 16.2.6(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -168,6 +205,9 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
+      ioredis:
+        specifier: ^5.6.1
+        version: 5.11.1
       tweetnacl:
         specifier: ^1.0.3
         version: 1.0.3

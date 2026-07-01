@@ -6,16 +6,23 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "./idl/txoracle.json": "./idl/txoracle.json"
+    "./idl/txoracle.json": "./idl/txoracle.json",
+    "./sim": {
+      "types": "./dist/sim.d.ts",
+      "import": "./dist/sim.js",
+      "default": "./dist/sim.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify": "node --import tsx src/verify.ts",
     "subscribe": "node --import tsx src/cli-subscribe.ts",
-    "detect": "node --import tsx src/detect.ts"
+    "detect": "node --import tsx src/detect.ts",
+    "probe": "node --import tsx src/probe.ts"
   },
   "dependencies": {
     "@copium/config": "workspace:*",
@@ -23,6 +30,7 @@
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "dotenv": "^16.5.0",
+    "ioredis": "^5.6.1",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

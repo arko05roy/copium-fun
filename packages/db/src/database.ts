@@ -218,6 +218,7 @@ export type Database = {
           created_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["simulator_sessions"]["Insert"]>;
+        Relationships: [];
       };
       copy_subscriptions: {
         Row: {

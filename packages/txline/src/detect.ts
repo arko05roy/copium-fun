@@ -54,6 +54,15 @@ function gameStateFrom(update: ScoreUpdate): string | undefined {
   return update.gameState ?? update.GameState;
 }
 
+function statsFrom(
+  update: ScoreUpdate,
+): Record<string, { value?: number } | number> | undefined {
+  const raw = update as ScoreUpdate & {
+    Stats?: Record<string, { value?: number } | number>;
+  };
+  return raw.stats ?? raw.Stats;
+}
+
 function goalValue(
   stats: Record<string, { value?: number } | number> | undefined,
   key: number,
@@ -105,8 +114,9 @@ export function detectFromScoreUpdate(
     next.gameState = state;
   }
 
+  const stats = statsFrom(update);
   for (const key of GOAL_KEYS) {
-    const value = goalValue(update.stats, key);
+    const value = goalValue(stats, key);
     if (value === undefined) continue;
     const before = prev?.goals[key];
     next.goals[key] = value;
@@ -183,6 +193,12 @@ function demo(): void {
   );
   console.assert(goal.events.some((e) => e.kind === "goal"));
   state = goal.next;
+
+  const goalStats = detectFromScoreUpdate(
+    { FixtureId: 1, GameState: "H2", Ts: 3, Stats: { "1": 1, "2": 1 } } as ScoreUpdate,
+    { goals: { "1": 1, "2": 0 }, gameState: "H2" },
+  );
+  console.assert(goalStats.events.some((e) => e.kind === "goal"));
 
   const odds = detectFromOddsUpdate(
     { FixtureId: 1, Ts: 3, Pct: ["40.000", "60.000"], MessageId: "a" },

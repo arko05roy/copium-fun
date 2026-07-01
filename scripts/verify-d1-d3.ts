@@ -58,11 +58,15 @@ async function main(): Promise<void> {
   assertExists("submissions/t1-settlement/README.md");
   assertExists("submissions/t2-agent-desk/README.md");
   assertExists("submissions/t3-match-feed/README.md");
+  assertExists("programs/copium-pulses/Anchor.toml");
+  assertExists("programs/copium-pulses/programs/copium-pulses/src/lib.rs");
+  assertExists("programs/copium-pulses/programs/copium-pulses/src/state.rs");
   assertExists(".vendor/tx-on-chain/idl/txoracle.json");
   console.log("scaffold files ok");
 
   run("build", "pnpm", ["build"]);
   run("typecheck", "pnpm", ["typecheck"]);
+  run("anchor:build", "pnpm", ["anchor:build"]);
 
   console.log("\n=== D2 database ===");
   run("db:health", "pnpm", ["db:health"]);
