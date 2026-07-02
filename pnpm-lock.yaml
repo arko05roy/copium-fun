@@ -11,6 +11,9 @@ importers:
       '@copium/db':
         specifier: workspace:*
         version: link:packages/db
+      '@copium/pulse-engine':
+        specifier: workspace:*
+        version: link:packages/pulse-engine
       '@copium/txline':
         specifier: workspace:*
         version: link:packages/txline
@@ -177,6 +180,22 @@ importers:
       postgres:
         specifier: ^3.4.7
         version: 3.4.9
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.20.0
+      tsx:
+        specifier: ^4.20.3
+        version: 4.22.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/pulse-engine:
+    dependencies:
+      '@copium/txline':
+        specifier: workspace:*
+        version: link:../txline
     devDependencies:
       '@types/node':
         specifier: ^22.15.30

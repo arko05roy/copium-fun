@@ -1,0 +1,71 @@
+{
+  "name": "@copium/pulse-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./calibration": {
+      "types": "./dist/calibration.d.ts",
+      "import": "./dist/calibration.js",
+      "default": "./dist/calibration.js"
+    },
+    "./copium-gap": {
+      "types": "./dist/copium-gap.d.ts",
+      "import": "./dist/copium-gap.js",
+      "default": "./dist/copium-gap.js"
+    },
+    "./labels": {
+      "types": "./dist/labels.d.ts",
+      "import": "./dist/labels.js",
+      "default": "./dist/labels.js"
+    },
+    "./duel-points": {
+      "types": "./dist/duel-points.d.ts",
+      "import": "./dist/duel-points.js",
+      "default": "./dist/duel-points.js"
+    },
+    "./pool-math": {
+      "types": "./dist/pool-math.d.ts",
+      "import": "./dist/pool-math.js",
+      "default": "./dist/pool-math.js"
+    },
+    "./pulse-catalog": {
+      "types": "./dist/pulse-catalog.d.ts",
+      "import": "./dist/pulse-catalog.js",
+      "default": "./dist/pulse-catalog.js"
+    },
+    "./scores": {
+      "types": "./dist/scores.d.ts",
+      "import": "./dist/scores.js",
+      "default": "./dist/scores.js"
+    },
+    "./spawn": {
+      "types": "./dist/spawn.d.ts",
+      "import": "./dist/spawn.js",
+      "default": "./dist/spawn.js"
+    },
+    "./bundle-eval": {
+      "types": "./dist/bundle-eval.d.ts",
+      "import": "./dist/bundle-eval.js",
+      "default": "./dist/bundle-eval.js"
+    }
+  },
+  "dependencies": {
+    "@copium/txline": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test src/test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.3"
+  }
+}

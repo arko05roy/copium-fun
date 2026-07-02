@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · 1 Jul 2026 — fixture simulator from TxLINE historical (`pnpm verify:d5`, `/sim`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · 1 Jul 2026 — fixture simulator from TxLINE historical (`pnpm verify:d5`, `/sim`)
 
 ---
 
@@ -776,8 +776,13 @@ Redis events + odds
 - [x] Simulator session builder (D5) — `buildSimBundle` + `replayStep` → Redis goal inject (`pnpm verify:d5`)
 - [ ] Health dashboard (D7 sim UI)
 
-### EPIC C — pulse-engine + settlement internal (D8–D10)
-Gap/labels tests, validate_stat spike, lock snapshot
+### EPIC C — pulse-engine + settlement internal (D8–D10) — **D6 ✅**
+
+- [x] `@copium/pulse-engine` — gap, labels, duel points, pool math, pulse catalog, calibration
+- [x] Subpath exports (`copium-gap`, `labels`, `duel-points`, `pool-math`, `pulse-catalog`, `calibration`)
+- [x] `evaluateBundle` — real TxLINE historical sim bundle → goal/HT settlement
+- [x] `pnpm verify:d6` — unit tests + historical integration
+- [ ] Gap/labels tests, validate_stat spike, lock snapshot (D8–D10)
 
 ### EPIC D — `copium-pulses` (D10–D12)
 Anchor: create_pulse, open_position, settle crank, devnet USDC
@@ -825,7 +830,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D3 ✅** | TxLINE auth + devnet subscribe | snapshot 200 ✅ |
 | **D4 ✅** | SSE ingest + event detector | Redis events ✅ (`pnpm txline:ingest` + `pnpm verify:d4`) |
 | **D5 ✅** | Simulator session from historical fixture | inject goal ✅ (`pnpm verify:d5`, `/sim`) |
-| D6 | `pulse-engine` + tests | 15+ cases |
+| **D6 ✅** | `pulse-engine` + tests | 30+ unit cases + `pnpm verify:d6` on TxLINE historical |
 | D7 | **M1:** event → log "would spawn pulse" | sim UI scrub |
 
 ### Week 2 — Chain + Proof + orchestrator (D8–D14)
@@ -862,8 +867,8 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 |----|------|--------|
 | T0 | txline ingest + Redis events | `pnpm redis:up` · `pnpm txline:ingest` · `pnpm verify:d4` |
 | T0b | fixture simulator + goal inject | `pnpm verify:d5` · `/sim` |
-| T0c | D1–D5 stack | `pnpm verify:d1-d5` (spawns ingest for D4 if token set) |
-| T1 | pulse-engine unit | `pnpm --filter pulse-engine test` |
+| T0c | D1–D6 stack | `pnpm verify:d1-d6` (spawns ingest for D4 if token set) |
+| T1 | pulse-engine unit | `pnpm --filter @copium/pulse-engine test` |
 | T2 | settlement lock/validate | integration historical fixture |
 | T3 | validate_stat | settlement package |
 | T4 | Pulse open E2E | simulator + Playwright |
