@@ -25,12 +25,19 @@ export type { PoolSide } from "./pool-math.js";
 export {
   fullGameGoals,
   h1GoalsFromStats,
+  minuteFromUpdate,
   readStat,
   statsFromUpdate,
 } from "./scores.js";
 export type { StatMap } from "./scores.js";
 export { pulseTypeForEvent, suggestPulse } from "./spawn.js";
 export type { SpawnableEventKind, SuggestedPulse } from "./spawn.js";
+export {
+  createSpawnTracker,
+  spawnIntent,
+  spawnIntentsForDetected,
+} from "./spawn-handler.js";
+export type { FixtureSpawnCtx, SpawnIntent } from "./spawn-handler.js";
 export {
   formatPulseQuestion,
   GAME_PHASE,

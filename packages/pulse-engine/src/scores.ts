@@ -1,6 +1,23 @@
 /** TxLINE score payload stats map (keys are stringified stat ids). */
 export type StatMap = Record<string, { value?: number } | number>;
 
+export function minuteFromUpdate(
+  update: {
+    Minute?: number;
+    minute?: number;
+    gameState?: string;
+    GameState?: string;
+  },
+  fallback: number,
+): number {
+  const m = update.Minute ?? update.minute;
+  let minute = typeof m === "number" && Number.isFinite(m) ? m : fallback;
+  const phase = update.gameState ?? update.GameState;
+  if (phase === "HT") minute = 45;
+  if (phase === "H2") minute = Math.max(minute, 46);
+  return minute;
+}
+
 export function readStat(
   stats: StatMap | undefined,
   key: number,

@@ -11,7 +11,12 @@ import {
   settleNextGoal,
   settleOverUnderHt,
 } from "./pulse-catalog.js";
-import { fullGameGoals, h1GoalsFromStats, statsFromUpdate } from "./scores.js";
+import {
+  fullGameGoals,
+  h1GoalsFromStats,
+  minuteFromUpdate,
+  statsFromUpdate,
+} from "./scores.js";
 import { suggestPulse } from "./spawn.js";
 
 export type GoalPulseEval = {
@@ -36,16 +41,6 @@ export type BundleEval = {
   htPulse: HtPulseEval | null;
   maxCopiumGap: number;
 };
-
-function gameStateFrom(update: ScoreUpdate): string | undefined {
-  return update.gameState ?? update.GameState;
-}
-
-function minuteFromUpdate(update: ScoreUpdate, fallback: number): number {
-  const raw = update as ScoreUpdate & { Minute?: number; minute?: number };
-  const m = raw.Minute ?? raw.minute;
-  return typeof m === "number" && Number.isFinite(m) ? m : fallback;
-}
 
 /** Walk real TxLINE sim bundle — settlement + spawn suggestions, no mocks. */
 export function evaluateBundle(bundle: SimBundle): BundleEval {
@@ -105,9 +100,6 @@ export function evaluateBundle(bundle: SimBundle): BundleEval {
         }
       }
 
-      const phase = gameStateFrom(payload);
-      if (phase === "HT") minute = 45;
-      if (phase === "H2") minute = Math.max(minute, 46);
     } else {
       const { next } = detectFromOddsUpdate(event.payload as OddsUpdate, state);
       state = next;

@@ -56,6 +56,8 @@ export type {
 } from "./detect.js";
 export {
   INGEST_META_KEY,
+  ORCHESTRATOR_META_KEY,
+  SPAWN_LOG_KEY,
   oddsChannel,
   scoresChannel,
   eventChannel,

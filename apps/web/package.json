@@ -33,6 +33,7 @@
   "dependencies": {
     "@copium/config": "workspace:*",
     "@copium/db": "workspace:*",
+    "@copium/pulse-engine": "workspace:*",
     "@copium/txline": "workspace:*",
     "ioredis": "^5.6.1",
     "@solana/client": "^1.2.0",

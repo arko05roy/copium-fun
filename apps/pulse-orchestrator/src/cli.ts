@@ -105,7 +105,21 @@ async function main(): Promise<void> {
     return;
   }
 
-  throw new Error("usage: build-session [--fixture ID] | advance --session ID [--until-goal] [--steps N]");
+  if (command === "listen") {
+    const { startListener } = await import("./listen.js");
+    const { stop } = await startListener();
+    const shutdown = async () => {
+      await stop();
+      process.exit(0);
+    };
+    process.on("SIGINT", () => void shutdown());
+    process.on("SIGTERM", () => void shutdown());
+    return;
+  }
+
+  throw new Error(
+    "usage: build-session [--fixture ID] | advance --session ID [--until-goal] [--steps N] | listen",
+  );
 }
 
 main().catch((err: unknown) => {

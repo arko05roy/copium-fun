@@ -53,6 +53,11 @@
       "types": "./dist/bundle-eval.d.ts",
       "import": "./dist/bundle-eval.js",
       "default": "./dist/bundle-eval.js"
+    },
+    "./spawn-handler": {
+      "types": "./dist/spawn-handler.d.ts",
+      "import": "./dist/spawn-handler.js",
+      "default": "./dist/spawn-handler.js"
     }
   },
   "dependencies": {

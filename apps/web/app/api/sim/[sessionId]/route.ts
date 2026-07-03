@@ -20,6 +20,12 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json({ ok: false, error: "invalid bundle" }, { status: 500 });
   }
 
+  const timeline = data.bundle.events.map((event, index) => ({
+    index,
+    stream: event.stream,
+    ts: event.ts,
+  }));
+
   return NextResponse.json({
     ok: true,
     sessionId: data.id,
@@ -27,5 +33,6 @@ export async function GET(_req: Request, { params }: Params) {
     cursor: data.cursor ?? 0,
     events: data.bundle.events.length,
     goalCursor: goalCursor(data.bundle),
+    timeline,
   });
 }

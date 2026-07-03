@@ -60,6 +60,9 @@ importers:
       '@copium/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copium/pulse-engine':
+        specifier: workspace:*
+        version: link:../../packages/pulse-engine
       '@copium/txline':
         specifier: workspace:*
         version: link:../../packages/txline
@@ -110,6 +113,9 @@ importers:
       '@copium/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@copium/pulse-engine':
+        specifier: workspace:*
+        version: link:../../packages/pulse-engine
       '@copium/txline':
         specifier: workspace:*
         version: link:../../packages/txline

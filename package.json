@@ -17,14 +17,17 @@
     "redis:up": "docker compose up -d redis",
     "sim:build": "pnpm --filter @copium/pulse-orchestrator build-session",
     "sim:advance": "pnpm --filter @copium/pulse-orchestrator advance",
+    "orchestrator:listen": "pnpm --filter @copium/pulse-orchestrator listen",
     "anchor:build": "cd programs/copium-pulses && NO_DNA=1 anchor build",
     "vendor:tx-on-chain": "git clone --depth 1 https://github.com/txodds/tx-on-chain.git .vendor/tx-on-chain",
     "verify:d1-d3": "node --import tsx scripts/verify-d1-d3.ts",
     "verify:d4": "node --import tsx scripts/verify-d4.ts",
     "verify:d5": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && node --import tsx scripts/verify-d5.ts",
     "verify:d6": "pnpm --filter @copium/config build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d6.ts",
+    "verify:d7": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d7.ts",
     "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts",
-    "verify:d1-d6": "node --import tsx scripts/verify-d1-d6.ts"
+    "verify:d1-d6": "node --import tsx scripts/verify-d1-d6.ts",
+    "verify:d1-d7": "node --import tsx scripts/verify-d1-d7.ts"
   },
   "devDependencies": {
     "@copium/db": "workspace:*",
