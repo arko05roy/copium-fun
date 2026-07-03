@@ -1843,7 +1843,8 @@
             }
           }
         }
-      ]
+      ],
+      "returns": "bool"
     },
     {
       "name": "withdraw_usdt",

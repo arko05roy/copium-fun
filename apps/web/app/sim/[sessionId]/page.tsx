@@ -34,6 +34,15 @@ type AdvanceResult = {
   rewind?: boolean;
 };
 
+type ValidateStatResult = {
+  ok: boolean;
+  valid?: boolean;
+  method?: string;
+  dailyScoresPda?: string;
+  proved?: { key: number; value: number; period: number };
+  error?: string;
+};
+
 export default function SimSessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
   const [meta, setMeta] = useState<SessionMeta | null>(null);
@@ -42,6 +51,8 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
   const [busy, setBusy] = useState(false);
   const [scrub, setScrub] = useState(0);
   const [orchestratorLog, setOrchestratorLog] = useState<SpawnIntent[]>([]);
+  const [validateResult, setValidateResult] = useState<ValidateStatResult | null>(null);
+  const [validateBusy, setValidateBusy] = useState(false);
 
   const refreshSpawnLog = useCallback(async () => {
     const res = await fetch("/api/stack/spawn-log?limit=15");
@@ -120,6 +131,25 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
     }
   }, [sessionId, refresh, refreshSpawnLog]);
 
+  const runValidateStat = useCallback(async () => {
+    setValidateBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/settlement/validate-stat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, pulseType: "next_goal" }),
+      });
+      const json = (await res.json()) as ValidateStatResult;
+      setValidateResult(json);
+      if (!json.ok) throw new Error(json.error ?? "validate_stat failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "validate_stat failed");
+    } finally {
+      setValidateBusy(false);
+    }
+  }, [sessionId]);
+
   const total = meta?.events ?? 0;
   const cursor = meta?.cursor ?? 0;
   const pct = total > 0 ? Math.round((cursor / total) * 100) : 0;
@@ -129,7 +159,7 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
       <Link href="/sim" className="text-zinc-500 hover:text-black">
         ← stack health
       </Link>
-      <h1 className="text-2xl font-semibold">Sim session</h1>
+      <h1 className="text-2xl font-semibold">Sim session (D7 + D8)</h1>
       <p className="text-zinc-600 text-xs">{sessionId}</p>
 
       {meta ? (
@@ -203,6 +233,27 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
             >
               replay to goal
             </button>
+            <button
+              type="button"
+              disabled={validateBusy || !meta?.goalCursor}
+              onClick={() => void runValidateStat()}
+              className="rounded bg-violet-800 px-3 py-1 text-white disabled:opacity-50"
+            >
+              {validateBusy ? "validating…" : "validate_stat"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {validateResult?.ok ? (
+        <div className="rounded border border-violet-300 bg-violet-50 p-4 text-xs">
+          <div className="font-semibold text-violet-900">txoracle.validate_stat → true</div>
+          <div className="mt-1 text-zinc-600">
+            method {validateResult.method} · stat {validateResult.proved?.key}=
+            {validateResult.proved?.value}
+          </div>
+          <div className="mt-1 truncate text-[10px] text-zinc-500">
+            PDA {validateResult.dailyScoresPda}
           </div>
         </div>
       ) : null}

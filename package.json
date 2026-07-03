@@ -25,6 +25,7 @@
     "verify:d5": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && node --import tsx scripts/verify-d5.ts",
     "verify:d6": "pnpm --filter @copium/config build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d6.ts",
     "verify:d7": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d7.ts",
+    "verify:d8": "pnpm --filter @copium/config build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && node --import tsx scripts/verify-d8.ts",
     "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts",
     "verify:d1-d6": "node --import tsx scripts/verify-d1-d6.ts",
     "verify:d1-d7": "node --import tsx scripts/verify-d1-d7.ts"
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@copium/db": "workspace:*",
     "@copium/pulse-engine": "workspace:*",
+    "@copium/settlement": "workspace:*",
     "@copium/txline": "workspace:*",
     "ioredis": "^5.6.1",
     "tsx": "^4.20.3",

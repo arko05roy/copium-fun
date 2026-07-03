@@ -14,6 +14,9 @@ importers:
       '@copium/pulse-engine':
         specifier: workspace:*
         version: link:packages/pulse-engine
+      '@copium/settlement':
+        specifier: workspace:*
+        version: link:packages/settlement
       '@copium/txline':
         specifier: workspace:*
         version: link:packages/txline
@@ -116,6 +119,9 @@ importers:
       '@copium/pulse-engine':
         specifier: workspace:*
         version: link:../../packages/pulse-engine
+      '@copium/settlement':
+        specifier: workspace:*
+        version: link:../../packages/settlement
       '@copium/txline':
         specifier: workspace:*
         version: link:../../packages/txline
@@ -209,6 +215,31 @@ importers:
       tsx:
         specifier: ^4.20.3
         version: 4.22.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/settlement:
+    dependencies:
+      '@copium/config':
+        specifier: workspace:*
+        version: link:../config
+      '@copium/pulse-engine':
+        specifier: workspace:*
+        version: link:../pulse-engine
+      '@copium/txline':
+        specifier: workspace:*
+        version: link:../txline
+      '@coral-xyz/anchor':
+        specifier: ^0.32.1
+        version: 0.32.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@solana/web3.js':
+        specifier: ^1.98.2
+        version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.20.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

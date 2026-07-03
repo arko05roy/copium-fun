@@ -62,10 +62,10 @@ export default function SimIndexPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8 font-mono text-sm">
-      <h1 className="text-2xl font-semibold">Fixture simulator (D7)</h1>
+      <h1 className="text-2xl font-semibold">Fixture simulator (D7 + D8)</h1>
       <p className="text-zinc-600 text-xs">
-        Real TxLINE historical bundle → Redis replay → orchestrator logs{" "}
-        <code>would_spawn_pulse</code>. Run <code>pnpm orchestrator:listen</code> for live M1.
+        Real TxLINE historical bundle → Redis replay → orchestrator{" "}
+        <code>would_spawn_pulse</code> → session page <code>validate_stat</code> (devnet txoracle).
       </p>
 
       {health ? (

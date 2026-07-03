@@ -16,7 +16,13 @@ if (existsSync(envPath)) {
 }
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["ws"],
+  serverExternalPackages: [
+    "ws",
+    "@coral-xyz/anchor",
+    "@solana/web3.js",
+    "@copium/settlement",
+    "@copium/txline",
+  ],
   transpilePackages: ["@copium/config", "@copium/db"],
 };
 

@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · 4 Jul 2026 — orchestrator M1 + sim UI scrub (`pnpm verify:d7`, `/sim`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · 4 Jul 2026 — `validate_stat` spike (`pnpm verify:d8`, `/sim` → validate_stat)
 
 ---
 
@@ -776,13 +776,16 @@ Redis events + odds
 - [x] Simulator session builder (D5) — `buildSimBundle` + `replayStep` → Redis goal inject (`pnpm verify:d5`)
 - [x] Health dashboard (D7 sim UI) — `/sim` stack health + `/sim/[sessionId]` scrub + orchestrator `would_spawn_pulse` (`pnpm verify:d7`)
 
-### EPIC C — pulse-engine + settlement internal (D8–D10) — **D6 ✅**
+### EPIC C — pulse-engine + settlement internal (D8–D10) — **D8 ✅**
 
 - [x] `@copium/pulse-engine` — gap, labels, duel points, pool math, pulse catalog, calibration
 - [x] Subpath exports (`copium-gap`, `labels`, `duel-points`, `pool-math`, `pulse-catalog`, `calibration`)
 - [x] `evaluateBundle` — real TxLINE historical sim bundle → goal/HT settlement
 - [x] `pnpm verify:d6` — unit tests + historical integration
-- [ ] Gap/labels tests, validate_stat spike, lock snapshot (D8–D10)
+- [x] `@copium/settlement` — `fetchStatValidation`, `validateStatOnChain` (txoracle `.view()` / simulate)
+- [x] `pnpm verify:d8` — historical goal + HT + docs fixture on devnet
+- [x] `/api/settlement/validate-stat` + sim session UI
+- [ ] lock odds snapshot (D9–D10)
 
 ### EPIC D — `copium-pulses` (D10–D12)
 Anchor: create_pulse, open_position, settle crank, devnet USDC
@@ -832,12 +835,13 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D5 ✅** | Simulator session from historical fixture | inject goal ✅ (`pnpm verify:d5`, `/sim`) |
 | **D6 ✅** | `pulse-engine` + tests | 30+ unit cases + `pnpm verify:d6` on TxLINE historical |
 | **D7 ✅** | **M1:** event → log `would_spawn_pulse` | sim UI scrub + `/api/stack/health` (`pnpm verify:d7`) |
+| **D8 ✅** | validate_stat spike | `.view()` true (`pnpm verify:d8`, `/sim` validate_stat) |
 
 ### Week 2 — Chain + Proof + orchestrator (D8–D14)
 
 | Day | Focus | Exit |
 |-----|-------|------|
-| D8 | validate_stat spike | .view() true |
+| **D8 ✅** | validate_stat spike | `.view()` true (`pnpm verify:d8`) |
 | D9 | `copium-pulses` create + open | anchor test |
 | D10 | pulse-orchestrator spawn E2E | pulse row + pool |
 | D11 | settlement-worker Phase A | proof_bundles |
