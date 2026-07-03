@@ -1,15 +1,24 @@
 /** TxLINE score payload stats map (keys are stringified stat ids). */
 export type StatMap = Record<string, { value?: number } | number>;
 
+type ClockPayload = { Seconds?: number; Running?: boolean };
+
 export function minuteFromUpdate(
   update: {
     Minute?: number;
     minute?: number;
     gameState?: string;
     GameState?: string;
+    Clock?: ClockPayload;
+    clock?: { seconds?: number };
   },
   fallback: number,
 ): number {
+  const clockSec = update.Clock?.Seconds ?? update.clock?.seconds;
+  if (typeof clockSec === "number" && Number.isFinite(clockSec) && clockSec >= 0) {
+    return Math.floor(clockSec / 60);
+  }
+
   const m = update.Minute ?? update.minute;
   let minute = typeof m === "number" && Number.isFinite(m) ? m : fallback;
   const phase = update.gameState ?? update.GameState;

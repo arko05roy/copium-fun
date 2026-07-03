@@ -1,10 +1,11 @@
-import type { SimBundle, ScoreUpdate } from "@copium/txline";
+import type { SimBundle } from "@copium/txline/sim";
+import type { ScoreUpdate } from "@copium/txline/detect";
 import {
   detectFromOddsUpdate,
   detectFromScoreUpdate,
   type FixtureDetectState,
   type OddsUpdate,
-} from "@copium/txline";
+} from "@copium/txline/detect";
 import { copiumGap } from "./copium-gap.js";
 import { crowdYesPct } from "./pool-math.js";
 import {

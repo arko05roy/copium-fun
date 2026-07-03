@@ -15,7 +15,7 @@ import {
 } from "./pulse-catalog.js";
 import { FEE_BPS, PULSE_WINDOW_SEC } from "./calibration.js";
 import { pulseTypeForEvent, suggestPulse } from "./spawn.js";
-import { readStat, fullGameGoals, h1GoalsFromStats } from "./scores.js";
+import { minuteFromUpdate, readStat, fullGameGoals, h1GoalsFromStats } from "./scores.js";
 
 describe("copiumGap", () => {
   it("returns absolute crowd-line distance", () => {
@@ -242,6 +242,11 @@ describe("scores", () => {
 
   it("fullGameGoals uses keys 1 and 2", () => {
     assert.deepEqual(fullGameGoals({ "1": 2, "2": 1 }), { 1: 2, 2: 1 });
+  });
+
+  it("minuteFromUpdate uses TxLINE Clock.Seconds", () => {
+    assert.equal(minuteFromUpdate({ Clock: { Seconds: 563 } }, 0), 9);
+    assert.equal(minuteFromUpdate({ Minute: 67, Clock: { Seconds: 120 } }, 0), 2);
   });
 });
 

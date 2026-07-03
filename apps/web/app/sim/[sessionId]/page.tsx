@@ -14,8 +14,14 @@ type SessionMeta = {
 type SpawnIntent = {
   action: "would_spawn_pulse" | "skip";
   pulse?: { question: string; pulseType: string; closesAt: number };
-  event?: { kind: string };
+  event?: { kind: string; fixtureId?: number };
   reason?: string;
+  at?: string;
+};
+
+type OrchestratorLog = {
+  ok: boolean;
+  entries: SpawnIntent[];
 };
 
 type AdvanceResult = {
@@ -35,6 +41,13 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [scrub, setScrub] = useState(0);
+  const [orchestratorLog, setOrchestratorLog] = useState<SpawnIntent[]>([]);
+
+  const refreshSpawnLog = useCallback(async () => {
+    const res = await fetch("/api/stack/spawn-log?limit=15");
+    const json = (await res.json()) as OrchestratorLog;
+    if (json.ok) setOrchestratorLog(json.entries);
+  }, []);
 
   const refresh = useCallback(async () => {
     const res = await fetch(`/api/sim/${sessionId}`);
@@ -47,7 +60,10 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
+    void refreshSpawnLog();
+    const id = setInterval(() => void refreshSpawnLog(), 3000);
+    return () => clearInterval(id);
+  }, [refresh, refreshSpawnLog]);
 
   const runSeek = useCallback(
     async (target: number) => {
@@ -64,13 +80,14 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
         setLast(json);
         setScrub(json.cursor);
         await refresh();
+        await refreshSpawnLog();
       } catch (e) {
         setError(e instanceof Error ? e.message : "seek failed");
       } finally {
         setBusy(false);
       }
     },
-    [sessionId, refresh],
+    [sessionId, refresh, refreshSpawnLog],
   );
 
   const step = useCallback(
@@ -95,12 +112,13 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
       setLast(json);
       setScrub(json.cursor);
       await refresh();
+      await refreshSpawnLog();
     } catch (e) {
       setError(e instanceof Error ? e.message : "advance failed");
     } finally {
       setBusy(false);
     }
-  }, [sessionId, refresh]);
+  }, [sessionId, refresh, refreshSpawnLog]);
 
   const total = meta?.events ?? 0;
   const cursor = meta?.cursor ?? 0;
@@ -212,7 +230,7 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
 
       {last?.spawnIntents?.length ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">spawn intents (M1)</h2>
+          <h2 className="font-semibold">spawn intents (replay)</h2>
           {last.spawnIntents.map((intent, i) => (
             <div
               key={i}
@@ -227,6 +245,41 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
                   <div className="font-semibold text-emerald-900">would_spawn_pulse</div>
                   <div>{intent.pulse?.question}</div>
                   <div className="text-zinc-600">{intent.pulse?.pulseType}</div>
+                </>
+              ) : (
+                <>
+                  skip · {intent.event?.kind} — {intent.reason}
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {orchestratorLog.length ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold">orchestrator spawn log (live M1)</h2>
+          <p className="text-[10px] text-zinc-500">
+            Redis <code>orchestrator:spawn_log</code> — needs{" "}
+            <code>pnpm orchestrator:listen</code>
+          </p>
+          {orchestratorLog.map((intent, i) => (
+            <div
+              key={`orch-${i}-${intent.at ?? i}`}
+              className={
+                intent.action === "would_spawn_pulse"
+                  ? "rounded border border-blue-300 bg-blue-50 p-3 text-xs"
+                  : "rounded bg-zinc-100 p-2 text-xs text-zinc-500"
+              }
+            >
+              {intent.action === "would_spawn_pulse" ? (
+                <>
+                  <div className="font-semibold text-blue-900">would_spawn_pulse</div>
+                  <div>{intent.pulse?.question}</div>
+                  <div className="text-zinc-600">
+                    {intent.pulse?.pulseType} · fixture {intent.event?.fixtureId}
+                  </div>
+                  {intent.at ? <div className="text-zinc-400">{intent.at}</div> : null}
                 </>
               ) : (
                 <>

@@ -18,6 +18,8 @@ export type ScoreUpdate = {
   ts?: number;
   Ts?: number;
   stats?: Record<string, { value?: number } | number>;
+  Stats?: Record<string, { value?: number } | number>;
+  Clock?: { Seconds?: number; Running?: boolean };
 };
 
 export type OddsUpdate = {

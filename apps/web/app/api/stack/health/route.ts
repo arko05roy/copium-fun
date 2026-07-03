@@ -1,5 +1,5 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { INGEST_META_KEY, ORCHESTRATOR_META_KEY, SPAWN_LOG_KEY } from "@copium/txline";
+import { INGEST_META_KEY, ORCHESTRATOR_META_KEY, SPAWN_LOG_KEY } from "@copium/txline/redis";
 import { Redis } from "ioredis";
 import { NextResponse } from "next/server";
 

@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · 1 Jul 2026 — fixture simulator from TxLINE historical (`pnpm verify:d5`, `/sim`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · 4 Jul 2026 — orchestrator M1 + sim UI scrub (`pnpm verify:d7`, `/sim`)
 
 ---
 
@@ -766,7 +766,7 @@ Redis events + odds
 - [x] Supabase `001_pulses.sql` migration (`@copium/db` — 11 tables live)
 - [ ] CI
 
-### EPIC B — TxLINE + simulator (D3–D7) — **D4 ✅**
+### EPIC B — TxLINE + simulator (D3–D7) — **D7 ✅**
 
 - [x] Guest auth (`POST /auth/guest/start`)
 - [x] Devnet on-chain `subscribe` (tier 1) + `POST /api/token/activate`
@@ -774,7 +774,7 @@ Redis events + odds
 - [x] SSE ingest (`apps/txline-ingest`) — odds + scores fork, Redis pub/sub, `:9090/health`
 - [x] Event detector (`@copium/txline/detect`) — goal, phase change, odds move >5pp → `event:{fixtureId}`
 - [x] Simulator session builder (D5) — `buildSimBundle` + `replayStep` → Redis goal inject (`pnpm verify:d5`)
-- [ ] Health dashboard (D7 sim UI)
+- [x] Health dashboard (D7 sim UI) — `/sim` stack health + `/sim/[sessionId]` scrub + orchestrator `would_spawn_pulse` (`pnpm verify:d7`)
 
 ### EPIC C — pulse-engine + settlement internal (D8–D10) — **D6 ✅**
 
@@ -831,7 +831,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D4 ✅** | SSE ingest + event detector | Redis events ✅ (`pnpm txline:ingest` + `pnpm verify:d4`) |
 | **D5 ✅** | Simulator session from historical fixture | inject goal ✅ (`pnpm verify:d5`, `/sim`) |
 | **D6 ✅** | `pulse-engine` + tests | 30+ unit cases + `pnpm verify:d6` on TxLINE historical |
-| D7 | **M1:** event → log "would spawn pulse" | sim UI scrub |
+| **D7 ✅** | **M1:** event → log `would_spawn_pulse` | sim UI scrub + `/api/stack/health` (`pnpm verify:d7`) |
 
 ### Week 2 — Chain + Proof + orchestrator (D8–D14)
 
@@ -867,7 +867,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 |----|------|--------|
 | T0 | txline ingest + Redis events | `pnpm redis:up` · `pnpm txline:ingest` · `pnpm verify:d4` |
 | T0b | fixture simulator + goal inject | `pnpm verify:d5` · `/sim` |
-| T0c | D1–D6 stack | `pnpm verify:d1-d6` (spawns ingest for D4 if token set) |
+| T0c | D1–D7 stack | `pnpm verify:d1-d7` (spawns ingest for D4 if token set) |
 | T1 | pulse-engine unit | `pnpm --filter @copium/pulse-engine test` |
 | T2 | settlement lock/validate | integration historical fixture |
 | T3 | validate_stat | settlement package |

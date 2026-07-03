@@ -10,6 +10,11 @@ type StackHealth = {
   orchestrator: {
     reachable: boolean;
     spawnLogCount?: number;
+    spawnLog?: Array<{
+      action: string;
+      pulse?: { question: string; pulseType: string };
+      at?: string;
+    }>;
     counters?: { wouldSpawn?: number; eventsSeen?: number };
   };
   supabase: { ok: boolean; tables?: Record<string, number> };
@@ -30,10 +35,14 @@ export default function SimIndexPage() {
   const [health, setHealth] = useState<StackHealth | null>(null);
 
   useEffect(() => {
-    void fetch("/api/stack/health")
-      .then((r) => r.json())
-      .then((data: StackHealth) => setHealth(data))
-      .catch(() => setHealth(null));
+    const poll = () =>
+      void fetch("/api/stack/health")
+        .then((r) => r.json())
+        .then((data: StackHealth) => setHealth(data))
+        .catch(() => setHealth(null));
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => clearInterval(id);
   }, []);
 
   const build = useCallback(async () => {
@@ -93,6 +102,20 @@ export default function SimIndexPage() {
                 : "schema missing"}
             </span>
           </div>
+          {health.orchestrator.spawnLog?.length ? (
+            <div className="mt-3 space-y-1 border-t border-zinc-100 pt-2">
+              <div className="text-zinc-500">recent spawn log</div>
+              {health.orchestrator.spawnLog.slice(0, 3).map((row, i) => (
+                <div key={i} className="truncate text-[10px]">
+                  {row.action === "would_spawn_pulse" ? (
+                    <span className="text-emerald-800">{row.pulse?.question}</span>
+                  ) : (
+                    <span className="text-zinc-400">skip</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : (
         <p className="text-zinc-500 text-xs">checking stack…</p>

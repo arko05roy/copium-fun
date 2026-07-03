@@ -5,7 +5,7 @@ import {
   type FixtureDetectState,
   type OddsUpdate,
   type ScoreUpdate,
-} from "@copium/txline";
+} from "@copium/txline/detect";
 import { minuteFromUpdate } from "./scores.js";
 import { suggestPulse, type SpawnableEventKind, type SuggestedPulse } from "./spawn.js";
 

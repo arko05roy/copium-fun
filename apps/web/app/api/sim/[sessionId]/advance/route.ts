@@ -1,6 +1,6 @@
 import { getSimulatorSession, updateSimulatorCursor } from "@copium/db";
 import { createSpawnTracker } from "@copium/pulse-engine/spawn-handler";
-import type { ScoreUpdate } from "@copium/txline";
+import type { ScoreUpdate } from "@copium/txline/detect";
 import { isSimBundle, loadEnv, replayStep, detectStateAtCursor } from "@copium/txline/sim";
 import { Redis } from "ioredis";
 import { NextResponse } from "next/server";
