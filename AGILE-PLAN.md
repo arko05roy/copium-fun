@@ -12,7 +12,7 @@
 
 **Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · 4 Jul 2026 — `validate_stat` spike (`pnpm verify:d8`, `/sim` → validate_stat)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · 4 Jul 2026 — `create_pulse` + `open_position` (`pnpm verify:d9`, devnet deploy)
 
 ---
 
@@ -787,8 +787,13 @@ Redis events + odds
 - [x] `/api/settlement/validate-stat` + sim session UI
 - [ ] lock odds snapshot (D9–D10)
 
-### EPIC D — `copium-pulses` (D10–D12)
-Anchor: create_pulse, open_position, settle crank, devnet USDC
+### EPIC D — `copium-pulses` (D9–D12) — **D9 ✅**
+
+- [x] `create_pulse` — PulsePool PDA + stake vault
+- [x] `open_position` — YES/NO SPL transfer + Position PDA
+- [x] `@copium/pulses-client` — PDA helpers + devnet program id
+- [x] `pnpm verify:d9` — IDL + anchor test on devnet
+- [ ] `lock_pulse`, `post_settlement`, `settle_pulse`, `withdraw` (D10–D12)
 
 ### EPIC E — pulse-orchestrator (D11–D13)
 Spawn on event, close scheduler, enqueue settle
@@ -842,7 +847,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | Day | Focus | Exit |
 |-----|-------|------|
 | **D8 ✅** | validate_stat spike | `.view()` true (`pnpm verify:d8`) |
-| D9 | `copium-pulses` create + open | anchor test |
+| **D9 ✅** | `copium-pulses` create + open | anchor test (`pnpm verify:d9`) |
 | D10 | pulse-orchestrator spawn E2E | pulse row + pool |
 | D11 | settlement-worker Phase A | proof_bundles |
 | D12 | Phase B crank + withdraw | settled devnet |

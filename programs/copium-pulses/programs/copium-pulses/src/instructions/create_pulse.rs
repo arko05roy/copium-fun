@@ -1,46 +1,8 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, Token, TokenAccount};
 
+use crate::CreatePulse;
 use crate::error::CopiumError;
-use crate::state::{PoolStatus, PulsePool, PULSE_POOL_SEED, VAULT_SEED};
-
-#[derive(Accounts)]
-#[instruction(fixture_id: u64, pulse_type: u8, opens_at: i64, closes_at: i64)]
-pub struct CreatePulse<'info> {
-    #[account(mut)]
-    pub authority: Signer<'info>,
-
-    #[account(
-        init,
-        payer = authority,
-        space = PulsePool::LEN,
-        seeds = [
-            PULSE_POOL_SEED,
-            authority.key().as_ref(),
-            &fixture_id.to_le_bytes(),
-            &[pulse_type],
-            &opens_at.to_le_bytes(),
-        ],
-        bump,
-    )]
-    pub pulse_pool: Account<'info, PulsePool>,
-
-    pub stake_mint: Account<'info, Mint>,
-
-    #[account(
-        init,
-        payer = authority,
-        seeds = [VAULT_SEED, pulse_pool.key().as_ref()],
-        bump,
-        token::mint = stake_mint,
-        token::authority = pulse_pool,
-    )]
-    pub vault: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
-}
+use crate::state::PoolStatus;
 
 pub fn handler(
     ctx: Context<CreatePulse>,

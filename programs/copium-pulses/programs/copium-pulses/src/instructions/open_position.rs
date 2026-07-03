@@ -1,46 +1,9 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self, Transfer};
 
+use crate::OpenPosition;
 use crate::error::CopiumError;
-use crate::state::{PoolStatus, Position, PositionSide, PulsePool, POSITION_SEED};
-
-#[derive(Accounts)]
-#[instruction(side: u8, stake: u64, odds_message_hash: [u8; 32])]
-pub struct OpenPosition<'info> {
-    #[account(mut)]
-    pub owner: Signer<'info>,
-
-    #[account(mut)]
-    pub pulse_pool: Account<'info, PulsePool>,
-
-    #[account(
-        init_if_needed,
-        payer = owner,
-        space = Position::LEN,
-        seeds = [POSITION_SEED, pulse_pool.key().as_ref(), owner.key().as_ref(), &[side]],
-        bump,
-    )]
-    pub position: Account<'info, Position>,
-
-    #[account(
-        mut,
-        constraint = owner_token_account.mint == pulse_pool.stake_mint @ CopiumError::InvalidSide,
-        constraint = owner_token_account.owner == owner.key() @ CopiumError::InvalidSide,
-    )]
-    pub owner_token_account: Account<'info, TokenAccount>,
-
-    #[account(
-        mut,
-        seeds = [crate::state::VAULT_SEED, pulse_pool.key().as_ref()],
-        bump = pulse_pool.vault_bump,
-        constraint = vault.mint == pulse_pool.stake_mint @ CopiumError::InvalidSide,
-        constraint = vault.owner == pulse_pool.key() @ CopiumError::InvalidSide,
-    )]
-    pub vault: Account<'info, TokenAccount>,
-
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-}
+use crate::state::{PoolStatus, PositionSide};
 
 pub fn handler(
     ctx: Context<OpenPosition>,

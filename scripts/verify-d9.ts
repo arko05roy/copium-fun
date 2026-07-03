@@ -34,7 +34,7 @@ function main(): void {
   }
   console.log("IDL ok — create_pulse, open_position");
 
-  run("anchor test", "anchor", ["test"], join(root, "programs/copium-pulses"));
+  run("anchor test", "env", ["-u", "CARGO_TARGET_DIR", "anchor", "test"], join(root, "programs/copium-pulses"));
   console.log("verify:d9 ok");
 }
 

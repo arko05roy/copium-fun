@@ -1,24 +1,60 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import {
-  POSITION_SIDE,
-  pulsePoolPda,
-  positionPda,
-  TXLINE_DEVNET,
-  vaultPda,
-} from "@copium/pulses-client";
-import {
   createAssociatedTokenAccountInstruction,
   createMint,
   getAssociatedTokenAddressSync,
   mintTo,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { assert } from "chai";
 import { CopiumPulses } from "../target/types/copium_pulses";
 
+/** TxLINE devnet USDT — @copium/config TXLINE_DEVNET.usdtMint */
+const DEVNET_STAKE_MINT = "ELWTKspHKCnCfCiCiqYw1EDH77k8VCP74dK9qytG2Ujh";
+
+const SIDE_YES = 0;
+const SIDE_NO = 1;
 const PULSE_TYPE_NEXT_GOAL = 1;
+
+function pulsePoolPda(
+  programId: PublicKey,
+  authority: PublicKey,
+  fixtureId: bigint,
+  pulseType: number,
+  opensAt: bigint,
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("pulse"),
+      authority.toBuffer(),
+      Buffer.from(new BigUint64Array([fixtureId]).buffer),
+      Buffer.from([pulseType]),
+      Buffer.from(new BigInt64Array([opensAt]).buffer),
+    ],
+    programId,
+  )[0];
+}
+
+function vaultPda(programId: PublicKey, pool: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("vault"), pool.toBuffer()],
+    programId,
+  )[0];
+}
+
+function positionPda(
+  programId: PublicKey,
+  pool: PublicKey,
+  owner: PublicKey,
+  side: number,
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("position"), pool.toBuffer(), owner.toBuffer(), Buffer.from([side])],
+    programId,
+  )[0];
+}
 
 describe("copium-pulses D9", () => {
   const provider = anchor.AnchorProvider.env();
@@ -28,8 +64,8 @@ describe("copium-pulses D9", () => {
   const authority = (provider.wallet as anchor.Wallet).payer;
   const trader = Keypair.generate();
 
-  let stakeMint: anchor.web3.PublicKey;
-  let traderAta: anchor.web3.PublicKey;
+  let stakeMint: PublicKey;
+  let traderAta: PublicKey;
 
   const fixtureId = 17_926_704n;
   const opensAt = BigInt(Math.floor(Date.now() / 1000) - 10);
@@ -37,10 +73,10 @@ describe("copium-pulses D9", () => {
   const oddsLockRoot = Buffer.alloc(32, 7);
   const oddsMessageHash = Buffer.alloc(32, 9);
 
-  let pool: anchor.web3.PublicKey;
-  let vault: anchor.web3.PublicKey;
-  let yesPosition: anchor.web3.PublicKey;
-  let noPosition: anchor.web3.PublicKey;
+  let pool: PublicKey;
+  let vault: PublicKey;
+  let yesPosition: PublicKey;
+  let noPosition: PublicKey;
 
   before(async () => {
     stakeMint = await createMint(
@@ -86,18 +122,8 @@ describe("copium-pulses D9", () => {
       opensAt,
     );
     vault = vaultPda(program.programId, pool);
-    yesPosition = positionPda(
-      program.programId,
-      pool,
-      trader.publicKey,
-      POSITION_SIDE.yes,
-    );
-    noPosition = positionPda(
-      program.programId,
-      pool,
-      trader.publicKey,
-      POSITION_SIDE.no,
-    );
+    yesPosition = positionPda(program.programId, pool, trader.publicKey, SIDE_YES);
+    noPosition = positionPda(program.programId, pool, trader.publicKey, SIDE_NO);
   });
 
   it("create_pulse opens pool + vault", async () => {
@@ -138,7 +164,7 @@ describe("copium-pulses D9", () => {
     const noStake = 500_000;
 
     await program.methods
-      .openPosition(POSITION_SIDE.yes, new anchor.BN(yesStake), [...oddsMessageHash])
+      .openPosition(SIDE_YES, new anchor.BN(yesStake), [...oddsMessageHash])
       .accountsPartial({
         owner: trader.publicKey,
         pulsePool: pool,
@@ -152,7 +178,7 @@ describe("copium-pulses D9", () => {
       .rpc();
 
     await program.methods
-      .openPosition(POSITION_SIDE.no, new anchor.BN(noStake), [...oddsMessageHash])
+      .openPosition(SIDE_NO, new anchor.BN(noStake), [...oddsMessageHash])
       .accountsPartial({
         owner: trader.publicKey,
         pulsePool: pool,
@@ -171,16 +197,13 @@ describe("copium-pulses D9", () => {
 
     const yesPos = await program.account.position.fetch(yesPosition);
     assert.equal(yesPos.stake.toNumber(), yesStake);
-    assert.equal(yesPos.side, POSITION_SIDE.yes);
+    assert.equal(yesPos.side, SIDE_YES);
 
     const vaultAcct = await provider.connection.getTokenAccountBalance(vault);
     assert.equal(vaultAcct.value.amount, String(yesStake + noStake));
   });
 
-  it("devnet stake mint matches @copium/config", () => {
-    assert.equal(
-      TXLINE_DEVNET.usdtMint,
-      "ELWTKspHKCnCfCiCiqYw1EDH77k8VCP74dK9qytG2Ujh",
-    );
+  it("devnet stake mint matches TxLINE program addresses doc", () => {
+    assert.equal(DEVNET_STAKE_MINT, "ELWTKspHKCnCfCiCiqYw1EDH77k8VCP74dK9qytG2Ujh");
   });
 });
