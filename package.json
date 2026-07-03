@@ -26,6 +26,7 @@
     "verify:d6": "pnpm --filter @copium/config build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d6.ts",
     "verify:d7": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d7.ts",
     "verify:d8": "pnpm --filter @copium/config build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && node --import tsx scripts/verify-d8.ts",
+    "verify:d9": "node --import tsx scripts/verify-d9.ts",
     "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts",
     "verify:d1-d6": "node --import tsx scripts/verify-d1-d6.ts",
     "verify:d1-d7": "node --import tsx scripts/verify-d1-d7.ts"
