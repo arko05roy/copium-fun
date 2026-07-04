@@ -209,6 +209,15 @@ export async function executeAgentTrade(
   };
 }
 
+/** D16 — Officer + Quant both evaluate; return all fills. */
+export async function executeAllAgentsOnPulse(pulseId: string): Promise<ExecuteAgentResult[]> {
+  const results: ExecuteAgentResult[] = [];
+  for (const agent of AGENTS) {
+    results.push(await executeAgentTrade(pulseId, agent));
+  }
+  return results;
+}
+
 /** D15 — first devnet fill: Officer if gap>20pp, else Quant toward line. */
 export async function executeFirstAgentOnPulse(pulseId: string): Promise<ExecuteAgentResult> {
   for (const agent of AGENTS) {

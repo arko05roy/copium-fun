@@ -127,6 +127,11 @@ async function settlePulseRow(
     bundle.truth.winningSide,
   );
 
+  if (pulse.fixture_id) {
+    const { scoreRoomDuelsForPulse } = await import("./score-duel.js");
+    await scoreRoomDuelsForPulse(pulse, bundle.truth.winningSide);
+  }
+
   return {
     pulseId: pulse.id,
     winningSide: bundle.truth.winningSide,

@@ -1,5 +1,7 @@
 import { SOLANA_DEVNET } from "@copium/config";
 
+import { CopyButton } from "./copy-button";
+
 export type TapeRow = {
   id: string;
   agent_slug: string;
@@ -40,6 +42,7 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
             <th className="px-3 py-2">Side</th>
             <th className="px-3 py-2">Stake</th>
             <th className="px-3 py-2">Tx</th>
+            <th className="px-3 py-2">Copy</th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +80,22 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
                 ) : (
                   "—"
                 )}
+              </td>
+              <td className="px-3 py-2.5">
+                <div className="flex gap-2">
+                  <CopyButton
+                    tradeId={row.id}
+                    agentName={row.agent_name}
+                    side={row.side}
+                    mode="copy"
+                  />
+                  <CopyButton
+                    tradeId={row.id}
+                    agentName={row.agent_name}
+                    side={row.side}
+                    mode="fade"
+                  />
+                </div>
               </td>
             </tr>
           ))}

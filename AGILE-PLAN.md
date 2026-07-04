@@ -816,14 +816,14 @@ Redis events + odds
 - [x] crank wiring on proof page (`verify_tx` from Phase B)
 - [x] **Track 1 video ready D14** — `/proof` index · sim §17A recorder · `pnpm verify:d14`
 
-### EPIC G — Agent runtime + Desk (D13–D17) — **D15 ✅ partial**
+### EPIC G — Agent runtime + Desk (D13–D17) — **D17 ✅**
 
 - [x] `apps/agent-runtime` — Officer execute on `pulse:spawned`
 - [x] Spawner LLM (`@copium/pulse-engine/spawner-llm`) wired in orchestrator spawn
 - [x] `/desk` tape + reasoning · `/api/desk/tape`
 - [x] `pnpm verify:d15` — devnet `open_position` + agent_trades row
-- [ ] Officer + Quant + Desk tape polish — **D16**
-- [ ] **Track 2 video ready D17**
+- [x] Officer + Quant + Desk tape polish — **D16**
+- [x] **Track 2 video ready D17**
 
 ### EPIC H — Mobile Feed + Rooms (D14–D18)
 Pulse cards, swipe, duel banner, receipts, join-room — **Track 3 video ready D18**
@@ -880,8 +880,8 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | Day | Focus | Exit |
 |-----|-------|------|
 | **D15 ✅** | Spawner LLM + first agent execute | tx on Desk (`pnpm verify:d15`) |
-| D16 | Officer + Quant + Desk tape | copy works |
-| D17 | **M3:** Track 2 video draft OK | §17B recordable |
+| D16 ✅ | Officer + Quant + Desk tape | copy works |
+| D17 ✅ | **M3:** Track 2 video draft OK | §17B recordable |
 | D18 | Mobile PulseCard swipe + duel | §17C recordable |
 | D19 | Receipts OG + Room join | share works |
 | D20 | Blinks + JUDGE.md + polish | 3 judge paths |
@@ -956,9 +956,9 @@ OPENAI_API_KEY=...          # Spawner + Narrator
 - [ ] **Loom §17A** (standalone)
 
 **Track 2**
-- [ ] `agent-runtime` with LLM Spawner + 2 executors
-- [ ] `/desk` tape + PnL
-- [ ] copy/fade Blinks
+- [x] `agent-runtime` with LLM Spawner + 2 executors
+- [x] `/desk` tape + PnL
+- [x] copy/fade Blinks
 - [ ] **Loom §17B** (standalone)
 
 **Track 3**

@@ -27,6 +27,23 @@ export type AgentTradeWithAgent = AgentTradeRow & {
   pulse_question: string;
 };
 
+export type AgentTradeDetail = AgentTradeWithAgent & {
+  onchain_pool_pubkey: string | null;
+  odds_message_id: string | null;
+  pulse_status: string | null;
+  winning_side: string | null;
+};
+
+export type AgentPnlRow = {
+  agent_slug: string;
+  agent_name: string;
+  fills: number;
+  wins: number;
+  losses: number;
+  open_fills: number;
+  pnl_usdt: number;
+};
+
 type AgentInsert = {
   slug: string;
   display_name: string;
@@ -185,4 +202,143 @@ export async function listAgentTape(limit = 40): Promise<AgentTradeWithAgent[]> 
       pulse_question: pulsesById.get(row.pulse_id) ?? "",
     };
   });
+}
+
+type PulseMeta = {
+  question: string;
+  status: string | null;
+  onchain_pool_pubkey: string | null;
+  odds_message_id: string | null;
+  winning_side: string | null;
+};
+
+async function fetchPulseMeta(pulseId: string): Promise<PulseMeta | null> {
+  const { data } = await (createDbClient().from("pulses") as unknown as {
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        single: () => Promise<{
+          data: {
+            question: string;
+            status: string | null;
+            onchain_pool_pubkey: string | null;
+            odds_message_id: string | null;
+            winning_side: string | null;
+          } | null;
+          error: unknown;
+        }>;
+      };
+    };
+  })
+    .select(
+      "question, status, onchain_pool_pubkey, odds_message_id, winning_side",
+    )
+    .eq("id", pulseId)
+    .single();
+  return data;
+}
+
+/** Copy/fade Blink — trade + open pulse pool. */
+export async function getAgentTradeById(tradeId: string): Promise<AgentTradeDetail | null> {
+  const { data: trade, error } = await (createDbClient().from("agent_trades") as unknown as {
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        single: () => Promise<{ data: AgentTradeRow | null; error: { message: string } | null }>;
+      };
+    };
+  })
+    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+    .eq("id", tradeId)
+    .single();
+  if (error || !trade) return null;
+
+  const { data: agent } = await agents()
+    .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+    .eq("id", trade.agent_id)
+    .single();
+  const pulse = await fetchPulseMeta(trade.pulse_id);
+  if (!agent || !pulse) return null;
+
+  return {
+    ...trade,
+    agent_slug: agent.slug,
+    agent_name: agent.display_name,
+    pulse_question: pulse.question,
+    onchain_pool_pubkey: pulse.onchain_pool_pubkey,
+    odds_message_id: pulse.odds_message_id,
+    pulse_status: pulse.status,
+    winning_side: pulse.winning_side,
+  };
+}
+
+/** Settled pulse PnL — wins/losses from real winning_side only. */
+export async function listAgentPnl(): Promise<AgentPnlRow[]> {
+  const { data: trades, error } = await (createDbClient().from("agent_trades") as unknown as {
+    select: (cols: string) => {
+      order: (
+        col: string,
+        opts: { ascending: boolean },
+      ) => Promise<{ data: AgentTradeRow[] | null; error: { message: string } | null }>;
+    };
+  })
+    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  if (!trades?.length) return [];
+
+  const agentIds = [...new Set(trades.map((t) => t.agent_id))];
+  const pulseIds = [...new Set(trades.map((t) => t.pulse_id))];
+
+  const agentsById = new Map<string, AgentRow>();
+  for (const id of agentIds) {
+    const { data } = await agents()
+      .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+      .eq("id", id)
+      .single();
+    if (data) agentsById.set(id, data);
+  }
+
+  const pulsesById = new Map<string, PulseMeta>();
+  for (const id of pulseIds) {
+    const meta = await fetchPulseMeta(id);
+    if (meta) pulsesById.set(id, meta);
+  }
+
+  const board = new Map<string, AgentPnlRow>();
+  for (const trade of trades) {
+    const agent = agentsById.get(trade.agent_id);
+    const slug = agent?.slug ?? "unknown";
+    const row =
+      board.get(slug) ??
+      ({
+        agent_slug: slug,
+        agent_name: agent?.display_name ?? "Agent",
+        fills: 0,
+        wins: 0,
+        losses: 0,
+        open_fills: 0,
+        pnl_usdt: 0,
+      } satisfies AgentPnlRow);
+    row.fills += 1;
+
+    const pulse = pulsesById.get(trade.pulse_id);
+    const stakeUsdt = (trade.stake ?? 0) / 1_000_000;
+    if (!pulse?.winning_side || !trade.side) {
+      row.open_fills += 1;
+    } else if (trade.side === pulse.winning_side) {
+      row.wins += 1;
+      row.pnl_usdt += stakeUsdt;
+    } else {
+      row.losses += 1;
+      row.pnl_usdt -= stakeUsdt;
+    }
+    board.set(slug, row);
+  }
+
+  return [...board.values()].sort((a, b) => b.pnl_usdt - a.pnl_usdt);
 }

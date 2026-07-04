@@ -82,8 +82,11 @@ export type { CreatePulseInput, CreatePulseResult } from "./create.js";
 export {
   openPositionOnChain,
   oddsMessageHash,
+  loadIdl,
 } from "./open-position.js";
 export type { OpenPositionInput, OpenPositionResult } from "./open-position.js";
+export { buildOpenPositionTransaction } from "./build-open-position-tx.js";
+export type { BuildOpenPositionInput } from "./build-open-position-tx.js";
 export {
   crankPulseOnChain,
   withdrawPositionOnChain,

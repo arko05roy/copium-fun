@@ -22,6 +22,7 @@ const nextConfig: NextConfig = {
     "@solana/web3.js",
     "@copium/settlement",
     "@copium/txline",
+    "@copium/pulses-client",
   ],
   transpilePackages: ["@copium/config", "@copium/db"],
 };

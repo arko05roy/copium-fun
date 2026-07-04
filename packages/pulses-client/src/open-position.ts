@@ -27,7 +27,7 @@ import {
 
 type CopiumPulsesIdl = Idl & { address: string };
 
-function loadIdl(): CopiumPulsesIdl {
+export function loadIdl(): CopiumPulsesIdl {
   const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
   const path = join(root, "programs/copium-pulses/target/idl/copium_pulses.json");
   return JSON.parse(readFileSync(path, "utf8")) as CopiumPulsesIdl;

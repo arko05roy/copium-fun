@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { AGENT_RUNTIME_META_KEY, loadEnv, PULSE_SPAWNED_CHANNEL } from "@copium/txline";
 import { Redis } from "ioredis";
-import { executeFirstAgentOnPulse } from "./executor.js";
+import { executeAllAgentsOnPulse } from "./executor.js";
 
 loadEnv();
 
@@ -54,24 +54,28 @@ export async function startAgentRuntime(): Promise<{
     counters.pulsesSeen += 1;
     counters.lastPulseAt = new Date().toISOString();
 
-    const result = await executeFirstAgentOnPulse(payload.pulseId);
-    if (result.skipped) {
+    const results = await executeAllAgentsOnPulse(payload.pulseId);
+    const filled = results.filter((r) => !r.skipped);
+    if (!filled.length) {
       counters.tradesSkipped += 1;
-      console.log(JSON.stringify({ action: "skip_trade", pulseId: payload.pulseId, reason: result.reason }));
+      const reason = results.map((r) => r.reason).filter(Boolean).join("; ") || "no signal";
+      console.log(JSON.stringify({ action: "skip_trade", pulseId: payload.pulseId, reason }));
       return;
     }
 
-    counters.tradesExecuted += 1;
+    counters.tradesExecuted += filled.length;
     counters.lastTradeAt = new Date().toISOString();
-    console.log(
-      JSON.stringify({
-        action: "agent_trade",
-        agent: result.agentSlug,
-        pulseId: payload.pulseId,
-        side: result.side,
-        executeTx: result.executeTx,
-      }),
-    );
+    for (const result of filled) {
+      console.log(
+        JSON.stringify({
+          action: "agent_trade",
+          agent: result.agentSlug,
+          pulseId: payload.pulseId,
+          side: result.side,
+          executeTx: result.executeTx,
+        }),
+      );
+    }
   };
 
   await sub.subscribe(PULSE_SPAWNED_CHANNEL);

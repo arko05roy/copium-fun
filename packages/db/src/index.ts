@@ -19,10 +19,18 @@ export type { SimSessionRow } from "./simulator.js";
 export {
   ensureAgent,
   getAgentBySlug,
+  getAgentTradeById,
   insertAgentTrade,
+  listAgentPnl,
   listAgentTape,
 } from "./agents.js";
-export type { AgentRow, AgentTradeRow, AgentTradeWithAgent } from "./agents.js";
+export type {
+  AgentRow,
+  AgentTradeRow,
+  AgentTradeDetail,
+  AgentTradeWithAgent,
+  AgentPnlRow,
+} from "./agents.js";
 export {
   getProofBundle,
   insertProofBundle,
@@ -34,3 +42,16 @@ export {
   updateProofVerifyTx,
 } from "./settlement.js";
 export type { ProofBundleRow, SettledProofPulse } from "./settlement.js";
+export {
+  addRoomMemberDuelPoints,
+  ensureRoom,
+  getRoom,
+  getRoomDuel,
+  insertCrowdPosition,
+  joinRoomMember,
+  listCrowdPositionsForPulse,
+  listRoomMembers,
+  listRoomsForFixture,
+  walletToUserId,
+} from "./rooms.js";
+export type { RoomDuelScore, RoomMemberRow, RoomRow } from "./rooms.js";
