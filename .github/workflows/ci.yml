@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.20.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: |
+          pnpm --filter @copium/config build
+          pnpm --filter @copium/db build
+          pnpm --filter @copium/pulse-engine build
+          pnpm --filter @copium/txline build
+          pnpm --filter @copium/settlement build
+          pnpm --filter @copium/pulses-client build
+
+      - name: Typecheck
+        run: |
+          pnpm --filter @copium/mobile typecheck
+          pnpm --filter @copium/web exec tsc --noEmit
+
+      - name: Pulse engine tests
+        run: pnpm --filter @copium/pulse-engine test

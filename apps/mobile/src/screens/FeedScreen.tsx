@@ -12,18 +12,25 @@ import {
   View,
 } from "react-native";
 
-import { COPIUM_TAGLINE, SOLANA_DEVNET } from "@copium/config";
+import { COPIUM_TAGLINE } from "@copium/config";
 
+import { DevnetBadge } from "../components/DevnetBadge";
 import { DuelBanner } from "../components/DuelBanner";
+import { AgentFlyby } from "../components/AgentFlyby";
+import { LiveHeader } from "../components/LiveHeader";
 import { PulseCard, openPulsePickBlink } from "../components/PulseCard";
 import { ReceiptShare } from "../components/ReceiptShare";
 import {
+  fetchAgentFlyby,
+  fetchFeedContext,
   fetchOpenPulses,
   fetchRoomDuel,
   fetchWalletReceipts,
   joinRoom,
   joinRoomBlinkUrl,
+  type AgentFlyby as AgentFlybyRow,
   type DuelScore,
+  type FeedContext,
   type FeedPulse,
   type WalletReceipt,
 } from "../lib/api";
@@ -31,6 +38,8 @@ import { getStoredRoomId, getStoredWallet, setStoredRoomId, setStoredWallet } fr
 
 export function FeedScreen() {
   const [pulses, setPulses] = useState<FeedPulse[]>([]);
+  const [context, setContext] = useState<FeedContext | null>(null);
+  const [flyby, setFlyby] = useState<AgentFlybyRow | null>(null);
   const [receipts, setReceipts] = useState<WalletReceipt[]>([]);
   const [duel, setDuel] = useState<DuelScore | null>(null);
   const [wallet, setWallet] = useState<string | null>(null);
@@ -44,12 +53,16 @@ export function FeedScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [open, w, r] = await Promise.all([
+      const [open, w, r, ctx, latestFlyby] = await Promise.all([
         fetchOpenPulses(),
         getStoredWallet(),
         getStoredRoomId(),
+        fetchFeedContext(),
+        fetchAgentFlyby(),
       ]);
       setPulses(open);
+      setContext(ctx);
+      setFlyby(latestFlyby);
       setWallet(w);
       setRoomId(r);
       if (w && r) {
@@ -131,9 +144,16 @@ export function FeedScreen() {
         />
       }
     >
-      <Text style={styles.kicker}>Track 3 · Match Feed · §17C</Text>
-      <Text style={styles.title}>{COPIUM_TAGLINE}</Text>
-      <Text style={styles.cluster}>{SOLANA_DEVNET.cluster} · live open pulses</Text>
+      <View style={styles.titleRow}>
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text style={styles.kicker}>Track 3 · Match Feed · §17C</Text>
+          <Text style={styles.title}>{COPIUM_TAGLINE}</Text>
+        </View>
+        <DevnetBadge />
+      </View>
+
+      <LiveHeader context={context} />
+      <AgentFlyby flyby={flyby} />
 
       {!wallet ? (
         <View style={styles.setup}>
@@ -228,6 +248,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 8,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 4,
+  },
   kicker: {
     fontSize: 10,
     letterSpacing: 2.5,
@@ -239,11 +266,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     color: "#F4FFF7",
     marginTop: 4,
-  },
-  cluster: {
-    fontSize: 12,
-    color: "#6E9080",
-    marginBottom: 12,
   },
   setup: {
     gap: 8,

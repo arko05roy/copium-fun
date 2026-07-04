@@ -30,6 +30,32 @@ export type WalletReceipt = {
   share_url: string;
 };
 
+export type FeedContext = {
+  score: string;
+  scoreHome: number;
+  scoreAway: number;
+  phase: string;
+  minute: number | null;
+  copiumGap: number;
+  crowdYesPct: number;
+  linePct: number;
+  fixtureId: number | null;
+  simSessionId: string | null;
+  pulseQuestion: string | null;
+};
+
+export type AgentFlyby = {
+  id: string;
+  agentName: string;
+  agentSlug: string;
+  side: string | null;
+  stake: number | null;
+  reasoning: string | null;
+  executeTx: string | null;
+  pulseQuestion: string;
+  createdAt: string | null;
+};
+
 const webBase = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:3000";
 
 export function webApiBase(): string {
@@ -43,6 +69,20 @@ export async function fetchOpenPulses(): Promise<FeedPulse[]> {
     throw new Error(json.error ?? "feed fetch failed");
   }
   return json.pulses;
+}
+
+export async function fetchFeedContext(): Promise<FeedContext | null> {
+  const res = await fetch(`${webBase}/api/feed/context`);
+  const json = (await res.json()) as { ok?: boolean; context?: FeedContext; error?: string };
+  if (!res.ok || !json.ok || !json.context) return null;
+  return json.context;
+}
+
+export async function fetchAgentFlyby(): Promise<AgentFlyby | null> {
+  const res = await fetch(`${webBase}/api/feed/flyby`);
+  const json = (await res.json()) as { ok?: boolean; flyby?: AgentFlyby | null; error?: string };
+  if (!res.ok || !json.ok) return null;
+  return json.flyby ?? null;
 }
 
 export async function fetchRoomDuel(roomId: string, wallet: string): Promise<DuelScore> {

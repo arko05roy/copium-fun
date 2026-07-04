@@ -10,7 +10,40 @@ Three separate products from one Pulse engine. Pick your track:
 | 2 — Agent Desk | `/desk` | BRAND-DOC §17B |
 | 3 — Match Feed | mobile app + `/room/demo` | BRAND-DOC §17C |
 
-Run `pnpm verify:d20` to confirm all three paths respond.
+Run `pnpm verify:d21` for full dev ship checklist.
+
+---
+
+## Deploy (web)
+
+```bash
+# Vercel — set root directory to apps/web
+# Env: NEXT_PUBLIC_SITE_URL, SUPABASE_*, TXLINE_API_TOKEN, etc. (.env.example)
+vercel --cwd apps/web
+```
+
+Set `NEXT_PUBLIC_SITE_URL` to production URL so receipt OG + Blinks resolve correctly.
+
+---
+
+## Mobile binary (Track 3 judges)
+
+```bash
+cd apps/mobile
+npm i -g eas-cli
+eas login
+eas init   # once — writes projectId to app.json
+EXPO_PUBLIC_WEB_URL=https://copium.fun pnpm build:apk   # Android APK (preview profile)
+# pnpm build:ios   # TestFlight (preview profile) — needs Apple dev account
+```
+
+Paste APK/TestFlight link here after build: _TBD_
+
+Local dev (no binary):
+
+```bash
+EXPO_PUBLIC_WEB_URL=http://127.0.0.1:3000 pnpm --filter @copium/mobile start
+```
 
 ---
 
@@ -76,6 +109,7 @@ TXLINE_API_BASE=https://txline-dev.txodds.com
 ```bash
 pnpm verify:d19   # receipts OG + room join + share API
 pnpm verify:d20   # 3 judge paths + actions.json + JUDGE.md
+pnpm verify:d21   # CI + deploy config + feed context/flyby + ship checklist
 ```
 
 ## Repo map

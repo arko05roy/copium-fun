@@ -67,4 +67,25 @@ export async function updateSimulatorCursor(
   if (error) throw new Error(error.message);
 }
 
+export async function getLatestSimulatorSession(): Promise<SimSessionRow | null> {
+  const { data, error } = await (createDbClient().from("simulator_sessions") as unknown as {
+    select: (cols: string) => {
+      order: (
+        col: string,
+        opts: { ascending: boolean },
+      ) => {
+        limit: (n: number) => Promise<{
+          data: SimSessionRow[] | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+  })
+    .select("id, fixture_id, bundle, cursor")
+    .order("created_at", { ascending: false })
+    .limit(1);
+  if (error) throw new Error(error.message);
+  return data?.[0] ?? null;
+}
+
 export type { SimSessionRow };

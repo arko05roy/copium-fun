@@ -1,8 +1,10 @@
 import { listSettledProofPulses, loadEnv } from "@copium/db";
-import { COPIUM_TAGLINE, SOLANA_DEVNET } from "@copium/config";
+import { COPIUM_TAGLINE } from "@copium/config";
 import { DM_Mono, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import type { Metadata } from "next";
+
+import { DevnetBadge } from "../components/devnet-badge";
 
 loadEnv();
 
@@ -49,9 +51,7 @@ export default async function ProofIndexPage() {
             >
               copium.fun
             </Link>
-            <span className="rounded border border-[var(--proof-border)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--proof-muted)]">
-              Track 1 · {SOLANA_DEVNET.cluster}
-            </span>
+            <DevnetBadge className="!border-[var(--proof-border)] !text-[var(--proof-muted)]" />
           </div>
           <div className="space-y-3">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--proof-accent)]">

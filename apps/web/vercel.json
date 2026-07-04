@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd ../.. && pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/web build",
+  "installCommand": "cd ../.. && pnpm install",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
+}

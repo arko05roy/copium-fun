@@ -3,6 +3,7 @@ export type { Database } from "./database.js";
 export { loadEnv, supabaseAnonKey, supabaseUrl } from "./env.js";
 export {
   getSimulatorSession,
+  getLatestSimulatorSession,
   insertSimulatorSession,
   updateSimulatorCursor,
 } from "./simulator.js";

@@ -1,11 +1,12 @@
 import { getProofBundle, getPulse, loadEnv } from "@copium/db";
-import { COPIUM_TAGLINE, SOLANA_DEVNET, TXLINE_DEVNET } from "@copium/config";
+import { COPIUM_TAGLINE, TXLINE_DEVNET } from "@copium/config";
 import { DM_Mono, Source_Serif_4 } from "next/font/google";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 import { BundleDownload } from "../../components/bundle-download";
+import { DevnetBadge } from "../../components/devnet-badge";
 import { ProofSheet } from "../../components/proof-sheet";
 
 loadEnv();
@@ -70,9 +71,7 @@ export default async function ProofPage({ params }: PageProps) {
             >
               copium.fun
             </Link>
-            <span className="rounded border border-[var(--proof-border)] px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--proof-muted)]">
-              {SOLANA_DEVNET.cluster} · txoracle
-            </span>
+            <DevnetBadge className="!border-[var(--proof-border)] !text-[var(--proof-muted)]" />
           </div>
 
           <div className="space-y-3">

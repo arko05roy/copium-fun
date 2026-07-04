@@ -1,5 +1,6 @@
 "use client";
 
+import { SOLANA_DEVNET } from "@copium/config";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -62,7 +63,12 @@ export default function SimIndexPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 p-8 font-mono text-sm">
-      <h1 className="text-2xl font-semibold">Fixture simulator · Track 1</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Fixture simulator · Track 1</h1>
+        <span className="rounded border border-zinc-300 px-2 py-1 text-[10px] uppercase tracking-wider text-zinc-600">
+          {SOLANA_DEVNET.cluster} · no payment
+        </span>
+      </div>
       <p className="text-zinc-600 text-xs">
         TxLINE historical → Redis replay → spawn → settlement. Record §17A from session +
         <a href="/proof" className="ml-1 underline">

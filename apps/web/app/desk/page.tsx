@@ -1,12 +1,13 @@
 "use client";
 
-import { COPIUM_TAGLINE, SOLANA_DEVNET } from "@copium/config";
+import { COPIUM_TAGLINE } from "@copium/config";
 import { IBM_Plex_Mono, Newsreader } from "next/font/google";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { AgentReasoning } from "../components/agent-reasoning";
 import { DeskTape, type TapeRow } from "../components/desk-tape";
+import { DevnetBadge } from "../components/devnet-badge";
 import { PnlBoard, type PnlRow } from "../components/pnl-board";
 
 const plexMono = IBM_Plex_Mono({
@@ -105,9 +106,7 @@ export default function DeskPage() {
               />
               agent-runtime
             </span>
-            <span className="rounded border border-[var(--desk-border)] px-2.5 py-1 text-[var(--desk-muted)]">
-              {SOLANA_DEVNET.cluster}
-            </span>
+            <DevnetBadge className="!border-[var(--desk-border)] !text-[var(--desk-muted)]" />
           </div>
         </header>
 

@@ -14,7 +14,7 @@
 
 **Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracle` program.
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · D12 ✅ · D13 ✅ · D14 ✅ · D15 ✅ · D16 ✅ · D17 ✅ · D18 ✅ · D19 ✅ · D20 ✅ · 5 Jul 2026 — receipts + judge paths (`pnpm verify:d19` · `pnpm verify:d20`)
+**Progress:** D1 ✅ · … · D21 dev ✅ · 5 Jul 2026 — ship-ready code (`pnpm verify:d21`) · submit: videos + forms + deploy
 
 ---
 
@@ -732,9 +732,9 @@ Redis events + odds
 | Component | Behavior | Status |
 |-----------|----------|--------|
 | `PulseCard` | 90s countdown, Crowd vs Line bar, YES/NO swipe | ✅ D18 |
-| `LiveHeader` | Score, minute, copium gap ticker | post-hackathon |
+| `LiveHeader` | Score, minute, copium gap ticker | ✅ D21 |
 | `DuelBanner` | Room H2H score | ✅ D18 |
-| `AgentFlyby` | Compact agent trade card (no Desk) | post-hackathon |
+| `AgentFlyby` | Compact agent trade card (no Desk) | ✅ D21 |
 | `ReceiptShare` | Share sheet trigger (`/r/[id]`) | ✅ D19 |
 
 ### 13.3 Desk components (web)
@@ -758,7 +758,7 @@ Redis events + odds
 
 ## 14. Epics & backlog
 
-### EPIC A — Foundation (D1–D2) — **D2 ✅ (CI deferred)**
+### EPIC A — Foundation (D1–D2) — **D2 ✅**
 
 - [x] Monorepo (pnpm + Turborepo)
 - [x] Web scaffold (`@copium/web`)
@@ -768,7 +768,7 @@ Redis events + odds
 - [x] Public GitHub monorepo
 - [x] `.vendor/tx-on-chain` cloned locally
 - [x] Supabase `001_pulses.sql` migration (`@copium/db` — 11 tables live)
-- [ ] CI
+- [x] CI (`.github/workflows/ci.yml` · D21)
 
 ### EPIC B — TxLINE + simulator (D3–D7) — **D7 ✅**
 
@@ -851,11 +851,14 @@ Redis events + odds
 
 ### EPIC K — Hackathon submit (D19–D21)
 
-- [x] `JUDGE.md` — full judge guide (repo root · updated D20)
+- [x] `JUDGE.md` — full judge guide + deploy/mobile build (D21)
 - [x] 3 judge paths wired — `/proof`, `/desk`, `/room/demo` + home cards (`pnpm verify:d20`)
+- [x] Dev ship config — Vercel (`apps/web/vercel.json`), EAS (`apps/mobile/eas.json`), `pnpm verify:d21`
 - [ ] **3 Loom videos** (§17A/B/C)
 - [ ] 3× Superteam forms
-- [ ] Live URL (production deploy)
+- [ ] Live URL (Vercel deploy + `NEXT_PUBLIC_SITE_URL`)
+- [ ] blinks.xyz inspector on production HTTPS
+- [ ] Mobile APK / TestFlight link in `JUDGE.md`
 
 ### EPIC L — Post-hackathon
 MagicBlock live, mainnet, extra pulse types, Expo push prod
@@ -901,7 +904,8 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D18 ✅** | Mobile PulseCard swipe + duel | §17C recordable (`pnpm verify:d18`) |
 | **D19 ✅** | Receipts OG + Room join | share works (`pnpm verify:d19`) |
 | **D20 ✅** | Blinks + JUDGE.md + polish | 3 judge paths (`pnpm verify:d20`) |
-| D21 | **M5:** 3 final videos + 3 submissions | submit |
+| **D21 ✅** | Dev ship — CI, deploy, feed polish | `pnpm verify:d21` |
+| D22 | **M5:** 3 final videos + 3 submissions + deploy | submit |
 
 **D22 (19 Jul):** buffer — fix blockers
 
@@ -926,6 +930,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | T9 | Duel points | unit (`@copium/pulse-engine`) |
 | T10 | JUDGE walkthrough ×3 | `pnpm verify:d20` · one path per track |
 | T11 | Receipts OG + share | `pnpm verify:d19` · `/r/[receiptId]` |
+| T12 | Dev ship checklist | `pnpm verify:d21` · CI + Vercel + EAS |
 
 ---
 
@@ -990,7 +995,7 @@ OPENAI_API_KEY=...          # Spawner + Narrator
 - [x] Public GitHub monorepo
 - [ ] Live URL
 - [x] `JUDGE.md` (full judge guide — D20)
-- [ ] Devnet badge all surfaces (home · receipt · room — proof/desk/mobile pending)
+- [x] Devnet badge all surfaces (home · proof · desk · receipt · room · sim · mobile)
 - [x] No FIFA marks
 - [ ] **Three videos — never combined**
 
@@ -1081,4 +1086,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.5 — D1–D20 complete · 5 Jul 2026*
+*Document version: 4.6 — D1–D21 dev complete · 5 Jul 2026*
