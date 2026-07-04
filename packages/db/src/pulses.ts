@@ -14,6 +14,8 @@ export type PulseRow = {
   onchain_pool_pubkey: string | null;
   odds_message_id: string | null;
   odds_proof: Json | null;
+  settlement_root: string | null;
+  winning_side: string | null;
   created_at: string | null;
 };
 
@@ -95,7 +97,7 @@ export async function insertPulse(row: PulseInsert): Promise<PulseRow> {
       crowd_yes_pct: 50,
     })
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, created_at",
+      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
     )
     .single();
   if (error || !data) throw new Error(error?.message ?? "pulse insert failed");
@@ -110,7 +112,7 @@ export async function attachPoolToPulse(
     .update({ onchain_pool_pubkey: poolPubkey })
     .eq("id", pulseId)
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, created_at",
+      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
     )
     .single();
   if (error || !data) throw new Error(error?.message ?? "pulse update failed");
@@ -120,7 +122,7 @@ export async function attachPoolToPulse(
 export async function getPulse(pulseId: string): Promise<PulseRow> {
   const { data, error } = await pulses()
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, created_at",
+      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
     )
     .eq("id", pulseId)
     .single();
@@ -131,7 +133,7 @@ export async function getPulse(pulseId: string): Promise<PulseRow> {
 export async function listRecentPulses(limit = 20): Promise<PulseRow[]> {
   const { data, error } = await pulses()
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, created_at",
+      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);

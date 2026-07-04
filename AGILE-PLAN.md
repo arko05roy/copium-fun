@@ -12,7 +12,7 @@ e` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/
 
 **Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracl` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · 4 Jul 2026 — spawn E2E: odds lock + pulse row + `create_pulse` (`pnpm verify:d10`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · 4 Jul 2026 — Phase A: validate_stat + proof_bundles (`pnpm verify:d11`)
 
 ---
 
@@ -796,8 +796,13 @@ Redis events + odds
 - [x] `pnpm verify:d9` — IDL + anchor test on devnet
 - [ ] `lock_pulse`, `post_settlement`, `settle_pulse`, `withdraw` (D10–D12)
 
-### EPIC E — pulse-orchestrator (D11–D13)
-Spawn on event, close scheduler, enqueue settle
+### EPIC E — pulse-orchestrator (D11–D13) — **D11 ✅ Phase A**
+
+- [x] `apps/settlement-worker` — poll open pulses past `closes_at`
+- [x] `validateScore` — TxLINE timeline + `validate_stat.view()`
+- [x] `buildSettlementRoot` + `proof_bundles` insert
+- [x] `pnpm verify:d11` — spawn → Phase A → proof row
+- [ ] close scheduler + enqueue settle (D12–D13)
 
 ### EPIC F — Proof surface (D12–D14)
 `/proof/[pulseId]`, bundle API, crank wiring — **Track 1 video ready D14**
@@ -850,7 +855,7 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D8 ✅** | validate_stat spike | `.view()` true (`pnpm verify:d8`) |
 | **D9 ✅** | `copium-pulses` create + open | anchor test (`pnpm verify:d9`) |
 | **D10 ✅** | pulse-orchestrator spawn E2E | pulse row + pool (`pnpm verify:d10`) |
-| D11 | settlement-worker Phase A | proof_bundles |
+| **D11 ✅** | settlement-worker Phase A | proof_bundles (`pnpm verify:d11`) |
 | D12 | Phase B crank + withdraw | settled devnet |
 | D13 | `/proof/[pulseId]` UI + download | bundle JSON |
 | D14 | **M2:** Track 1 video draft OK | §17A recordable |

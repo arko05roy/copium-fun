@@ -15,3 +15,11 @@ export {
 } from "./pulses.js";
 export type { PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";
+export {
+  getProofBundle,
+  insertProofBundle,
+  listPulsesReadyToSettle,
+  markPulseSettled,
+  updatePositionResults,
+} from "./settlement.js";
+export type { ProofBundleRow } from "./settlement.js";

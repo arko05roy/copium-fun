@@ -1,11 +1,17 @@
 import { createServerSupabase } from "@/lib/supabase/server";
-import { INGEST_META_KEY, ORCHESTRATOR_META_KEY, SPAWN_LOG_KEY } from "@copium/txline/redis";
+import {
+  INGEST_META_KEY,
+  ORCHESTRATOR_META_KEY,
+  SETTLEMENT_META_KEY,
+  SPAWN_LOG_KEY,
+} from "@copium/txline/redis";
 import { Redis } from "ioredis";
 import { NextResponse } from "next/server";
 
 const REDIS_URL = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 const INGEST_PORT = Number(process.env.TXLINE_INGEST_PORT ?? 9090);
 const ORCHESTRATOR_PORT = Number(process.env.PULSE_ORCHESTRATOR_PORT ?? 9091);
+const SETTLEMENT_PORT = Number(process.env.SETTLEMENT_WORKER_PORT ?? 9092);
 
 const TABLES = ["fixtures", "pulses", "simulator_sessions"] as const;
 
@@ -27,6 +33,7 @@ export async function GET() {
   let redisOk = false;
   let ingestMeta: string | null = null;
   let orchestratorMeta: string | null = null;
+  let settlementMeta: string | null = null;
   let spawnLogCount = 0;
 
   try {
@@ -34,6 +41,7 @@ export async function GET() {
     if (redisOk) {
       ingestMeta = await redis.get(INGEST_META_KEY);
       orchestratorMeta = await redis.get(ORCHESTRATOR_META_KEY);
+      settlementMeta = await redis.get(SETTLEMENT_META_KEY);
       spawnLogCount = await redis.llen(SPAWN_LOG_KEY);
     }
   } finally {
@@ -53,9 +61,10 @@ export async function GET() {
     tables[table] = count ?? 0;
   }
 
-  const [ingest, orchestrator] = await Promise.all([
+  const [ingest, orchestrator, settlement] = await Promise.all([
     fetchJson(`http://127.0.0.1:${INGEST_PORT}/health`),
     fetchJson(`http://127.0.0.1:${ORCHESTRATOR_PORT}/health`),
+    fetchJson(`http://127.0.0.1:${SETTLEMENT_PORT}/health`),
   ]);
 
   return NextResponse.json({
@@ -71,6 +80,11 @@ export async function GET() {
       meta: orchestratorMeta ? JSON.parse(orchestratorMeta) : null,
       spawnLogCount,
       ...orchestrator.body,
+    },
+    settlement: {
+      reachable: settlement.ok,
+      meta: settlementMeta ? JSON.parse(settlementMeta) : null,
+      ...settlement.body,
     },
     supabase: { ok: supabaseOk, tables },
   });

@@ -1,6 +1,15 @@
 export { toBytes32, toProofNodes } from "./merkle.js";
 export type { ProofNodeWire } from "./merkle.js";
 
+export {
+  buildSettlementRoot,
+  settlementRootHex,
+} from "./hash.js";
+export type { PulseTruthBundle, PulseSettlementBundle } from "./hash.js";
+
+export { validateScore } from "./score.js";
+export type { ValidateScoreInput } from "./score.js";
+
 export { fetchOddsValidation } from "./fetch-odds.js";
 export type { OddsValidationPayload } from "./fetch-odds.js";
 
