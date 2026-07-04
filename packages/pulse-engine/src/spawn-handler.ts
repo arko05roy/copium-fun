@@ -12,12 +12,24 @@ import { suggestPulse, type SpawnableEventKind, type SuggestedPulse } from "./sp
 export type FixtureSpawnCtx = {
   minute: number;
   linePct?: number;
+  oddsMessageId?: string;
+  oddsTs?: number;
 };
 
 export type SpawnIntent =
   | {
       action: "would_spawn_pulse";
       fixtureId: number;
+      event: DetectedEvent;
+      pulse: SuggestedPulse;
+      at: string;
+    }
+  | {
+      action: "spawned_pulse";
+      fixtureId: number;
+      pulseId: string;
+      poolPubkey: string;
+      signature: string;
       event: DetectedEvent;
       pulse: SuggestedPulse;
       at: string;
@@ -101,7 +113,12 @@ export function createSpawnTracker(): {
     },
     contextFor(fixtureId) {
       const row = track(fixtureId);
-      return { minute: row.minute, linePct: row.linePct };
+      return {
+        minute: row.minute,
+        linePct: row.linePct,
+        oddsMessageId: row.oddsMessageId,
+        oddsTs: row.oddsTs,
+      };
     },
     onDetected(events) {
       return events.map((event) => spawnIntent(event, this.contextFor(event.fixtureId)));

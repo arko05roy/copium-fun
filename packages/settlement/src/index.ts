@@ -1,10 +1,16 @@
 export { toBytes32, toProofNodes } from "./merkle.js";
 export type { ProofNodeWire } from "./merkle.js";
 
+export { fetchOddsValidation } from "./fetch-odds.js";
+export type { OddsValidationPayload } from "./fetch-odds.js";
+
+export { lockOddsSnapshot } from "./lock.js";
+export type { LockedOddsSnapshot } from "./lock.js";
+
 export { fetchStatValidation } from "./fetch.js";
 export type { StatValidationParams, StatValidationPayload } from "./fetch.js";
 
-export { dailyScoresPda, epochDayFromTs } from "./pda.js";
+export { dailyOddsPda, dailyScoresPda, epochDayFromTs } from "./pda.js";
 
 export {
   COMPUTE_BUDGET_VALIDATE_STAT,

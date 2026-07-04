@@ -12,11 +12,23 @@ type SessionMeta = {
 };
 
 type SpawnIntent = {
-  action: "would_spawn_pulse" | "skip";
+  action: "would_spawn_pulse" | "spawned_pulse" | "skip";
   pulse?: { question: string; pulseType: string; closesAt: number };
+  pulseId?: string;
+  poolPubkey?: string;
+  signature?: string;
   event?: { kind: string; fixtureId?: number };
   reason?: string;
   at?: string;
+};
+
+type PulseRow = {
+  id: string;
+  question: string;
+  pulse_type: string;
+  onchain_pool_pubkey: string | null;
+  odds_message_id: string | null;
+  status: string | null;
 };
 
 type OrchestratorLog = {
@@ -51,13 +63,19 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
   const [busy, setBusy] = useState(false);
   const [scrub, setScrub] = useState(0);
   const [orchestratorLog, setOrchestratorLog] = useState<SpawnIntent[]>([]);
+  const [recentPulses, setRecentPulses] = useState<PulseRow[]>([]);
   const [validateResult, setValidateResult] = useState<ValidateStatResult | null>(null);
   const [validateBusy, setValidateBusy] = useState(false);
 
   const refreshSpawnLog = useCallback(async () => {
-    const res = await fetch("/api/stack/spawn-log?limit=15");
-    const json = (await res.json()) as OrchestratorLog;
+    const [logRes, pulseRes] = await Promise.all([
+      fetch("/api/stack/spawn-log?limit=15"),
+      fetch("/api/pulses?limit=5"),
+    ]);
+    const json = (await logRes.json()) as OrchestratorLog;
+    const pulses = (await pulseRes.json()) as { ok: boolean; pulses?: PulseRow[] };
     if (json.ok) setOrchestratorLog(json.entries);
+    if (pulses.ok && pulses.pulses) setRecentPulses(pulses.pulses);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -159,7 +177,7 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
       <Link href="/sim" className="text-zinc-500 hover:text-black">
         ← stack health
       </Link>
-      <h1 className="text-2xl font-semibold">Sim session (D7 + D8)</h1>
+      <h1 className="text-2xl font-semibold">Sim session (D7–D10)</h1>
       <p className="text-zinc-600 text-xs">{sessionId}</p>
 
       {meta ? (
@@ -307,9 +325,36 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
         </div>
       ) : null}
 
+      {recentPulses.length ? (
+        <div className="space-y-2">
+          <h2 className="font-semibold">spawned pulses (D10)</h2>
+          {recentPulses.map((pulse) => (
+            <div
+              key={pulse.id}
+              className="rounded border border-amber-300 bg-amber-50 p-3 text-xs"
+            >
+              <div className="font-semibold text-amber-900">{pulse.question}</div>
+              <div className="text-zinc-600">
+                {pulse.pulse_type} · {pulse.status} · odds {pulse.odds_message_id}
+              </div>
+              {pulse.onchain_pool_pubkey ? (
+                <a
+                  href={`https://explorer.solana.com/address/${pulse.onchain_pool_pubkey}?cluster=devnet`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 block truncate text-[10px] text-blue-700 underline"
+                >
+                  pool {pulse.onchain_pool_pubkey}
+                </a>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       {orchestratorLog.length ? (
         <div className="space-y-2">
-          <h2 className="font-semibold">orchestrator spawn log (live M1)</h2>
+          <h2 className="font-semibold">orchestrator spawn log (D10 E2E)</h2>
           <p className="text-[10px] text-zinc-500">
             Redis <code>orchestrator:spawn_log</code> — needs{" "}
             <code>pnpm orchestrator:listen</code>
@@ -318,12 +363,30 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
             <div
               key={`orch-${i}-${intent.at ?? i}`}
               className={
-                intent.action === "would_spawn_pulse"
-                  ? "rounded border border-blue-300 bg-blue-50 p-3 text-xs"
-                  : "rounded bg-zinc-100 p-2 text-xs text-zinc-500"
+                intent.action === "spawned_pulse"
+                  ? "rounded border border-amber-400 bg-amber-50 p-3 text-xs"
+                  : intent.action === "would_spawn_pulse"
+                    ? "rounded border border-blue-300 bg-blue-50 p-3 text-xs"
+                    : "rounded bg-zinc-100 p-2 text-xs text-zinc-500"
               }
             >
-              {intent.action === "would_spawn_pulse" ? (
+              {intent.action === "spawned_pulse" ? (
+                <>
+                  <div className="font-semibold text-amber-900">spawned_pulse</div>
+                  <div>{intent.pulse?.question}</div>
+                  <div className="text-zinc-600">pulse {intent.pulseId}</div>
+                  {intent.poolPubkey ? (
+                    <a
+                      href={`https://explorer.solana.com/address/${intent.poolPubkey}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 block truncate text-[10px] text-blue-700 underline"
+                    >
+                      pool {intent.poolPubkey}
+                    </a>
+                  ) : null}
+                </>
+              ) : intent.action === "would_spawn_pulse" ? (
                 <>
                   <div className="font-semibold text-blue-900">would_spawn_pulse</div>
                   <div>{intent.pulse?.question}</div>

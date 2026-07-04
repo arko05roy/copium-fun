@@ -1,15 +1,19 @@
-import { insertSimulatorSession, loadEnv as loadDbEnv, updateSimulatorCursor } from "@copium/db";
+import { getPulse, insertSimulatorSession, loadEnv as loadDbEnv, updateSimulatorCursor } from "@copium/db";
 import { spawnIntent } from "@copium/pulse-engine/spawn-handler";
 import { evaluateBundle } from "@copium/pulse-engine/bundle-eval";
+import { pulsePoolPda, COPIUM_PULSES_PROGRAM_ID, accountExists } from "@copium/pulses-client";
+import { PULSE_CATALOG } from "@copium/pulse-engine/pulse-catalog";
 import {
   buildSimBundle,
   goalCursor,
   loadEnv,
+  loadServiceKeypair,
   replayStep,
   startGuestSession,
   SPAWN_LOG_KEY,
 } from "@copium/txline";
 import { startListener } from "../apps/pulse-orchestrator/src/listen.ts";
+import { toUnixSec } from "../apps/pulse-orchestrator/src/spawn.ts";
 import { Redis } from "ioredis";
 
 loadEnv();
@@ -18,7 +22,14 @@ loadDbEnv();
 const REDIS_URL = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 const DEFAULT_FIXTURE = Number(process.env.VERIFY_D5_FIXTURE_ID ?? 17926704);
 
-async function waitForSpawnLog(timeoutMs: number): Promise<boolean> {
+type SpawnLogEntry = {
+  action?: string;
+  pulseId?: string;
+  poolPubkey?: string;
+  signature?: string;
+};
+
+async function waitForSpawnedPulse(timeoutMs: number): Promise<SpawnLogEntry> {
   const redis = new Redis(REDIS_URL);
   const start = Date.now();
 
@@ -26,20 +37,20 @@ async function waitForSpawnLog(timeoutMs: number): Promise<boolean> {
     const rows = await redis.lrange(SPAWN_LOG_KEY, 0, 20);
     for (const row of rows) {
       try {
-        const parsed = JSON.parse(row) as { action?: string };
-        if (parsed.action === "would_spawn_pulse" || parsed.action === "spawned_pulse") {
+        const parsed = JSON.parse(row) as SpawnLogEntry;
+        if (parsed.action === "spawned_pulse" && parsed.pulseId && parsed.poolPubkey) {
           redis.disconnect();
-          return true;
+          return parsed;
         }
       } catch {
         // skip
       }
     }
-    await new Promise((r) => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   redis.disconnect();
-  return false;
+  throw new Error("orchestrator did not spawn pulse within timeout");
 }
 
 async function main(): Promise<void> {
@@ -80,26 +91,53 @@ async function main(): Promise<void> {
     );
 
     const pub = new Redis(REDIS_URL);
-    const spawnPromise = waitForSpawnLog(30_000);
+    const spawnPromise = waitForSpawnedPulse(120_000);
     const result = await replayStep(pub, bundle, 0, { goals: {} }, { untilGoal: true });
     pub.disconnect();
 
     const spawned = await spawnPromise;
-    if (!spawned) {
-      throw new Error("orchestrator did not log would_spawn_pulse within 30s");
-    }
-
     await updateSimulatorCursor(row.id, result.cursor);
 
-    console.log("verify:d7 ok");
+    const pulse = await getPulse(spawned.pulseId!);
+    if (!pulse.onchain_pool_pubkey) {
+      throw new Error("pulse row missing onchain_pool_pubkey");
+    }
+    if (pulse.onchain_pool_pubkey !== spawned.poolPubkey) {
+      throw new Error("DB pool pubkey mismatch spawn log");
+    }
+    if (!pulse.odds_message_id || !pulse.odds_proof) {
+      throw new Error("pulse row missing locked odds proof");
+    }
+
+    const authority = loadServiceKeypair();
+    const opensAtSec = toUnixSec(evalResult.goalPulse.suggestion.opensAt);
+    const expectedPool = pulsePoolPda(
+      COPIUM_PULSES_PROGRAM_ID,
+      authority.publicKey,
+      BigInt(DEFAULT_FIXTURE),
+      PULSE_CATALOG.next_goal.pulseTypeCode,
+      BigInt(opensAtSec),
+    );
+    if (expectedPool.toBase58() !== pulse.onchain_pool_pubkey) {
+      throw new Error("pool PDA mismatch");
+    }
+
+    const onchain = await accountExists(pulse.onchain_pool_pubkey);
+    if (!onchain) {
+      throw new Error("on-chain pulse pool account not found on devnet");
+    }
+
+    console.log("verify:d10 ok");
     console.log({
       sessionId: row.id,
       fixtureId: DEFAULT_FIXTURE,
-      events: bundle.events.length,
+      pulseId: pulse.id,
+      poolPubkey: pulse.onchain_pool_pubkey,
+      signature: spawned.signature,
+      oddsMessageId: pulse.odds_message_id,
+      question: pulse.question,
       goalCursor: goalAt,
       emitted: result.emitted,
-      goalQuestion: evalResult.goalPulse.suggestion.question,
-      orchestratorSpawn: true,
     });
   } finally {
     await stop();

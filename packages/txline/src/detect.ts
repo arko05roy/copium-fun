@@ -38,6 +38,7 @@ export type FixtureDetectState = {
   goals: Record<number, number>;
   linePct?: number;
   oddsMessageId?: string;
+  oddsTs?: number;
 };
 
 function fixtureIdFromScore(update: ScoreUpdate): number | undefined {
@@ -100,6 +101,7 @@ export function detectFromScoreUpdate(
     gameState: prev?.gameState,
     linePct: prev?.linePct,
     oddsMessageId: prev?.oddsMessageId,
+    oddsTs: prev?.oddsTs,
   };
   const events: DetectedEvent[] = [];
 
@@ -152,6 +154,7 @@ export function detectFromOddsUpdate(
     gameState: prev?.gameState,
     linePct: prev?.linePct,
     oddsMessageId: prev?.oddsMessageId,
+    oddsTs: prev?.oddsTs,
   };
   const events: DetectedEvent[] = [];
 
@@ -160,6 +163,7 @@ export function detectFromOddsUpdate(
     const before = prev?.linePct;
     next.linePct = linePct;
     next.oddsMessageId = update.MessageId;
+    next.oddsTs = tsFrom(update);
     if (before !== undefined && Math.abs(linePct - before) >= thresholdPp) {
       events.push({
         kind: "odds_move",

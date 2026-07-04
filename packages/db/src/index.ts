@@ -6,4 +6,12 @@ export {
   insertSimulatorSession,
   updateSimulatorCursor,
 } from "./simulator.js";
+export {
+  attachPoolToPulse,
+  ensureFixture,
+  getPulse,
+  insertPulse,
+  listRecentPulses,
+} from "./pulses.js";
+export type { PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";

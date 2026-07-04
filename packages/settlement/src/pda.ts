@@ -18,3 +18,14 @@ export function dailyScoresPda(epochDay: number): PublicKey {
   );
   return pda;
 }
+
+export function dailyOddsPda(epochDay: number): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("daily_batch_roots"),
+      new anchor.BN(epochDay).toArrayLike(Buffer, "le", 2),
+    ],
+    TXORACLE,
+  );
+  return pda;
+}

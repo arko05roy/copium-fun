@@ -13,6 +13,7 @@ const SPAWN_LOG_MAX = 100;
 type OrchestratorCounters = {
   eventsSeen: number;
   wouldSpawn: number;
+  spawned: number;
   skipped: number;
   startedAt: string;
   lastEventAt?: string;
@@ -22,6 +23,7 @@ type OrchestratorCounters = {
 const counters: OrchestratorCounters = {
   eventsSeen: 0,
   wouldSpawn: 0,
+  spawned: 0,
   skipped: 0,
   startedAt: new Date().toISOString(),
 };
@@ -128,13 +130,28 @@ export async function startListener(): Promise<{
 
     const intents = tracker.onDetected([event]);
     for (const intent of intents) {
-      remember(intent);
-      await pushSpawnLog(redis, intent);
+      let finalIntent = intent;
 
       if (intent.action === "would_spawn_pulse") {
         counters.wouldSpawn += 1;
-        counters.lastSpawnAt = intent.at;
-        console.log(JSON.stringify(intent));
+        const { executeSpawnPulse } = await import("./spawn.js");
+        finalIntent = await executeSpawnPulse(
+          redis,
+          intent,
+          tracker.contextFor(intent.fixtureId),
+        );
+      }
+
+      remember(finalIntent);
+      await pushSpawnLog(redis, finalIntent);
+
+      if (finalIntent.action === "spawned_pulse") {
+        counters.spawned += 1;
+        counters.lastSpawnAt = finalIntent.at;
+        console.log(JSON.stringify(finalIntent));
+      } else if (finalIntent.action === "would_spawn_pulse") {
+        counters.lastSpawnAt = finalIntent.at;
+        console.log(JSON.stringify(finalIntent));
       } else {
         counters.skipped += 1;
       }
@@ -142,8 +159,9 @@ export async function startListener(): Promise<{
   };
 
   await sub.psubscribe("event:*", "scores:*", "odds:*");
+  let chain = Promise.resolve();
   sub.on("pmessage", (_pattern, channel, message) => {
-    void onMessage(channel, message);
+    chain = chain.then(() => onMessage(channel, message));
   });
 
   const health = startHealthServer(redis);

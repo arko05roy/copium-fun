@@ -13,6 +13,8 @@
   "dependencies": {
     "@copium/db": "workspace:*",
     "@copium/pulse-engine": "workspace:*",
+    "@copium/pulses-client": "workspace:*",
+    "@copium/settlement": "workspace:*",
     "@copium/txline": "workspace:*",
     "dotenv": "^16.5.0",
     "ioredis": "^5.6.1"
