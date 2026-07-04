@@ -19,9 +19,11 @@
     "@copium/txline": "workspace:*",
     "@coral-xyz/anchor": "^0.32.1",
     "@solana/spl-token": "^0.4.13",
-    "@solana/web3.js": "^1.98.4"
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.2"
   },
   "devDependencies": {
+    "@types/bn.js": "^5.1.6",
     "@types/node": "^22.15.21",
     "typescript": "^5.9.3"
   }

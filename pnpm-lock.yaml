@@ -245,7 +245,13 @@ importers:
       '@solana/web3.js':
         specifier: ^1.98.4
         version: 1.98.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      bn.js:
+        specifier: ^5.2.2
+        version: 5.2.4
     devDependencies:
+      '@types/bn.js':
+        specifier: ^5.1.6
+        version: 5.2.0
       '@types/node':
         specifier: ^22.15.21
         version: 22.20.0

@@ -115,9 +115,9 @@ export function createSpawnTracker(): {
       const row = track(fixtureId);
       return {
         minute: row.minute,
-        linePct: row.linePct,
-        oddsMessageId: row.oddsMessageId,
-        oddsTs: row.oddsTs,
+        linePct: row.linePct ?? row.detect.linePct,
+        oddsMessageId: row.detect.oddsMessageId,
+        oddsTs: row.detect.oddsTs,
       };
     },
     onDetected(events) {

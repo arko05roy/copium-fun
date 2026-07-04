@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import * as anchor from "@coral-xyz/anchor";
+import { Program, AnchorProvider, Wallet, type Idl } from "@coral-xyz/anchor";
+import BN from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
   Connection,
@@ -17,7 +18,7 @@ import {
   vaultPda,
 } from "./index.js";
 
-type CopiumPulsesIdl = anchor.Idl & { address: string };
+type CopiumPulsesIdl = Idl & { address: string };
 
 function loadIdl(): CopiumPulsesIdl {
   const root = join(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -64,13 +65,13 @@ export async function createPulseOnChain(
     "confirmed",
   );
 
-  const provider = new anchor.AnchorProvider(
+  const provider = new AnchorProvider(
     connection,
-    new anchor.Wallet(input.authority),
+    new Wallet(input.authority),
     { commitment: "confirmed" },
   );
 
-  const program = new anchor.Program(loadIdl(), provider);
+  const program = new Program(loadIdl(), provider);
   const pool = pulsePoolPda(
     COPIUM_PULSES_PROGRAM_ID,
     input.authority.publicKey,
@@ -87,10 +88,10 @@ export async function createPulseOnChain(
 
   const signature = await program.methods
     .createPulse(
-      new anchor.BN(input.fixtureId.toString()),
+      new BN(input.fixtureId.toString()),
       input.pulseTypeCode,
-      new anchor.BN(input.opensAt.toString()),
-      new anchor.BN(input.closesAt.toString()),
+      new BN(input.opensAt.toString()),
+      new BN(input.closesAt.toString()),
       input.oddsLockRoot,
     )
     .accountsPartial({

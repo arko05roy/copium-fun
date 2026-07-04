@@ -1,4 +1,5 @@
 import { attachPoolToPulse, insertPulse, loadEnv as loadDbEnv } from "@copium/db";
+import { PULSE_WINDOW_SEC } from "@copium/pulse-engine/calibration";
 import { PULSE_CATALOG } from "@copium/pulse-engine/pulse-catalog";
 import type { SpawnIntent } from "@copium/pulse-engine/spawn-handler";
 import type { FixtureSpawnCtx } from "@copium/pulse-engine/spawn-handler";
@@ -53,7 +54,7 @@ export async function executeSpawnPulse(
   }
 
   const opensAtSec = toUnixSec(intent.pulse.opensAt);
-  const closesAtSec = toUnixSec(intent.pulse.closesAt);
+  const closesAtSec = opensAtSec + PULSE_WINDOW_SEC;
   const key = dedupKey(intent.fixtureId, intent.pulse.pulseType, opensAtSec);
   const claimed = await redis.set(key, "1", "EX", 86_400, "NX");
   if (claimed === null) {

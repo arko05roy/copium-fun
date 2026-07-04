@@ -5,12 +5,12 @@
 
 **Hackathon:** Register 24 Jun 2026 · Submit 19 Jul 2026 · Winners 29 Jul 2026  
 **Team:** 1–3 humans · **Tracks:** all three (separate Superteam entries) · **One prize max** (hackathon terms §2.6)
+e` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/video path (TxLINE historical bundles — UI feels live). Mainnet tier 12 = post-hackathon optional.
 
+**Companion docs:** `BRAND-DOC.md
 **Scope policy:** One **Pulse engine** powers three judge-facing surfaces — **Feed** (T3), **Desk** (T2), **Proof** (T1). **No published SDK.** World Cup = Season 0.
 
-**Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracle` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/video path (TxLINE historical bundles — UI feels live). Mainnet tier 12 = post-hackathon optional.
-
-**Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
+**Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracl` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
 **Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · 4 Jul 2026 — spawn E2E: odds lock + pulse row + `create_pulse` (`pnpm verify:d10`)
 
