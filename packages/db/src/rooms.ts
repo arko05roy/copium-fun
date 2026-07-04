@@ -93,6 +93,24 @@ export async function getRoom(roomId: string): Promise<RoomRow | null> {
   return data;
 }
 
+export async function getRoomBySlug(slug: string): Promise<RoomRow | null> {
+  const { data, error } = await (createDbClient().from("rooms") as unknown as {
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        single: () => Promise<{ data: RoomRow | null; error: { message: string } | null }>;
+      };
+    };
+  })
+    .select("id, slug, fixture_id, owner_id, created_at")
+    .eq("slug", slug)
+    .single();
+  if (error) return null;
+  return data;
+}
+
 export async function ensureRoom(slug: string, fixtureId: number): Promise<RoomRow> {
   const existing = await (createDbClient().from("rooms") as unknown as {
     select: (cols: string) => {

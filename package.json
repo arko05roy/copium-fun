@@ -36,6 +36,8 @@
     "verify:d16": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && pnpm --filter @copium/pulses-client build && pnpm anchor:build && node --import tsx scripts/verify-d16.ts",
     "verify:d17": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && node --import tsx scripts/verify-d17.ts",
     "verify:d18": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && node --import tsx scripts/verify-d18.ts",
+    "verify:d19": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/pulse-engine build && node --import tsx scripts/verify-d19.ts",
+    "verify:d20": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && node --import tsx scripts/verify-d20.ts",
     "agent:listen": "pnpm --filter @copium/agent-runtime listen",
     "settlement:worker": "pnpm --filter @copium/settlement-worker start",
     "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts",

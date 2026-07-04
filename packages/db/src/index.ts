@@ -46,6 +46,7 @@ export {
   addRoomMemberDuelPoints,
   ensureRoom,
   getRoom,
+  getRoomBySlug,
   getRoomDuel,
   insertCrowdPosition,
   joinRoomMember,
@@ -55,3 +56,13 @@ export {
   walletToUserId,
 } from "./rooms.js";
 export type { RoomDuelScore, RoomMemberRow, RoomRow } from "./rooms.js";
+export {
+  getCrowdPosition,
+  getReceipt,
+  getReceiptForPulseUser,
+  insertReceipt,
+  listPositionsForPulse,
+  listReceiptsForUser,
+  updateReceiptOgUrl,
+} from "./receipts.js";
+export type { ReceiptRow, ReceiptWithPulse } from "./receipts.js";

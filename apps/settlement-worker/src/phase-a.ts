@@ -132,6 +132,9 @@ async function settlePulseRow(
     await scoreRoomDuelsForPulse(pulse, bundle.truth.winningSide);
   }
 
+  const { mintReceiptsForPulse } = await import("./mint-receipt.js");
+  await mintReceiptsForPulse(pulse, bundle.truth.winningSide);
+
   return {
     pulseId: pulse.id,
     winningSide: bundle.truth.winningSide,

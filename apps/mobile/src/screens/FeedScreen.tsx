@@ -16,17 +16,22 @@ import { COPIUM_TAGLINE, SOLANA_DEVNET } from "@copium/config";
 
 import { DuelBanner } from "../components/DuelBanner";
 import { PulseCard, openPulsePickBlink } from "../components/PulseCard";
+import { ReceiptShare } from "../components/ReceiptShare";
 import {
   fetchOpenPulses,
   fetchRoomDuel,
+  fetchWalletReceipts,
   joinRoom,
+  joinRoomBlinkUrl,
   type DuelScore,
   type FeedPulse,
+  type WalletReceipt,
 } from "../lib/api";
 import { getStoredRoomId, getStoredWallet, setStoredRoomId, setStoredWallet } from "../lib/wallet";
 
 export function FeedScreen() {
   const [pulses, setPulses] = useState<FeedPulse[]>([]);
+  const [receipts, setReceipts] = useState<WalletReceipt[]>([]);
   const [duel, setDuel] = useState<DuelScore | null>(null);
   const [wallet, setWallet] = useState<string | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
@@ -51,6 +56,15 @@ export function FeedScreen() {
         setDuel(await fetchRoomDuel(r, w));
       } else {
         setDuel(null);
+      }
+      if (w) {
+        try {
+          setReceipts(await fetchWalletReceipts(w));
+        } catch {
+          setReceipts([]);
+        }
+      } else {
+        setReceipts([]);
       }
       setError(null);
     } catch (e) {
@@ -141,7 +155,7 @@ export function FeedScreen() {
 
       {wallet && !roomId ? (
         <View style={styles.setup}>
-          <Text style={styles.setupLabel}>Room id (join-room Blink)</Text>
+          <Text style={styles.setupLabel}>Room id or join Blink</Text>
           <TextInput
             style={styles.input}
             placeholder="uuid"
@@ -150,9 +164,31 @@ export function FeedScreen() {
             value={roomDraft}
             onChangeText={setRoomDraft}
           />
-          <Pressable style={styles.btn} onPress={() => void handleSaveRoom()}>
-            <Text style={styles.btnText}>Join room</Text>
-          </Pressable>
+          <View style={styles.row}>
+            <Pressable style={styles.btn} onPress={() => void handleSaveRoom()}>
+              <Text style={styles.btnText}>Join room</Text>
+            </Pressable>
+            {roomDraft.trim() ? (
+              <Pressable
+                style={styles.btnOutline}
+                onPress={() => {
+                  void Linking.openURL(joinRoomBlinkUrl(roomDraft.trim()));
+                  setStatus("Opening join-room Blink…");
+                }}
+              >
+                <Text style={styles.btnOutlineText}>Blink</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+
+      {receipts.length > 0 ? (
+        <View style={styles.receiptStack}>
+          <Text style={styles.sectionLabel}>Your receipts</Text>
+          {receipts.map((r) => (
+            <ReceiptShare key={r.id} receipt={r} />
+          ))}
         </View>
       ) : null}
 
@@ -242,6 +278,34 @@ const styles = StyleSheet.create({
     color: "#071510",
     textTransform: "uppercase",
     letterSpacing: 1,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+  },
+  btnOutline: {
+    borderWidth: 1,
+    borderColor: "#B8FF57",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  btnOutlineText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#B8FF57",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  receiptStack: {
+    gap: 10,
+    marginBottom: 8,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    color: "#7CB892",
+    textTransform: "uppercase",
+    letterSpacing: 2,
   },
   stack: {
     gap: 16,

@@ -4,11 +4,19 @@
 
 Three separate products from one Pulse engine. Pick your track:
 
+| Track | Entry URL | Video script |
+|-------|-----------|--------------|
+| 1 — Settlement | `/proof/{pulseId}` | BRAND-DOC §17A |
+| 2 — Agent Desk | `/desk` | BRAND-DOC §17B |
+| 3 — Match Feed | mobile app + `/room/demo` | BRAND-DOC §17C |
+
+Run `pnpm verify:d20` to confirm all three paths respond.
+
 ---
 
 ## Track 1 — Pulse Settlement (~5 min)
 
-**URL:** `copium.fun/proof/{pulseId}`  
+**URL:** `https://copium.fun/proof/{pulseId}` (local: `http://127.0.0.1:3000/proof/{pulseId}`)  
 **Video:** matches BRAND-DOC §17A (settlement only)
 
 1. Optional: `/sim/{sessionId}` — advance fixture to goal event
@@ -22,14 +30,17 @@ Three separate products from one Pulse engine. Pick your track:
 
 ## Track 2 — Agent Desk (~5 min)
 
-**URL:** `copium.fun/desk`  
+**URL:** `https://copium.fun/desk`  
 **Video:** matches BRAND-DOC §17B (agents only)
 
 1. Confirm TxLINE SSE indicator is live (or simulator running)
 2. Advance sim — watch **Spawner** create a Pulse question
 3. Watch **Officer Copium** / **The Quant** rows — tx hash on each trade
-4. Click **Copy** on an agent row — sign with devnet wallet
+4. Click **Copy** on an agent row — sign with devnet wallet (Blink via dial.to)
 5. Check PnL leaderboard after Pulse closes
+
+**Blinks:** `actions.json` at site root maps `/agent/*` → copy-agent, `/fade/*` → fade-agent.  
+Test with [blinks.xyz inspector](https://www.blinks.xyz/inspector) — paste `https://dial.to/?action={your-api-url}`.
 
 **Do not expect:** proof page tour, mobile swipe UI.
 
@@ -37,14 +48,15 @@ Three separate products from one Pulse engine. Pick your track:
 
 ## Track 3 — Match Feed (~5 min)
 
-**URL:** mobile app (link in repo README / TestFlight / APK)  
+**URL:** mobile app (`pnpm --filter @copium/mobile start` with `EXPO_PUBLIC_WEB_URL`)  
+**Room join web:** `/room/demo` or `/room/{slug}`  
 **Video:** matches BRAND-DOC §17C (phone only)
 
 1. Open app — World Cup match feed
-2. Trigger or wait for Pulse push notification
-3. Swipe **YES** or **NO** on 90-second Pulse card
-4. View friend duel banner (join via `/room/{slug}` if solo)
-5. Share receipt to X from share sheet
+2. Save devnet wallet pubkey in app setup
+3. Join room via room id or **Join via Blink** on `/room/demo`
+4. Swipe **YES** or **NO** on 90-second Pulse card (opens dial.to pulse-pick)
+5. After Pulse settles — **Share receipt** from receipts section (`/r/{receiptId}`)
 
 **Do not expect:** Merkle paths, crank UI, Desk terminal.
 
@@ -54,7 +66,16 @@ Three separate products from one Pulse engine. Pick your track:
 
 ```bash
 COPIUM_NETWORK=devnet
+SOLANA_RPC_URL=https://api.devnet.solana.com
+NEXT_PUBLIC_SITE_URL=https://copium.fun   # or http://127.0.0.1:3000 locally
 TXLINE_API_BASE=https://txline-dev.txodds.com
+```
+
+## Verify scripts
+
+```bash
+pnpm verify:d19   # receipts OG + room join + share API
+pnpm verify:d20   # 3 judge paths + actions.json + JUDGE.md
 ```
 
 ## Repo map
@@ -66,6 +87,8 @@ TXLINE_API_BASE=https://txline-dev.txodds.com
 | `apps/mobile` | React Native Feed |
 | `apps/web/app/desk` | Agent Desk |
 | `apps/web/app/proof` | Proof surface |
+| `apps/web/app/r` | Receipt landing + OG |
+| `apps/web/app/room` | Room join + Blink |
 | `packages/settlement` | Internal settle pipeline (not published) |
 
 ## Questions

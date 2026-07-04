@@ -2,8 +2,34 @@
 
 import { COPIUM_TAGLINE, SOLANA_DEVNET, TXLINE_DEVNET, TXLINE_WORLDCUP_FREE_TIER } from "@copium/config";
 import { useWalletConnection } from "@solana/react-hooks";
+import Link from "next/link";
 
 import { DbStatus } from "./components/db-status";
+import { DevnetBadge } from "./components/devnet-badge";
+
+const JUDGE_PATHS = [
+  {
+    track: "Track 1",
+    title: "Pulse Settlement",
+    href: "/proof",
+    blurb: "TxLINE proof bundle · permissionless crank · JSON export",
+    video: "BRAND-DOC §17A",
+  },
+  {
+    track: "Track 2",
+    title: "Agent Desk",
+    href: "/desk",
+    blurb: "Live tape · Spawner · copy/fade Blinks · PnL board",
+    video: "BRAND-DOC §17B",
+  },
+  {
+    track: "Track 3",
+    title: "Match Feed",
+    href: "/room/demo",
+    blurb: "Mobile feed · pulse swipe · duel room · receipt share",
+    video: "BRAND-DOC §17C",
+  },
+] as const;
 
 export default function Home() {
   const { connectors, connect, disconnect, wallet, status } =
@@ -15,9 +41,12 @@ export default function Home() {
     <div className="relative min-h-screen overflow-x-clip bg-bg1 text-foreground">
       <main className="relative z-10 mx-auto flex min-h-screen max-w-4xl flex-col gap-10 border-x border-border-low px-6 py-16">
         <header className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.18em] text-muted">
-            copium.fun · {SOLANA_DEVNET.cluster}
-          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="text-sm uppercase tracking-[0.18em] text-muted">
+              copium.fun
+            </p>
+            <DevnetBadge className="!border-border-low !text-muted" />
+          </div>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">
             {COPIUM_TAGLINE}
           </h1>
@@ -47,6 +76,31 @@ export default function Home() {
             </div>
           </dl>
           <DbStatus />
+        </section>
+
+        <section className="w-full max-w-3xl space-y-4">
+          <p className="text-lg font-semibold">Judge paths</p>
+          <p className="text-sm text-muted">
+            Three separate demos — full walkthrough in repo root <code className="text-xs">JUDGE.md</code>.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {JUDGE_PATHS.map((path) => (
+              <Link
+                key={path.track}
+                href={path.href}
+                className="group flex flex-col gap-2 rounded-2xl border border-border-low bg-card p-5 transition hover:-translate-y-0.5 hover:border-primary/40"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  {path.track}
+                </span>
+                <span className="text-base font-semibold">{path.title}</span>
+                <span className="text-xs leading-relaxed text-muted">{path.blurb}</span>
+                <span className="mt-auto text-[10px] uppercase tracking-wide text-muted/80">
+                  {path.video}
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
 
         <section className="w-full max-w-3xl space-y-4 rounded-2xl border border-border-low bg-card p-6 shadow-[0_20px_80px_-50px_rgba(0,0,0,0.35)]">

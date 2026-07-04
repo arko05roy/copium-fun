@@ -18,6 +18,18 @@ export type DuelScore = {
   roomSlug: string;
 };
 
+export type WalletReceipt = {
+  id: string;
+  label: string | null;
+  pulse_id: string;
+  question: string;
+  side: "yes" | "no" | null;
+  result: string | null;
+  winning_side: string | null;
+  created_at: string | null;
+  share_url: string;
+};
+
 const webBase = process.env.EXPO_PUBLIC_WEB_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:3000";
 
 export function webApiBase(): string {
@@ -53,6 +65,22 @@ export async function joinRoom(roomId: string, wallet: string): Promise<string> 
   const json = (await res.json()) as { type?: string; message?: string };
   if (!res.ok) throw new Error(json.message ?? "join failed");
   return json.message ?? "Joined";
+}
+
+export async function fetchWalletReceipts(wallet: string): Promise<WalletReceipt[]> {
+  const res = await fetch(
+    `${webBase}/api/receipts/for-wallet?wallet=${encodeURIComponent(wallet)}&limit=5`,
+  );
+  const json = (await res.json()) as { ok?: boolean; receipts?: WalletReceipt[]; error?: string };
+  if (!res.ok || !json.ok || !json.receipts) {
+    throw new Error(json.error ?? "receipts fetch failed");
+  }
+  return json.receipts;
+}
+
+export function joinRoomBlinkUrl(roomId: string): string {
+  const action = `${webBase}/api/actions/join-room/${roomId}`;
+  return `https://dial.to/?action=${encodeURIComponent(action)}`;
 }
 
 export function pulsePickBlinkUrl(pulseId: string, side: "yes" | "no"): string {
