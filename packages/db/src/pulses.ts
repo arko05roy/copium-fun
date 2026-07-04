@@ -130,6 +130,35 @@ export async function getPulse(pulseId: string): Promise<PulseRow> {
   return data;
 }
 
+export async function listOpenPulses(limit = 10): Promise<PulseRow[]> {
+  const { data, error } = await (createDbClient().from("pulses") as unknown as {
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        order: (
+          col2: string,
+          opts: { ascending: boolean },
+        ) => {
+          limit: (n: number) => Promise<{
+            data: PulseRow[] | null;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    };
+  })
+    .select(
+      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+    )
+    .eq("status", "open")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function listRecentPulses(limit = 20): Promise<PulseRow[]> {
   const { data, error } = await pulses()
     .select(

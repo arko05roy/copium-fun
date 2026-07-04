@@ -80,6 +80,11 @@ export { TXLINE_DEVNET } from "@copium/config";
 export { createPulseOnChain, accountExists } from "./create.js";
 export type { CreatePulseInput, CreatePulseResult } from "./create.js";
 export {
+  openPositionOnChain,
+  oddsMessageHash,
+} from "./open-position.js";
+export type { OpenPositionInput, OpenPositionResult } from "./open-position.js";
+export {
   crankPulseOnChain,
   withdrawPositionOnChain,
   fetchPoolStatus,

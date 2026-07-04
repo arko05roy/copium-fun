@@ -177,8 +177,14 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
       <Link href="/sim" className="text-zinc-500 hover:text-black">
         ← stack health
       </Link>
-      <h1 className="text-2xl font-semibold">Sim session (D7–D10)</h1>
-      <p className="text-zinc-600 text-xs">{sessionId}</p>
+      <h1 className="text-2xl font-semibold">Track 1 recorder (§17A)</h1>
+      <p className="text-zinc-600 text-xs">
+        Simulator admin — goal inject → pool PDA · locked messageId · validate_stat →{" "}
+        <a href="/proof" className="underline">
+          /proof
+        </a>
+      </p>
+      <p className="font-mono text-[10px] text-zinc-400">{sessionId}</p>
 
       {meta ? (
         <div className="grid gap-2 rounded border border-zinc-200 p-4 text-xs">
@@ -339,12 +345,20 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
               </div>
               {pulse.onchain_pool_pubkey ? (
                 <a
-                  href={`https://explorer.solana.com/address/${pulse.onchain_pool_pubkey}?cluster=devnet`}
+                  href={`https://solscan.io/account/${pulse.onchain_pool_pubkey}?cluster=devnet`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-1 block truncate text-[10px] text-blue-700 underline"
                 >
                   pool {pulse.onchain_pool_pubkey}
+                </a>
+              ) : null}
+              {pulse.status === "settled" ? (
+                <a
+                  href={`/proof/${pulse.id}`}
+                  className="mt-1 inline-block text-[10px] font-semibold text-violet-800 underline"
+                >
+                  open proof →
                 </a>
               ) : null}
             </div>

@@ -1,6 +1,7 @@
 import { attachPoolToPulse, insertPulse, loadEnv as loadDbEnv } from "@copium/db";
 import { PULSE_WINDOW_SEC } from "@copium/pulse-engine/calibration";
 import { PULSE_CATALOG } from "@copium/pulse-engine/pulse-catalog";
+import { generateSpawnQuestion } from "@copium/pulse-engine/spawner-llm";
 import type { SpawnIntent } from "@copium/pulse-engine/spawn-handler";
 import type { FixtureSpawnCtx } from "@copium/pulse-engine/spawn-handler";
 import { createPulseOnChain } from "@copium/pulses-client";
@@ -8,6 +9,7 @@ import { lockOddsSnapshot } from "@copium/settlement";
 import {
   loadEnv,
   loadServiceKeypair,
+  PULSE_SPAWNED_CHANNEL,
   startGuestSession,
 } from "@copium/txline";
 import type { Redis } from "ioredis";
@@ -79,13 +81,22 @@ export async function executeSpawnPulse(
     );
 
     const catalog = PULSE_CATALOG[intent.pulse.pulseType];
+    const question = await generateSpawnQuestion({
+      eventKind: intent.event.kind as "goal" | "phase_change" | "odds_move",
+      pulseType: intent.pulse.pulseType,
+      minute: ctx.minute,
+      linePct: locked.linePct ?? ctx.linePct,
+      templateQuestion: intent.pulse.question,
+      fixtureId: intent.fixtureId,
+    });
+
     const row = await insertPulse({
       fixture_id: intent.fixtureId,
       pulse_type: intent.pulse.pulseType,
-      question: intent.pulse.question,
+      question,
       opens_at: new Date(opensAtSec * 1000).toISOString(),
       closes_at: new Date(closesAtSec * 1000).toISOString(),
-      line_pct: locked.linePct ?? null,
+      line_pct: locked.linePct ?? intent.pulse.linePct ?? ctx.linePct ?? null,
       odds_message_id: locked.messageId,
       odds_proof: JSON.parse(JSON.stringify(locked.proof)),
     });
@@ -101,6 +112,20 @@ export async function executeSpawnPulse(
     });
 
     await attachPoolToPulse(row.id, onchain.pool.toBase58());
+
+    await redis.publish(
+      PULSE_SPAWNED_CHANNEL,
+      JSON.stringify({
+        pulseId: row.id,
+        poolPubkey: onchain.pool.toBase58(),
+        fixtureId: intent.fixtureId,
+        pulseType: intent.pulse.pulseType,
+        linePct: locked.linePct ?? ctx.linePct,
+        oddsMessageId: locked.messageId,
+        question,
+        at,
+      }),
+    );
 
     return {
       action: "spawned_pulse",

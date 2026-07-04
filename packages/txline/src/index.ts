@@ -59,6 +59,8 @@ export {
   ORCHESTRATOR_META_KEY,
   SETTLEMENT_META_KEY,
   SPAWN_LOG_KEY,
+  PULSE_SPAWNED_CHANNEL,
+  AGENT_RUNTIME_META_KEY,
   oddsChannel,
   scoresChannel,
   eventChannel,
@@ -72,3 +74,4 @@ export {
 export type { SimBundle, SimBundleEvent, SimStream } from "./historical.js";
 export { goalCursor, isSimBundle, replayStep, detectStateAtCursor } from "./replay.js";
 export type { ReplayResult } from "./replay.js";
+export { requestDevnetUsdtFaucet } from "./faucet.js";

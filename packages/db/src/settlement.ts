@@ -123,6 +123,28 @@ export async function listPulsesReadyToSettle(limit = 20): Promise<PulseRow[]> {
   return data ?? [];
 }
 
+export type SettledProofPulse = PulseRow & {
+  verify_tx: string | null;
+  has_bundle: boolean;
+};
+
+export async function listSettledProofPulses(limit = 20): Promise<SettledProofPulse[]> {
+  const pulses = await listRecentPulses(limit * 3);
+  const out: SettledProofPulse[] = [];
+  for (const pulse of pulses) {
+    if (pulse.status !== "settled") continue;
+    const proof = await getProofBundle(pulse.id);
+    if (!proof?.bundle_json || !proof.truth_json) continue;
+    out.push({
+      ...pulse,
+      verify_tx: proof.verify_tx,
+      has_bundle: Boolean(proof.bundle_json),
+    });
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
 export async function getProofBundle(pulseId: string): Promise<ProofBundleRow | null> {
   const { data, error } = await proofBundles()
     .select("pulse_id, truth_json, settlement_json, verify_tx, bundle_json, created_at")

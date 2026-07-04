@@ -58,10 +58,18 @@
       "types": "./dist/spawn-handler.d.ts",
       "import": "./dist/spawn-handler.js",
       "default": "./dist/spawn-handler.js"
+    },
+    "./spawner-llm": {
+      "types": "./dist/spawner-llm.d.ts",
+      "import": "./dist/spawner-llm.js",
+      "default": "./dist/spawner-llm.js"
     }
   },
   "dependencies": {
-    "@copium/txline": "workspace:*"
+    "@copium/txline": "workspace:*",
+    "@ai-sdk/openai": "^1.3.24",
+    "ai": "^4.3.19",
+    "zod": "^3.25.76"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
