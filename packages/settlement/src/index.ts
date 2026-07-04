@@ -39,6 +39,13 @@ export type {
 export { validateStatOnChain } from "./validate.js";
 export type { ValidateStatInput, ValidateStatResult } from "./validate.js";
 
+export {
+  crankPulseOnChain,
+  settlementRootFromHex,
+  winningSideCode,
+} from "./crank.js";
+export type { CrankPulseInput, CrankPulseResult } from "./crank.js";
+
 import type { SimBundle } from "@copium/txline";
 import { fetchStatValidation } from "./fetch.js";
 import { predicateGoalScored, predicateOverUnderHtYes } from "./predicate.js";

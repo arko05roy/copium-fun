@@ -68,8 +68,8 @@ describe("copium-pulses D9", () => {
   let traderAta: PublicKey;
 
   const fixtureId = 17_926_704n;
-  const opensAt = BigInt(Math.floor(Date.now() / 1000) - 10);
-  const closesAt = opensAt + 90n;
+  const opensAt = BigInt(Math.floor(Date.now() / 1000) - 1);
+  const closesAt = opensAt + 30n;
   const oddsLockRoot = Buffer.alloc(32, 7);
   const oddsMessageHash = Buffer.alloc(32, 9);
 
@@ -201,6 +201,61 @@ describe("copium-pulses D9", () => {
 
     const vaultAcct = await provider.connection.getTokenAccountBalance(vault);
     assert.equal(vaultAcct.value.amount, String(yesStake + noStake));
+  });
+
+  it("lock_pulse → post_settlement → settle_pulse → withdraw", async () => {
+    const poolInfo = await program.account.pulsePool.fetch(pool);
+    const deadline = Number(poolInfo.closesAt) * 1000 + 2000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    const settlementRoot = Buffer.alloc(32, 11);
+
+    await program.methods.lockPulse().accountsPartial({
+      crank: authority.publicKey,
+      pulsePool: pool,
+    }).rpc();
+
+    await program.methods
+      .postSettlement([...settlementRoot])
+      .accountsPartial({
+        crank: authority.publicKey,
+        pulsePool: pool,
+      })
+      .rpc();
+
+    await program.methods
+      .settlePulse(SIDE_YES)
+      .accountsPartial({
+        crank: authority.publicKey,
+        pulsePool: pool,
+      })
+      .rpc();
+
+    const settled = await program.account.pulsePool.fetch(pool);
+    assert.equal(settled.status, 2);
+    assert.equal(settled.winningSide, SIDE_YES);
+
+    const before = await provider.connection.getTokenAccountBalance(traderAta);
+    await program.methods
+      .withdraw()
+      .accountsPartial({
+        owner: trader.publicKey,
+        pulsePool: pool,
+        position: yesPosition,
+        ownerTokenAccount: traderAta,
+        vault,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([trader])
+      .rpc();
+
+    const after = await provider.connection.getTokenAccountBalance(traderAta);
+    assert.isAbove(Number(after.value.amount), Number(before.value.amount));
+
+    const yesPos = await program.account.position.fetch(yesPosition);
+    assert.equal(yesPos.stake.toNumber(), 0);
   });
 
   it("devnet stake mint matches TxLINE program addresses doc", () => {

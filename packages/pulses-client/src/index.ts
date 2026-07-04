@@ -79,3 +79,11 @@ function i64LE(value: bigint): Buffer {
 export { TXLINE_DEVNET } from "@copium/config";
 export { createPulseOnChain, accountExists } from "./create.js";
 export type { CreatePulseInput, CreatePulseResult } from "./create.js";
+export {
+  crankPulseOnChain,
+  withdrawPositionOnChain,
+  fetchPoolStatus,
+  settlementRootFromHex,
+  winningSideCode,
+} from "./crank.js";
+export type { CrankPulseInput, CrankPulseResult, WithdrawPositionInput } from "./crank.js";

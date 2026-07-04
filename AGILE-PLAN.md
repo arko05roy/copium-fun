@@ -12,7 +12,7 @@ e` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/
 
 **Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracl` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · 4 Jul 2026 — Phase A: validate_stat + proof_bundles (`pnpm verify:d11`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · D12 ✅ · D13 ✅ · 4 Jul 2026 — Phase B crank on devnet (`pnpm verify:d12`)
 
 ---
 
@@ -225,6 +225,8 @@ copium.fun/
 │   │       ├── desk-tape.tsx
 │   │       ├── agent-reasoning.tsx
 │   │       ├── proof-sheet.tsx
+│   │       ├── crank-status.tsx
+│   │       ├── bundle-download.tsx
 │   │       └── pulse-countdown.tsx
 │   ├── txline-ingest/
 │   ├── pulse-orchestrator/
@@ -788,24 +790,31 @@ Redis events + odds
 - [x] `/api/settlement/validate-stat` + sim session UI
 - [x] lock odds snapshot (D10) — `lockOddsSnapshot` + TxLINE `/api/odds/validation`
 
-### EPIC D — `copium-pulses` (D9–D12) — **D9 ✅**
+### EPIC D — `copium-pulses` (D9–D12) — **D12 ✅**
 
 - [x] `create_pulse` — PulsePool PDA + stake vault
 - [x] `open_position` — YES/NO SPL transfer + Position PDA
-- [x] `@copium/pulses-client` — PDA helpers + devnet program id
-- [x] `pnpm verify:d9` — IDL + anchor test on devnet
-- [ ] `lock_pulse`, `post_settlement`, `settle_pulse`, `withdraw` (D10–D12)
+- [x] `lock_pulse`, `post_settlement`, `settle_pulse`, `withdraw`
+- [x] `@copium/pulses-client` — crank + withdraw helpers
+- [x] `pnpm verify:d9` — anchor test · `pnpm verify:d12` — devnet crank
 
-### EPIC E — pulse-orchestrator (D11–D13) — **D11 ✅ Phase A**
+### EPIC E — pulse-orchestrator (D11–D13) — **D11 ✅ · D12 ✅**
 
 - [x] `apps/settlement-worker` — poll open pulses past `closes_at`
 - [x] `validateScore` — TxLINE timeline + `validate_stat.view()`
 - [x] `buildSettlementRoot` + `proof_bundles` insert
 - [x] `pnpm verify:d11` — spawn → Phase A → proof row
-- [ ] close scheduler + enqueue settle (D12–D13)
+- [x] Phase B — `runPhaseBPoll` lock → post_settlement → settle_pulse
+- [x] `pnpm verify:d12` — devnet crank + `proof_bundles.verify_tx`
 
-### EPIC F — Proof surface (D12–D14)
-`/proof/[pulseId]`, bundle API, crank wiring — **Track 1 video ready D14**
+### EPIC F — Proof surface (D12–D14) — **D13 ✅**
+
+- [x] `/api/proof/[pulseId]` — pulse + `proof_bundles` JSON
+- [x] `/proof/[pulseId]/page.tsx` — audit UI (Track 1 hero)
+- [x] `proof-sheet.tsx` · `crank-status.tsx` · `bundle-download.tsx`
+- [x] `pnpm verify:d13` — settled pulse → bundle download
+- [x] crank wiring on proof page (`verify_tx` from Phase B)
+- [ ] **Track 1 video ready D14**
 
 ### EPIC G — Agent runtime + Desk (D13–D17)
 Spawner LLM, Officer + Quant execute, Desk UI, copy Blinks — **Track 2 video ready D17**
@@ -856,8 +865,8 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | **D9 ✅** | `copium-pulses` create + open | anchor test (`pnpm verify:d9`) |
 | **D10 ✅** | pulse-orchestrator spawn E2E | pulse row + pool (`pnpm verify:d10`) |
 | **D11 ✅** | settlement-worker Phase A | proof_bundles (`pnpm verify:d11`) |
-| D12 | Phase B crank + withdraw | settled devnet |
-| D13 | `/proof/[pulseId]` UI + download | bundle JSON |
+| **D12 ✅** | Phase B crank + withdraw | settled devnet (`pnpm verify:d12`) |
+| **D13 ✅** | `/proof/[pulseId]` UI + download | bundle JSON (`pnpm verify:d13`) |
 | D14 | **M2:** Track 1 video draft OK | §17A recordable |
 
 ### Week 3 — Agents + Feed + ship (D15–D21)
@@ -886,8 +895,9 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | T1 | pulse-engine unit | `pnpm --filter @copium/pulse-engine test` |
 | T2 | settlement lock/validate | integration historical fixture |
 | T3 | validate_stat | settlement package |
+| T3b | Proof page + bundle API | `pnpm verify:d13` · `/proof/[pulseId]` |
 | T4 | Pulse open E2E | simulator + Playwright |
-| T5 | Crank settle E2E | worker + withdraw |
+| T5 | Crank settle E2E | `pnpm verify:d12` · worker Phase B |
 | T6 | Spawner output schema | zod snapshot |
 | T7 | Agent execute | recorded events |
 | T8 | Copy Blink | blinks.xyz inspector |
@@ -934,8 +944,8 @@ OPENAI_API_KEY=...          # Spawner + Narrator
 
 **Track 1**
 - [ ] `copium-pulses` on devnet
-- [ ] Permissionless settle crank
-- [ ] `/proof/[pulseId]` + JSON download
+- [x] Permissionless settle crank (`pnpm verify:d12`)
+- [x] `/proof/[pulseId]` + JSON download (`pnpm verify:d13`)
 - [ ] Simulator for repeatable demo
 - [ ] **Loom §17A** (standalone)
 

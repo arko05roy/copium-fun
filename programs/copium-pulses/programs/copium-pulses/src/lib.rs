@@ -36,6 +36,25 @@ pub mod copium_pulses {
     ) -> Result<()> {
         instructions::open_position::handler(ctx, side, stake, odds_message_hash)
     }
+
+    pub fn lock_pulse(ctx: Context<LockPulse>) -> Result<()> {
+        instructions::lock_pulse::handler(ctx)
+    }
+
+    pub fn post_settlement(
+        ctx: Context<PostSettlement>,
+        settlement_root: [u8; 32],
+    ) -> Result<()> {
+        instructions::post_settlement::handler(ctx, settlement_root)
+    }
+
+    pub fn settle_pulse(ctx: Context<SettlePulse>, winning_side: u8) -> Result<()> {
+        instructions::settle_pulse::handler(ctx, winning_side)
+    }
+
+    pub fn withdraw(ctx: Context<Withdraw>) -> Result<()> {
+        instructions::withdraw::handler(ctx)
+    }
 }
 
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -82,6 +101,30 @@ pub struct CreatePulse<'info> {
 }
 
 #[derive(Accounts)]
+pub struct LockPulse<'info> {
+    pub crank: Signer<'info>,
+
+    #[account(mut)]
+    pub pulse_pool: Account<'info, PulsePool>,
+}
+
+#[derive(Accounts)]
+pub struct PostSettlement<'info> {
+    pub crank: Signer<'info>,
+
+    #[account(mut)]
+    pub pulse_pool: Account<'info, PulsePool>,
+}
+
+#[derive(Accounts)]
+pub struct SettlePulse<'info> {
+    pub crank: Signer<'info>,
+
+    #[account(mut)]
+    pub pulse_pool: Account<'info, PulsePool>,
+}
+
+#[derive(Accounts)]
 #[instruction(side: u8, stake: u64, odds_message_hash: [u8; 32])]
 pub struct OpenPosition<'info> {
     #[account(mut)]
@@ -122,4 +165,45 @@ pub struct OpenPosition<'info> {
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Withdraw<'info> {
+    #[account(mut)]
+    pub owner: Signer<'info>,
+
+    #[account(mut)]
+    pub pulse_pool: Account<'info, PulsePool>,
+
+    #[account(
+        mut,
+        seeds = [
+            POSITION_SEED,
+            pulse_pool.key().as_ref(),
+            owner.key().as_ref(),
+            &[position.side],
+        ],
+        bump = position.bump,
+        constraint = position.pool == pulse_pool.key() @ CopiumError::InvalidSide,
+        constraint = position.owner == owner.key() @ CopiumError::InvalidSide,
+    )]
+    pub position: Account<'info, Position>,
+
+    #[account(
+        mut,
+        constraint = owner_token_account.mint == pulse_pool.stake_mint @ CopiumError::InvalidSide,
+        constraint = owner_token_account.owner == owner.key() @ CopiumError::InvalidSide,
+    )]
+    pub owner_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, pulse_pool.key().as_ref()],
+        bump = pulse_pool.vault_bump,
+        constraint = vault.mint == pulse_pool.stake_mint @ CopiumError::InvalidSide,
+        constraint = vault.owner == pulse_pool.key() @ CopiumError::InvalidSide,
+    )]
+    pub vault: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
 }

@@ -1,6 +1,6 @@
 import { createDbClient } from "./client.js";
 import type { Json } from "./database.js";
-import type { PulseRow } from "./pulses.js";
+import { listRecentPulses, type PulseRow } from "./pulses.js";
 
 export type ProofBundleRow = {
   pulse_id: string;
@@ -39,6 +39,12 @@ function proofBundles() {
           error: { message: string } | null;
         }>;
       };
+    };
+    update: (row: { verify_tx: string }) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => Promise<{ error: { message: string } | null }>;
     };
   };
 }
@@ -169,4 +175,29 @@ export async function updatePositionResults(
     updated += 1;
   }
   return updated;
+}
+
+export async function updateProofVerifyTx(
+  pulseId: string,
+  verifyTx: string,
+): Promise<void> {
+  const { error } = await proofBundles()
+    .update({ verify_tx: verifyTx })
+    .eq("pulse_id", pulseId);
+  if (error) throw new Error(error.message);
+}
+
+/** Phase B crank — settled pulse with proof bundle but no on-chain verify tx yet. */
+export async function listPulsesReadyForPhaseB(limit = 20): Promise<PulseRow[]> {
+  const pulses = await listRecentPulses(80);
+  const out: PulseRow[] = [];
+  for (const pulse of pulses) {
+    if (pulse.status !== "settled") continue;
+    if (!pulse.onchain_pool_pubkey || !pulse.winning_side) continue;
+    const proof = await getProofBundle(pulse.id);
+    if (!proof?.settlement_json || proof.verify_tx) continue;
+    out.push(pulse);
+    if (out.length >= limit) break;
+  }
+  return out;
 }

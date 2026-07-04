@@ -29,6 +29,8 @@
     "verify:d9": "node --import tsx scripts/verify-d9.ts",
     "verify:d10": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && pnpm --filter @copium/pulses-client build && pnpm anchor:build && node --import tsx scripts/verify-d10.ts",
     "verify:d11": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && pnpm --filter @copium/pulses-client build && pnpm anchor:build && node --import tsx scripts/verify-d11.ts",
+    "verify:d12": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && pnpm --filter @copium/txline build && pnpm --filter @copium/pulse-engine build && pnpm --filter @copium/settlement build && pnpm --filter @copium/pulses-client build && pnpm anchor:build && node --import tsx scripts/verify-d12.ts",
+    "verify:d13": "pnpm --filter @copium/config build && pnpm --filter @copium/db build && node --import tsx scripts/verify-d13.ts",
     "settlement:worker": "pnpm --filter @copium/settlement-worker start",
     "verify:d1-d5": "node --import tsx scripts/verify-d1-d5.ts",
     "verify:d1-d6": "node --import tsx scripts/verify-d1-d6.ts",

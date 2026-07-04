@@ -29,10 +29,10 @@ function main(): void {
     instructions: { name: string }[];
   };
   const names = new Set(parsed.instructions.map((ix) => ix.name));
-  for (const required of ["create_pulse", "open_position"]) {
+  for (const required of ["create_pulse", "open_position", "lock_pulse", "post_settlement", "settle_pulse", "withdraw"]) {
     if (!names.has(required)) throw new Error(`IDL missing ${required}`);
   }
-  console.log("IDL ok — create_pulse, open_position");
+  console.log("IDL ok — create_pulse, open_position, lock_pulse, post_settlement, settle_pulse, withdraw");
 
   run("anchor test", "env", ["-u", "CARGO_TARGET_DIR", "anchor", "test"], join(root, "programs/copium-pulses"));
   console.log("verify:d9 ok");

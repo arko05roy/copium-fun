@@ -2,6 +2,7 @@ import { createServer, type Server } from "node:http";
 import { loadEnv, SETTLEMENT_META_KEY } from "@copium/txline";
 import { Redis } from "ioredis";
 import { runPhaseAPoll, type PhaseAResult } from "./phase-a.js";
+import { runPhaseBPoll, type PhaseBResult } from "./phase-b.js";
 
 loadEnv();
 
@@ -19,10 +20,16 @@ const counters = {
 };
 
 const recent: PhaseAResult[] = [];
+const recentB: PhaseBResult[] = [];
 
 function remember(entry: PhaseAResult): void {
   recent.unshift(entry);
   if (recent.length > 20) recent.length = 20;
+}
+
+function rememberB(entry: PhaseBResult): void {
+  recentB.unshift(entry);
+  if (recentB.length > 20) recentB.length = 20;
 }
 
 function startHealthServer(redis: Redis): Server {
@@ -46,6 +53,7 @@ function startHealthServer(redis: Redis): Server {
       redis: redisOk,
       counters,
       recent,
+      recentPhaseB: recentB,
     };
 
     res.writeHead(body.ok ? 200 : 503, { "Content-Type": "application/json" });
@@ -92,6 +100,13 @@ export async function startWorker(): Promise<{
         counters.lastSettleAt = new Date().toISOString();
         console.log(JSON.stringify({ action: "phase_a_settled", ...row }));
       }
+
+      const phaseB = await runPhaseBPoll();
+      for (const row of phaseB) {
+        rememberB(row);
+        counters.lastSettleAt = new Date().toISOString();
+        console.log(JSON.stringify({ action: "phase_b_cranked", ...row }));
+      }
     } catch (err) {
       counters.errors += 1;
       console.error(
@@ -127,8 +142,12 @@ async function main(): Promise<void> {
     for (const row of results) {
       console.log(JSON.stringify({ action: "phase_a_settled", ...row }));
     }
-    if (results.length === 0) {
-      console.log(JSON.stringify({ action: "phase_a_idle" }));
+    const phaseB = await runPhaseBPoll();
+    for (const row of phaseB) {
+      console.log(JSON.stringify({ action: "phase_b_cranked", ...row }));
+    }
+    if (results.length === 0 && phaseB.length === 0) {
+      console.log(JSON.stringify({ action: "settlement_idle" }));
     }
     return;
   }

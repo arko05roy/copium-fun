@@ -18,8 +18,10 @@ export type { SimSessionRow } from "./simulator.js";
 export {
   getProofBundle,
   insertProofBundle,
+  listPulsesReadyForPhaseB,
   listPulsesReadyToSettle,
   markPulseSettled,
   updatePositionResults,
+  updateProofVerifyTx,
 } from "./settlement.js";
 export type { ProofBundleRow } from "./settlement.js";

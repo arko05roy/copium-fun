@@ -59,3 +59,21 @@
     color-scheme: light dark;
   }
 }
+
+/* Track 1 proof surface — audit document, scoped to /proof routes */
+.proof-surface {
+  --proof-bg: #08080a;
+  --proof-fg: #e6e3dc;
+  --proof-muted: #8a877f;
+  --proof-accent: #c9a227;
+  --proof-border: #2a2a2e;
+  --proof-valid: #3d9a6a;
+  --proof-invalid: #c44d4d;
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proof-surface * {
+    transition-duration: 0.01ms !important;
+  }
+}

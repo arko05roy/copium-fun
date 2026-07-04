@@ -17,6 +17,7 @@
   "dependencies": {
     "@copium/config": "workspace:*",
     "@copium/pulse-engine": "workspace:*",
+    "@copium/pulses-client": "workspace:*",
     "@copium/txline": "workspace:*",
     "@coral-xyz/anchor": "^0.32.1",
     "@solana/web3.js": "^1.98.2"
