@@ -5,14 +5,16 @@
 
 **Hackathon:** Register 24 Jun 2026 · Submit 19 Jul 2026 · Winners 29 Jul 2026  
 **Team:** 1–3 humans · **Tracks:** all three (separate Superteam entries) · **One prize max** (hackathon terms §2.6)
-e` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/video path (TxLINE historical bundles — UI feels live). Mainnet tier 12 = post-hackathon optional.
 
-**Companion docs:** `BRAND-DOC.md
+**Stack:** Devnet `txoracle` + devnet `copium-pulses` + devnet USDC. **Fixture simulator** = primary demo/video path (TxLINE historical bundles — UI feels live). Mainnet tier 12 = post-hackathon optional.
+
+**Companion docs:** `BRAND-DOC.md` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
+
 **Scope policy:** One **Pulse engine** powers three judge-facing surfaces — **Feed** (T3), **Desk** (T2), **Proof** (T1). **No published SDK.** World Cup = Season 0.
 
-**Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracl` (three separate videos §17A–C), `txline-txodds-research.md`, `sports-socialfi-prediction-agents-research.md`
+**Environment (LOCKED):** **Devnet** for build, demo, video, submission. TxLINE devnet + devnet `txoracle` program.
 
-**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · D12 ✅ · D13 ✅ · 4 Jul 2026 — Phase B crank on devnet (`pnpm verify:d12`)
+**Progress:** D1 ✅ · D2 ✅ · D3 ✅ · D4 ✅ · D5 ✅ · D6 ✅ · D7 ✅ · D8 ✅ · D9 ✅ · D10 ✅ · D11 ✅ · D12 ✅ · D13 ✅ · D14 ✅ · D15 ✅ · D16 ✅ · D17 ✅ · D18 ✅ · D19 ✅ · D20 ✅ · 5 Jul 2026 — receipts + judge paths (`pnpm verify:d19` · `pnpm verify:d20`)
 
 ---
 
@@ -707,8 +709,8 @@ Redis events + odds
 ### 12.3 dial.to checklist
 
 - [ ] HTTPS production domain
-- [ ] CORS on Action routes
-- [ ] Inspector pass on pulse-pick + copy-agent
+- [x] CORS on Action routes (`apps/web/lib/action-cors.ts` · `pnpm verify:d20`)
+- [ ] Inspector pass on pulse-pick + copy-agent (needs prod HTTPS — paste dial.to URL at blinks.xyz/inspector)
 
 ---
 
@@ -727,13 +729,13 @@ Redis events + odds
 
 ### 13.2 Feed components (mobile)
 
-| Component | Behavior |
-|-----------|----------|
-| `PulseCard` | 90s countdown, Crowd vs Line bar, YES/NO swipe |
-| `LiveHeader` | Score, minute, copium gap ticker |
-| `DuelBanner` | Room H2H score |
-| `AgentFlyby` | Compact agent trade card (no Desk) |
-| `ReceiptCard` | Share sheet trigger |
+| Component | Behavior | Status |
+|-----------|----------|--------|
+| `PulseCard` | 90s countdown, Crowd vs Line bar, YES/NO swipe | ✅ D18 |
+| `LiveHeader` | Score, minute, copium gap ticker | post-hackathon |
+| `DuelBanner` | Room H2H score | ✅ D18 |
+| `AgentFlyby` | Compact agent trade card (no Desk) | post-hackathon |
+| `ReceiptShare` | Share sheet trigger (`/r/[id]`) | ✅ D19 |
 
 ### 13.3 Desk components (web)
 
@@ -825,21 +827,35 @@ Redis events + odds
 - [x] Officer + Quant + Desk tape polish — **D16**
 - [x] **Track 2 video ready D17**
 
-### EPIC H — Mobile Feed + Rooms (D14–D18)
-Pulse cards, swipe, duel banner, receipts, join-room — **Track 3 video ready D18**
+### EPIC H — Mobile Feed + Rooms (D14–D18) — **D18 ✅**
 
-### EPIC I — Receipts (D16–D18)
-OG templates, `/r/[id]`, verify badge link
+- [x] `PulseCard` swipe → dial.to pulse-pick Blink (`apps/mobile/src/components/PulseCard.tsx`)
+- [x] `DuelBanner` + `/api/rooms/[roomId]/duel` (`pnpm verify:d18`)
+- [x] Feed open pulses API · wallet + room setup in `FeedScreen`
+- [x] **Track 3 video draft OK D18** — §17C recordable (`pnpm verify:d18`)
 
-### EPIC J — Blinks (D17)
-pulse-pick, copy-agent, join-room, dial.to
+### EPIC I — Receipts (D16–D19) — **D19 ✅**
+
+- [x] `mint_receipt` on Phase A settle (`apps/settlement-worker/src/mint-receipt.ts`)
+- [x] OG templates — `next/og` `ImageResponse` at `/r/[receiptId]/opengraph-image`
+- [x] `/r/[receiptId]` landing + TxLINE verify link → `/proof/[pulseId]`
+- [x] `/api/receipts/[receiptId]` + `/api/receipts/for-wallet`
+- [x] Mobile `ReceiptShare` share sheet (`pnpm verify:d19`)
+
+### EPIC J — Blinks (D17–D20) — **D20 ✅ (local)**
+
+- [x] `actions.json` rules — pulse-pick, copy-agent, fade-agent, join-room
+- [x] Action routes + CORS (`pnpm verify:d17` · `pnpm verify:d20`)
+- [x] dial.to deep links from mobile + `/room/[slug]`
+- [ ] blinks.xyz inspector pass on **production** HTTPS domain (D21 deploy)
 
 ### EPIC K — Hackathon submit (D19–D21)
 
-- [x] `JUDGE.md` outline (repo root)
-- [ ] 3 judge paths wired in product
+- [x] `JUDGE.md` — full judge guide (repo root · updated D20)
+- [x] 3 judge paths wired — `/proof`, `/desk`, `/room/demo` + home cards (`pnpm verify:d20`)
 - [ ] **3 Loom videos** (§17A/B/C)
 - [ ] 3× Superteam forms
+- [ ] Live URL (production deploy)
 
 ### EPIC L — Post-hackathon
 MagicBlock live, mainnet, extra pulse types, Expo push prod
@@ -880,11 +896,11 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | Day | Focus | Exit |
 |-----|-------|------|
 | **D15 ✅** | Spawner LLM + first agent execute | tx on Desk (`pnpm verify:d15`) |
-| D16 ✅ | Officer + Quant + Desk tape | copy works |
-| D17 ✅ | **M3:** Track 2 video draft OK | §17B recordable |
-| D18 | Mobile PulseCard swipe + duel | §17C recordable |
-| D19 | Receipts OG + Room join | share works |
-| D20 | Blinks + JUDGE.md + polish | 3 judge paths |
+| **D16 ✅** | Officer + Quant + Desk tape | copy works (`pnpm verify:d16`) |
+| **D17 ✅** | **M3:** Track 2 video draft OK | §17B recordable (`pnpm verify:d17`) |
+| **D18 ✅** | Mobile PulseCard swipe + duel | §17C recordable (`pnpm verify:d18`) |
+| **D19 ✅** | Receipts OG + Room join | share works (`pnpm verify:d19`) |
+| **D20 ✅** | Blinks + JUDGE.md + polish | 3 judge paths (`pnpm verify:d20`) |
 | D21 | **M5:** 3 final videos + 3 submissions | submit |
 
 **D22 (19 Jul):** buffer — fix blockers
@@ -906,9 +922,10 @@ MagicBlock live, mainnet, extra pulse types, Expo push prod
 | T5 | Crank settle E2E | `pnpm verify:d12` · worker Phase B |
 | T6 | Spawner output schema | zod snapshot |
 | T7 | Agent execute | recorded events |
-| T8 | Copy Blink | blinks.xyz inspector |
-| T9 | Duel points | unit |
-| T10 | JUDGE walkthrough ×3 | one path per track |
+| T8 | Copy Blink | blinks.xyz inspector (local: `pnpm verify:d20` · prod: after deploy) |
+| T9 | Duel points | unit (`@copium/pulse-engine`) |
+| T10 | JUDGE walkthrough ×3 | `pnpm verify:d20` · one path per track |
+| T11 | Receipts OG + share | `pnpm verify:d19` · `/r/[receiptId]` |
 
 ---
 
@@ -962,17 +979,18 @@ OPENAI_API_KEY=...          # Spawner + Narrator
 - [ ] **Loom §17B** (standalone)
 
 **Track 3**
-- [x] React Native Feed (shell — `FeedScreen`, D1)
-- [ ] Pulse swipe + Room duel
-- [ ] Receipts + share
+- [x] React Native Feed (`FeedScreen`, `PulseCard`, `DuelBanner`)
+- [x] Pulse swipe + Room duel (`pnpm verify:d18`)
+- [x] Receipts + share (`ReceiptShare` · `pnpm verify:d19`)
 - [ ] **Loom §17C** (phone only)
+- [ ] TestFlight / APK link in `JUDGE.md` (R8 — D21 if no binary yet)
 
 ### 18.3 Shared deliverables
 
 - [x] Public GitHub monorepo
 - [ ] Live URL
-- [x] `JUDGE.md` (outline on repo)
-- [ ] Devnet badge all surfaces
+- [x] `JUDGE.md` (full judge guide — D20)
+- [ ] Devnet badge all surfaces (home · receipt · room — proof/desk/mobile pending)
 - [x] No FIFA marks
 - [ ] **Three videos — never combined**
 
@@ -1030,7 +1048,7 @@ Devnet. Phantom devnet. No payment.
 | R5 | Three videos scope | Record drafts D14/D17/D18 not D21 |
 | R6 | Track shopping | Same pulse_id in all READMEs — one engine diagram |
 | R7 | Gambling optics | Free rooms + devnet copy |
-| R8 | RN demo friction | APK + TestFlight link in JUDGE.md by D20 |
+| R8 | RN demo friction | APK + TestFlight link in JUDGE.md by D20 — **deferred D21** (Expo dev build) |
 
 ---
 
@@ -1063,4 +1081,4 @@ Devnet. Phantom devnet. No payment.
 ---
 
 *One engine. Three surfaces. Every moment is a market.*  
-*Document version: 4.4 — D1–D4 complete · 1 Jul 2026*
+*Document version: 4.5 — D1–D20 complete · 5 Jul 2026*
