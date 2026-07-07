@@ -31,6 +31,7 @@ import {
   requestDevnetUsdtFaucet,
   solanaRpcUrl,
 } from "@copium/txline";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -73,6 +74,19 @@ const userAgentDecisionSchema = z.object({
   reason: z.string().max(160),
   confidence: z.number().min(0).max(1),
 });
+
+function createUserAgentModel(config: UserAgentConfig, apiKey: string) {
+  if (config.provider === "anthropic") {
+    return createAnthropic({ apiKey })(config.model);
+  }
+  if (config.provider === "groq") {
+    return createOpenAI({
+      apiKey,
+      baseURL: "https://api.groq.com/openai/v1",
+    })(config.model);
+  }
+  return createOpenAI({ apiKey })(config.model);
+}
 
 async function ensureUsdtBalance(
   connection: Connection,
@@ -198,9 +212,8 @@ async function userAgentDecision(input: {
   if (!apiKey) return null;
   let object: z.infer<typeof userAgentDecisionSchema>;
   try {
-    const openai = createOpenAI({ apiKey });
     const result = await generateObject({
-      model: openai(input.config.model),
+      model: createUserAgentModel(input.config, apiKey),
       schema: userAgentDecisionSchema,
       prompt: [
         "You are a devnet sports Pulse trading agent.",

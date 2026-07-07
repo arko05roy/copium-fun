@@ -23,6 +23,102 @@ type ApiResponse = {
   agents?: UserAgent[];
 };
 
+const MODEL_OPTIONS = [
+  { label: "OpenAI · gpt-5", provider: "openai", model: "gpt-5" },
+  { label: "OpenAI · gpt-5-mini", provider: "openai", model: "gpt-5-mini" },
+  { label: "OpenAI · gpt-5-nano", provider: "openai", model: "gpt-5-nano" },
+  { label: "OpenAI · gpt-4.1", provider: "openai", model: "gpt-4.1" },
+  { label: "OpenAI · gpt-4.1-mini", provider: "openai", model: "gpt-4.1-mini" },
+  { label: "OpenAI · gpt-4.1-nano", provider: "openai", model: "gpt-4.1-nano" },
+  { label: "OpenAI · gpt-4o", provider: "openai", model: "gpt-4o" },
+  { label: "OpenAI · gpt-4o-mini", provider: "openai", model: "gpt-4o-mini" },
+  { label: "OpenAI · o3", provider: "openai", model: "o3" },
+  { label: "OpenAI · o3-mini", provider: "openai", model: "o3-mini" },
+  { label: "OpenAI · o4-mini", provider: "openai", model: "o4-mini" },
+  { label: "OpenAI · gpt-4-turbo", provider: "openai", model: "gpt-4-turbo" },
+  {
+    label: "Claude · claude-opus-4-1",
+    provider: "anthropic",
+    model: "claude-opus-4-1",
+  },
+  {
+    label: "Claude · claude-opus-4-0",
+    provider: "anthropic",
+    model: "claude-opus-4-0",
+  },
+  {
+    label: "Claude · claude-sonnet-4-5",
+    provider: "anthropic",
+    model: "claude-sonnet-4-5",
+  },
+  {
+    label: "Claude · claude-sonnet-4-0",
+    provider: "anthropic",
+    model: "claude-sonnet-4-0",
+  },
+  {
+    label: "Claude · claude-3-7-sonnet-latest",
+    provider: "anthropic",
+    model: "claude-3-7-sonnet-latest",
+  },
+  {
+    label: "Claude · claude-3-5-sonnet-latest",
+    provider: "anthropic",
+    model: "claude-3-5-sonnet-latest",
+  },
+  {
+    label: "Claude · claude-3-5-haiku-latest",
+    provider: "anthropic",
+    model: "claude-3-5-haiku-latest",
+  },
+  {
+    label: "Claude · claude-3-haiku-20240307",
+    provider: "anthropic",
+    model: "claude-3-haiku-20240307",
+  },
+  {
+    label: "Groq · llama-3.3-70b-versatile",
+    provider: "groq",
+    model: "llama-3.3-70b-versatile",
+  },
+  {
+    label: "Groq · llama-3.1-8b-instant",
+    provider: "groq",
+    model: "llama-3.1-8b-instant",
+  },
+  {
+    label: "Groq · meta-llama/llama-4-maverick-17b-128e-instruct",
+    provider: "groq",
+    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+  },
+  {
+    label: "Groq · meta-llama/llama-4-scout-17b-16e-instruct",
+    provider: "groq",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+  },
+  {
+    label: "Groq · deepseek-r1-distill-llama-70b",
+    provider: "groq",
+    model: "deepseek-r1-distill-llama-70b",
+  },
+  { label: "Groq · qwen/qwen3-32b", provider: "groq", model: "qwen/qwen3-32b" },
+  {
+    label: "Groq · moonshotai/kimi-k2-instruct",
+    provider: "groq",
+    model: "moonshotai/kimi-k2-instruct",
+  },
+  {
+    label: "Groq · openai/gpt-oss-120b",
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+  },
+  {
+    label: "Groq · openai/gpt-oss-20b",
+    provider: "groq",
+    model: "openai/gpt-oss-20b",
+  },
+];
+
 export function AddAgentPanel() {
   const { wallet, status, connect, connectors } = useWalletConnection();
   const [agents, setAgents] = useState<UserAgent[]>([]);
@@ -38,6 +134,8 @@ export function AddAgentPanel() {
   const [error, setError] = useState<string | null>(null);
 
   const owner = wallet?.account.address.toString();
+  const selectedModel =
+    MODEL_OPTIONS.find((option) => option.model === model) ?? MODEL_OPTIONS[0]!;
 
   const ensureWallet = useCallback(async () => {
     if (status === "connected" && owner) return owner;
@@ -103,7 +201,7 @@ export function AddAgentPanel() {
         body: JSON.stringify({
           owner: walletOwner,
           name,
-          provider: "openai",
+          provider: selectedModel.provider,
           model,
           style,
           apiKey,
@@ -193,9 +291,11 @@ export function AddAgentPanel() {
             onChange={(e) => setModel(e.target.value)}
             className="border border-[var(--desk-border)] bg-[var(--desk-bg)] px-3 py-2 font-mono text-xs outline-none"
           >
-            <option value="gpt-4o-mini">OpenAI · gpt-4o-mini</option>
-            <option value="gpt-4o">OpenAI · gpt-4o</option>
-            <option value="gpt-4.1-mini">OpenAI · gpt-4.1-mini</option>
+            {MODEL_OPTIONS.map((option) => (
+              <option key={option.model} value={option.model}>
+                {option.label}
+              </option>
+            ))}
           </select>
           <input
             value={style}
@@ -207,7 +307,7 @@ export function AddAgentPanel() {
           <input
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
-            placeholder="OpenAI API key"
+            placeholder={`${selectedModel.label.split(" · ")[0]} API key`}
             type="password"
             className="border border-[var(--desk-border)] bg-[var(--desk-bg)] px-3 py-2 font-mono text-xs outline-none"
           />

@@ -20,6 +20,7 @@ export {
 export type { FixtureRow, PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";
 export {
+  AGENT_MODEL_OPTIONS,
   ensureAgent,
   createAgentClaimCode,
   createUserAgent,

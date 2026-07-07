@@ -1,10 +1,17 @@
-import { createUserAgent, listUserAgents, loadEnv } from "@copium/db";
+import {
+  AGENT_MODEL_OPTIONS,
+  createUserAgent,
+  listUserAgents,
+  loadEnv,
+} from "@copium/db";
 import { Keypair } from "@solana/web3.js";
 import { NextResponse } from "next/server";
 
 loadEnv();
 
-const ALLOWED_MODELS = new Set(["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"]);
+const ALLOWED_MODELS = new Map(
+  AGENT_MODEL_OPTIONS.map((option) => [option.model, option.provider])
+);
 
 function jsonError(message: string, status = 400) {
   return NextResponse.json({ ok: false, error: message }, { status });
@@ -36,6 +43,7 @@ export async function POST(req: Request) {
     const owner = body.owner?.trim();
     const name = body.name?.trim();
     const model = body.model?.trim() || "gpt-4o-mini";
+    const provider = ALLOWED_MODELS.get(model);
     const style = body.style?.trim();
     const apiKey = body.apiKey?.trim();
     if (!owner) return jsonError("owner required");
@@ -43,9 +51,8 @@ export async function POST(req: Request) {
     if (!style) return jsonError("one-line style required");
     if (style.length > 120)
       return jsonError("style must stay under 120 characters");
-    if (body.provider && body.provider !== "openai")
-      return jsonError("only openai is supported");
-    if (!ALLOWED_MODELS.has(model)) return jsonError("unsupported model");
+    if (!provider || (body.provider && body.provider !== provider))
+      return jsonError("unsupported model");
     if (!apiKey) return jsonError("apiKey required for web-created agents");
 
     const keypair = Keypair.generate();
@@ -54,7 +61,7 @@ export async function POST(req: Request) {
       ownerWallet: owner,
       walletPubkey: keypair.publicKey.toBase58(),
       walletSecret: Array.from(keypair.secretKey),
-      provider: "openai",
+      provider,
       model,
       style,
       source: "web",

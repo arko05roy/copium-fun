@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { stdin as input, stdout as output } from "node:process";
 import { loadEnv } from "@copium/txline";
 import {
+  AGENT_MODEL_OPTIONS,
+  type AgentProvider,
   createAgentClaimCode,
   createUserAgent,
   loadEnv as loadDbEnv,
@@ -11,6 +13,11 @@ import { Keypair } from "@solana/web3.js";
 
 loadEnv();
 loadDbEnv();
+
+const MODEL_OPTIONS = AGENT_MODEL_OPTIONS;
+const DEFAULT_MODEL =
+  MODEL_OPTIONS.find((option) => option.model === "gpt-4o-mini") ??
+  MODEL_OPTIONS[0]!;
 
 function argValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
@@ -24,6 +31,7 @@ function hasFlag(flag: string): boolean {
 
 async function askMissingAgentFields(defaults: {
   name?: string;
+  provider?: AgentProvider;
   model?: string;
   style?: string;
   apiKey?: string;
@@ -31,6 +39,7 @@ async function askMissingAgentFields(defaults: {
   enabled?: boolean;
 }): Promise<{
   name: string;
+  provider: AgentProvider;
   model: string;
   style: string;
   apiKey?: string;
@@ -55,14 +64,43 @@ async function askMissingAgentFields(defaults: {
   };
   try {
     const name = defaults.name ?? (await ask("Agent name: ")).trim();
-    const model =
-      defaults.model ??
-      ((await ask("Model [gpt-4o-mini]: ")).trim() || "gpt-4o-mini");
+    const defaultOption =
+      MODEL_OPTIONS.find(
+        (option) =>
+          option.provider === defaults.provider &&
+          option.model === defaults.model,
+      ) ??
+      MODEL_OPTIONS.find((option) => option.provider === defaults.provider) ??
+      MODEL_OPTIONS.find((option) => option.model === defaults.model) ??
+      DEFAULT_MODEL;
+    const defaultOptionNumber = MODEL_OPTIONS.indexOf(defaultOption) + 1;
+    const selectedOption = defaults.model
+      ? defaultOption
+      : (MODEL_OPTIONS[
+          Number(
+            (
+              await ask(
+                [
+                  "Model:",
+                  ...MODEL_OPTIONS.map(
+                    (option, index) =>
+                      `  ${index + 1}. ${option.label}${option === defaultOption ? " (default)" : ""}`,
+                  ),
+                  `Choose model [${defaultOptionNumber}]: `,
+                ].join("\n"),
+              )
+            ).trim() || defaultOptionNumber,
+          ) - 1
+        ] ?? defaultOption);
     const style =
       defaults.style ?? (await ask("One-line trading style: ")).trim();
     const apiKey =
       defaults.apiKey ??
-      (await ask("OpenAI API key [uses OPENAI_API_KEY if blank]: ")).trim() ??
+      (
+        await ask(
+          `${selectedOption.label.split(" · ")[0]} API key [uses ${selectedOption.env} if blank]: `,
+        )
+      ).trim() ??
       undefined;
     const maxStakeRaw = await ask(
       `Max devnet stake in micro-USDT [${defaults.maxStake ?? 100_000}]: `,
@@ -79,9 +117,10 @@ async function askMissingAgentFields(defaults: {
     if (!style) throw new Error("one-line trading style required");
     return {
       name,
-      model,
+      provider: selectedOption.provider,
+      model: selectedOption.model,
       style,
-      apiKey: apiKey || process.env.OPENAI_API_KEY?.trim(),
+      apiKey: apiKey || process.env[selectedOption.env]?.trim(),
       maxStake: Number(maxStakeRaw || defaults.maxStake || 100_000),
       enabled,
     };
@@ -95,9 +134,12 @@ async function main(): Promise<void> {
   if (command === "create-agent") {
     const answers = await askMissingAgentFields({
       name: argValue("--name"),
+      provider: MODEL_OPTIONS.find(
+        (option) => option.provider === argValue("--provider"),
+      )?.provider,
       model: argValue("--model"),
       style: argValue("--style"),
-      apiKey: argValue("--api-key") ?? process.env.OPENAI_API_KEY,
+      apiKey: argValue("--api-key"),
       maxStake: Number(argValue("--max-stake") ?? 100_000),
       enabled: hasFlag("--enable"),
     });
@@ -106,7 +148,7 @@ async function main(): Promise<void> {
       name: answers.name,
       walletPubkey: keypair.publicKey.toBase58(),
       walletSecret: Array.from(keypair.secretKey),
-      provider: "openai",
+      provider: answers.provider,
       model: answers.model,
       style: answers.style,
       source: "cli",
@@ -133,6 +175,7 @@ async function main(): Promise<void> {
       console.log("");
       console.log("Agent created");
       console.log(`Name:       ${payload.agent.name}`);
+      console.log(`Provider:   ${answers.provider}`);
       console.log(`Model:      ${answers.model}`);
       console.log(`Style:      ${answers.style}`);
       console.log(`Permission: ${payload.permission}`);

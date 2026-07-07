@@ -6,8 +6,190 @@ import {
 } from "node:crypto";
 import { createDbClient } from "./client.js";
 
-const SUPPORTED_AGENT_PROVIDERS = ["openai"] as const;
+const SUPPORTED_AGENT_PROVIDERS = ["openai", "anthropic", "groq"] as const;
 export type AgentProvider = (typeof SUPPORTED_AGENT_PROVIDERS)[number];
+
+export const AGENT_MODEL_OPTIONS: {
+  label: string;
+  provider: AgentProvider;
+  model: string;
+  env: string;
+}[] = [
+  {
+    label: "OpenAI · gpt-5",
+    provider: "openai",
+    model: "gpt-5",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-5-mini",
+    provider: "openai",
+    model: "gpt-5-mini",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-5-nano",
+    provider: "openai",
+    model: "gpt-5-nano",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4.1",
+    provider: "openai",
+    model: "gpt-4.1",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4.1-mini",
+    provider: "openai",
+    model: "gpt-4.1-mini",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4.1-nano",
+    provider: "openai",
+    model: "gpt-4.1-nano",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4o",
+    provider: "openai",
+    model: "gpt-4o",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4o-mini",
+    provider: "openai",
+    model: "gpt-4o-mini",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · o3",
+    provider: "openai",
+    model: "o3",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · o3-mini",
+    provider: "openai",
+    model: "o3-mini",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · o4-mini",
+    provider: "openai",
+    model: "o4-mini",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "OpenAI · gpt-4-turbo",
+    provider: "openai",
+    model: "gpt-4-turbo",
+    env: "OPENAI_API_KEY",
+  },
+  {
+    label: "Claude · claude-opus-4-1",
+    provider: "anthropic",
+    model: "claude-opus-4-1",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-opus-4-0",
+    provider: "anthropic",
+    model: "claude-opus-4-0",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-sonnet-4-5",
+    provider: "anthropic",
+    model: "claude-sonnet-4-5",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-sonnet-4-0",
+    provider: "anthropic",
+    model: "claude-sonnet-4-0",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-3-7-sonnet-latest",
+    provider: "anthropic",
+    model: "claude-3-7-sonnet-latest",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-3-5-sonnet-latest",
+    provider: "anthropic",
+    model: "claude-3-5-sonnet-latest",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-3-5-haiku-latest",
+    provider: "anthropic",
+    model: "claude-3-5-haiku-latest",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Claude · claude-3-haiku-20240307",
+    provider: "anthropic",
+    model: "claude-3-haiku-20240307",
+    env: "ANTHROPIC_API_KEY",
+  },
+  {
+    label: "Groq · llama-3.3-70b-versatile",
+    provider: "groq",
+    model: "llama-3.3-70b-versatile",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · llama-3.1-8b-instant",
+    provider: "groq",
+    model: "llama-3.1-8b-instant",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · meta-llama/llama-4-maverick-17b-128e-instruct",
+    provider: "groq",
+    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · meta-llama/llama-4-scout-17b-16e-instruct",
+    provider: "groq",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · deepseek-r1-distill-llama-70b",
+    provider: "groq",
+    model: "deepseek-r1-distill-llama-70b",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · qwen/qwen3-32b",
+    provider: "groq",
+    model: "qwen/qwen3-32b",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · moonshotai/kimi-k2-instruct",
+    provider: "groq",
+    model: "moonshotai/kimi-k2-instruct",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · openai/gpt-oss-120b",
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+    env: "GROQ_API_KEY",
+  },
+  {
+    label: "Groq · openai/gpt-oss-20b",
+    provider: "groq",
+    model: "openai/gpt-oss-20b",
+    env: "GROQ_API_KEY",
+  },
+];
 
 export type UserAgentConfig = {
   kind: "user";
@@ -283,7 +465,10 @@ export function isUserAgentConfig(config: unknown): config is UserAgentConfig {
   if (!config || typeof config !== "object") return false;
   const c = config as Partial<UserAgentConfig>;
   return (
-    c.kind === "user" && c.provider === "openai" && typeof c.style === "string"
+    c.kind === "user" &&
+    c.provider !== undefined &&
+    SUPPORTED_AGENT_PROVIDERS.includes(c.provider) &&
+    typeof c.style === "string"
   );
 }
 
