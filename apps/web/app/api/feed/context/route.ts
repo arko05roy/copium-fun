@@ -1,4 +1,9 @@
-import { getLatestSimulatorSession, listOpenPulses, loadEnv } from "@copium/db";
+import {
+  getFixture,
+  getLatestSimulatorSession,
+  listOpenPulses,
+  loadEnv,
+} from "@copium/db";
 import { copiumGap } from "@copium/pulse-engine/copium-gap";
 import { detectStateAtCursor, isSimBundle } from "@copium/txline/sim";
 import { NextResponse } from "next/server";
@@ -6,6 +11,14 @@ import { NextResponse } from "next/server";
 import { fetchTxlineLiveContext } from "@/lib/txline-live-context";
 
 loadEnv();
+
+async function matchNameForFixture(fixtureId: number | null): Promise<string> {
+  if (fixtureId == null) return "World Cup match";
+  const fixture = await getFixture(fixtureId);
+  if (fixture?.home_name && fixture.away_name)
+    return `${fixture.home_name} vs ${fixture.away_name}`;
+  return `Fixture ${fixtureId}`;
+}
 
 export async function GET() {
   try {
@@ -43,9 +56,17 @@ export async function GET() {
         scoreAway = state.goals[2] ?? 0;
         phase = state.gameState ?? "—";
         minute =
-          phase === "H1" ? 22 : phase === "HT" ? 45 : phase === "H2" ? 67 : null;
+          phase === "H1"
+            ? 22
+            : phase === "HT"
+              ? 45
+              : phase === "H2"
+                ? 67
+                : null;
       }
     }
+
+    const matchName = await matchNameForFixture(fixtureId);
 
     return NextResponse.json({
       ok: true,
@@ -59,6 +80,7 @@ export async function GET() {
         crowdYesPct: crowd,
         linePct: line,
         fixtureId,
+        matchName,
         simSessionId,
         pulseQuestion: pulse?.question ?? null,
         source,

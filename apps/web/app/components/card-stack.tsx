@@ -12,11 +12,16 @@ type PulseCardStackProps = {
 };
 
 function secondsLeft(closesAt: string): number {
-  return Math.max(0, Math.floor((new Date(closesAt).getTime() - Date.now()) / 1000));
+  return Math.max(
+    0,
+    Math.floor((new Date(closesAt).getTime() - Date.now()) / 1000)
+  );
 }
 
 function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
-  const [remaining, setRemaining] = useState(() => secondsLeft(pulse.closes_at));
+  const [remaining, setRemaining] = useState(() =>
+    secondsLeft(pulse.closes_at)
+  );
 
   useEffect(() => {
     if (!live) return;
@@ -39,6 +44,15 @@ function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
         </span>
       </div>
 
+      <div className="space-y-1">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--feed-kicker)]">
+          {pulse.matchName}
+        </p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-muted)]">
+          {pulse.triggerLabel} · Spawner-created
+        </p>
+      </div>
+
       <p className="text-2xl leading-snug line-clamp-6">{pulse.question}</p>
 
       <div className="mt-auto space-y-3">
@@ -53,8 +67,12 @@ function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
           />
         </div>
         <div className="flex justify-between text-xs font-semibold tracking-wide">
-          <span className="text-[var(--feed-muted)]">Crowd {crowdYes.toFixed(0)}% YES</span>
-          <span className="text-[var(--feed-line)]">Line {line.toFixed(0)}%</span>
+          <span className="text-[var(--feed-muted)]">
+            Crowd {crowdYes.toFixed(0)}% YES
+          </span>
+          <span className="text-[var(--feed-line)]">
+            Line {line.toFixed(0)}%
+          </span>
         </div>
         {live ? (
           <div className="flex justify-between text-xs font-semibold tracking-wide">
@@ -67,7 +85,11 @@ function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
   );
 }
 
-export function CardStack({ pulses, currentIndex, onSwipe }: PulseCardStackProps) {
+export function CardStack({
+  pulses,
+  currentIndex,
+  onSwipe,
+}: PulseCardStackProps) {
   const visible = pulses.slice(currentIndex, currentIndex + 3);
 
   const items = useMemo(
@@ -76,7 +98,7 @@ export function CardStack({ pulses, currentIndex, onSwipe }: PulseCardStackProps
         id: pulse.id,
         content: <PulseCardBody pulse={pulse} live={i === 0} />,
       })),
-    [visible],
+    [visible]
   );
 
   if (visible.length === 0) {

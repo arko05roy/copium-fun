@@ -40,9 +40,12 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ account }),
-        },
+        }
       );
-      const json = (await res.json()) as { transaction?: string; message?: string };
+      const json = (await res.json()) as {
+        transaction?: string;
+        message?: string;
+      };
       if (!res.ok || !json.transaction) {
         throw new Error(json.message ?? "pick tx build failed");
       }
@@ -67,17 +70,35 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
 
   const crowdYes = pulse.crowd_yes_pct ?? 50;
   const line = pulse.line_pct ?? 50;
+  const closesAt = new Date(pulse.closes_at).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
   return (
     <div className="flex min-h-[32rem] flex-col gap-8 rounded-2xl border border-[var(--feed-border)] bg-[var(--feed-card)] p-8">
       <div className="space-y-4">
         <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">
-          Current pulse
+          Current Pulse · {pulse.matchName}
         </p>
-        <h2 className="text-2xl leading-snug text-[var(--feed-fg)] sm:text-3xl">{pulse.question}</h2>
+        <h2 className="text-2xl leading-snug text-[var(--feed-fg)] sm:text-3xl">
+          {pulse.question}
+        </h2>
+        <div className="grid gap-2 rounded-xl border border-[var(--feed-border)] bg-[#0b1f14] p-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-muted)]">
+          <span>{pulse.triggerLabel}</span>
+          <span>{pulse.createdBy}</span>
+          <span>
+            {pulse.windowLabel} · locks at {closesAt}
+          </span>
+        </div>
         <div className="flex gap-4 text-xs text-[var(--feed-muted)]">
-          <span className="text-[var(--feed-accent)]">Crowd {crowdYes.toFixed(0)}% YES</span>
-          <span className="text-[var(--feed-line)]">Line {line.toFixed(0)}%</span>
+          <span className="text-[var(--feed-accent)]">
+            Crowd {crowdYes.toFixed(0)}% YES
+          </span>
+          <span className="text-[var(--feed-line)]">
+            Line {line.toFixed(0)}%
+          </span>
         </div>
       </div>
 
@@ -105,7 +126,9 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
       </div>
 
       <div className="space-y-3">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">Amount</p>
+        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">
+          Amount
+        </p>
         <div className="grid grid-cols-3 gap-3">
           {STAKE_OPTIONS.map((opt) => (
             <button
@@ -133,8 +156,14 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
         Skip pulse
       </button>
 
+      <p className="text-center text-xs leading-5 text-[var(--feed-muted)]">
+        {pulse.missedWindowCopy}
+      </p>
+
       {pending ? (
-        <p className="text-center text-xs text-[var(--feed-accent)]">Signing on devnet…</p>
+        <p className="text-center text-xs text-[var(--feed-accent)]">
+          Signing on devnet…
+        </p>
       ) : null}
       {result ? (
         <a
@@ -146,7 +175,9 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
           {result.slice(0, 12)}…
         </a>
       ) : null}
-      {error ? <p className="text-center text-xs text-[var(--feed-no)]">{error}</p> : null}
+      {error ? (
+        <p className="text-center text-xs text-[var(--feed-no)]">{error}</p>
+      ) : null}
     </div>
   );
 }

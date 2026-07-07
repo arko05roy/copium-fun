@@ -1,4 +1,8 @@
-import { insertCrowdPosition, loadEnv, refreshPulseCrowdFromPositions } from "@copium/db";
+import {
+  insertCrowdPosition,
+  loadEnv,
+  refreshPulseCrowdFromPositions,
+} from "@copium/db";
 import { SOLANA_DEVNET } from "@copium/config";
 import { buildOpenPositionTransaction } from "@copium/pulses-client";
 import { createPostResponse, type ActionGetResponse } from "@solana/actions";
@@ -25,10 +29,14 @@ function parseStake(raw: string | null): number {
 
 export async function buildPulsePickGet(
   pulseId: string,
-  baseUrl: string,
+  baseUrl: string
 ): Promise<ActionGetResponse | { error: string }> {
   const pulse = await ensurePulsePool(pulseId);
-  if (pulse.status !== "open") return { error: `pulse ${pulse.status ?? "closed"}` };
+  if (pulse.status !== "open") {
+    return {
+      error: `Pulse ${pulse.status ?? "closed"} — voting only works during the 90-second window.`,
+    };
+  }
   if (!pulse.onchain_pool_pubkey || !pulse.odds_message_id) {
     return { error: "pulse missing on-chain pool" };
   }
@@ -41,8 +49,8 @@ export async function buildPulsePickGet(
     type: "action",
     icon: new URL("/icon.svg", baseUrl).toString(),
     title: pulse.question,
-    description: `Line ${line} · Crowd ${crowd} YES · ${SOLANA_DEVNET.cluster}`,
-    label: "Pick",
+    description: `Live Pulse only · Line ${line} · Crowd ${crowd} YES · ${SOLANA_DEVNET.cluster}`,
+    label: "Pick before close",
     links: {
       actions: [
         {
@@ -64,14 +72,18 @@ export async function buildPulsePickPost(
   pulseId: string,
   account: string,
   sideRaw: string | null,
-  stakeRaw: string | null = null,
+  stakeRaw: string | null = null
 ): Promise<{ transaction: string; message: string } | { error: string }> {
   const side = parseSide(sideRaw);
   if (!side) return { error: "side=yes|no required" };
   const stake = parseStake(stakeRaw);
 
   const pulse = await ensurePulsePool(pulseId);
-  if (pulse.status !== "open") return { error: `pulse ${pulse.status ?? "closed"}` };
+  if (pulse.status !== "open") {
+    return {
+      error: `Pulse ${pulse.status ?? "closed"} — wait for the next open Pulse or inspect proof after settlement.`,
+    };
+  }
   if (!pulse.onchain_pool_pubkey || !pulse.odds_message_id) {
     return { error: "pulse missing on-chain pool" };
   }
@@ -103,13 +115,14 @@ export async function buildPulsePickPost(
     fields: {
       type: "transaction",
       transaction: tx,
-      message: `${side.toUpperCase()} · ${pulse.question.slice(0, 64)} · devnet`,
+      message: `${side.toUpperCase()} on live Pulse · ${pulse.question.slice(0, 64)} · devnet`,
     },
   });
-  if (post.type !== "transaction") return { error: "pulse-pick tx build failed" };
+  if (post.type !== "transaction")
+    return { error: "pulse-pick tx build failed" };
 
   return {
     transaction: post.transaction,
-    message: `Pick ${side.toUpperCase()}`,
+    message: `Picked ${side.toUpperCase()} before close`,
   };
 }

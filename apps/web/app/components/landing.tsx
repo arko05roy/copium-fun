@@ -1,186 +1,150 @@
 "use client";
 
-import { Bot, User, X } from "lucide-react";
+import { Activity, Bot, FileCheck, Radio } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
 
 import { DevnetBadge } from "./devnet-badge";
 
-type Path = "human" | "agent";
-
-const humanLinks = [
+const views = [
   {
     href: "/feed",
-    title: "Match feed",
-    description: "Swipe YES/NO on 90-second Pulses. Crowd vs line.",
-    kicker: "Web",
+    title: "Live Feed",
+    description:
+      "Watch the active match Pulse, see the crowd vs TxLINE, and swipe before the 90-second window closes.",
+    kicker: "Fan view",
+    icon: Radio,
   },
-  {
-    href: "/room/demo",
-    title: "Duel room",
-    description: "Head-to-head points for a match. Join via Blink or link.",
-    kicker: "Social",
-  },
-] as const;
-
-const agentLinks = [
   {
     href: "/desk",
-    title: "Agent desk",
-    description: "Live tape, Spawner questions, Officer Copium & Quant fills.",
-    kicker: "Track 2",
+    title: "Agent Desk",
+    description:
+      "See public agents trading the same Pulse, then copy or fade their position while the pool is open.",
+    kicker: "Strategy view",
+    icon: Bot,
   },
   {
     href: "/proof",
-    title: "Settlement proofs",
-    description: "TxLINE-attested bundles, crank status, JSON export.",
-    kicker: "Track 1",
+    title: "Proof",
+    description:
+      "After the window closes, TxLINE verification settles the Pulse and leaves a public bundle.",
+    kicker: "Settlement view",
+    icon: FileCheck,
   },
   {
-    href: "/sim",
-    title: "Fixture simulator",
-    description: "Replay historical match events for demos and video.",
-    kicker: "Admin",
+    href: "/room/demo",
+    title: "Duel Room",
+    description:
+      "Join friends around the same match and score each settled Pulse head-to-head.",
+    kicker: "Social view",
+    icon: Activity,
   },
 ] as const;
 
-const pathMeta = {
-  human: {
-    title: "Fan experience",
-    blurb: "Swipe on live Pulses, duel friends, share receipts.",
-    accent: "var(--landing-human)",
-    enterHref: "/feed",
-    enterLabel: "Enter feed",
-    links: humanLinks,
-  },
-  agent: {
-    title: "Trading & settlement",
-    blurb: "AI agents trade on the desk. Proofs are public and permissionless to crank.",
-    accent: "var(--landing-agent)",
-    enterHref: "/desk",
-    enterLabel: "Enter desk",
-    links: agentLinks,
-  },
-} as const;
+const steps = [
+  "TxLINE sees a live match event",
+  "A 90-second Pulse opens",
+  "Crowd and agents take YES/NO positions",
+  "TxLINE proof settles receipts, PnL, and duels",
+] as const;
 
 export function Landing() {
-  const [open, setOpen] = useState<Path | null>(null);
-
-  const close = useCallback(() => setOpen(null), []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open, close]);
-
-  const meta = open ? pathMeta[open] : null;
-
   return (
-    <div className="landing-surface relative flex min-h-screen flex-col items-center justify-center bg-[var(--landing-bg)] px-5 text-[var(--landing-fg)]">
-      <div className="absolute right-5 top-5 sm:right-8 sm:top-8">
-        <DevnetBadge className="!border-[var(--landing-border)] !text-[var(--landing-muted)]" />
-      </div>
+    <div className="landing-surface min-h-screen bg-[var(--landing-bg)] px-5 py-8 text-[var(--landing-fg)] sm:px-8">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col">
+        <header className="flex items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="font-mono text-xs uppercase tracking-[0.22em] text-[var(--landing-muted)]"
+          >
+            copium.fun
+          </Link>
+          <DevnetBadge className="!border-[var(--landing-border)] !text-[var(--landing-muted)]" />
+        </header>
 
-      <div className="flex w-full max-w-md flex-col items-center">
-        <div className="grid w-full grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen("human")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#e53935] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#d32f2f]"
-          >
-            <User className="size-4 opacity-90" aria-hidden />
-            I&apos;m a Human
-          </button>
-          <button
-            type="button"
-            onClick={() => setOpen("agent")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#4a4a4a] bg-transparent px-4 py-3.5 text-sm font-semibold text-[#b0b0b0] transition hover:border-[#6a6a6a] hover:text-[#e0e0e0]"
-          >
-            <Bot className="size-4 opacity-80" aria-hidden />
-            I&apos;m an Agent
-          </button>
-        </div>
-      </div>
-
-      {open && meta ? (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center"
-          role="presentation"
-          onClick={close}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="path-modal-title"
-            className="w-full max-w-lg rounded-xl border border-[var(--landing-border)] bg-[var(--landing-card)] p-6 shadow-2xl sm:p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div className="space-y-2 text-left">
-                <p
-                  className="text-[10px] uppercase tracking-[0.2em]"
-                  style={{ color: meta.accent }}
-                >
-                  {open === "human" ? "For humans" : "For agents"}
-                </p>
-                <h2 id="path-modal-title" className="text-xl font-semibold">
-                  {meta.title}
-                </h2>
-                <p className="text-sm leading-relaxed text-[var(--landing-muted)]">{meta.blurb}</p>
-              </div>
-              <button
-                type="button"
-                onClick={close}
-                className="rounded-md p-1 text-[var(--landing-muted)] hover:bg-[var(--landing-border)] hover:text-[var(--landing-fg)]"
-                aria-label="Close"
-              >
-                <X className="size-5" />
-              </button>
+        <main className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[1fr_28rem]">
+          <section className="max-w-3xl space-y-8">
+            <div className="space-y-4">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-[var(--landing-pulse)]">
+                One Pulse · Feed, agents, proof
+              </p>
+              <h1 className="text-5xl font-semibold leading-none tracking-[-0.04em] sm:text-7xl">
+                Every match moment becomes a market.
+              </h1>
+              <p className="max-w-2xl text-lg leading-8 text-[var(--landing-muted)]">
+                TxLINE spots the live event. A 90-second YES/NO Pulse opens. The
+                crowd swipes, agents trade the same pool, and TxLINE settles the
+                outcome with proof.
+              </p>
             </div>
 
-            <ul className="space-y-3">
-              {meta.links.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    onClick={close}
-                    className="group block rounded-lg border border-[var(--landing-border)] px-4 py-4 transition hover:bg-[#0c1410]"
-                  >
-                    <p
-                      className="text-[10px] uppercase tracking-[0.16em]"
-                      style={{ color: meta.accent }}
-                    >
-                      {link.kicker}
-                    </p>
-                    <p className="mt-1 text-lg group-hover:opacity-90">{link.title} →</p>
-                    <p className="mt-1 text-xs text-[var(--landing-muted)]">{link.description}</p>
-                  </Link>
-                </li>
+            <div className="grid gap-3 sm:grid-cols-4">
+              {steps.map((step, index) => (
+                <div
+                  key={step}
+                  className="rounded-xl border border-[var(--landing-border)] bg-[var(--landing-card)] p-4"
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--landing-pulse)]">
+                    {String(index + 1).padStart(2, "0")}
+                  </p>
+                  <p className="mt-3 text-sm leading-5 text-[var(--landing-fg)]">
+                    {step}
+                  </p>
+                </div>
               ))}
-            </ul>
+            </div>
 
-            <Link
-              href={meta.enterHref}
-              onClick={close}
-              className="mt-5 flex w-full items-center justify-center rounded-lg px-5 py-3 text-xs font-bold uppercase tracking-wide"
-              style={{
-                backgroundColor: meta.accent,
-                color: open === "human" ? "#071510" : "#0c0f12",
-              }}
-            >
-              {meta.enterLabel}
-            </Link>
-          </div>
-        </div>
-      ) : null}
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/feed"
+                className="rounded-xl bg-[var(--landing-pulse)] px-5 py-3 text-sm font-bold uppercase tracking-wide text-[#071510]"
+              >
+                Enter live feed
+              </Link>
+              <Link
+                href="/desk"
+                className="rounded-xl border border-[var(--landing-border)] px-5 py-3 text-sm font-bold uppercase tracking-wide text-[var(--landing-fg)] hover:border-[var(--landing-pulse)]"
+              >
+                Watch agents
+              </Link>
+            </div>
+          </section>
+
+          <aside className="space-y-3">
+            {views.map((view) => {
+              const Icon = view.icon;
+              return (
+                <Link
+                  key={view.href}
+                  href={view.href}
+                  className="group block rounded-2xl border border-[var(--landing-border)] bg-[var(--landing-card)] p-5 transition hover:border-[var(--landing-pulse)] hover:bg-[#0c1410]"
+                >
+                  <div className="flex items-start gap-4">
+                    <span className="rounded-xl border border-[var(--landing-border)] p-2 text-[var(--landing-pulse)]">
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--landing-muted)]">
+                        {view.kicker}
+                      </p>
+                      <p className="mt-1 text-xl font-semibold">
+                        {view.title} →
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-[var(--landing-muted)]">
+                        {view.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </aside>
+        </main>
+
+        <footer className="border-t border-[var(--landing-border)] py-5 text-xs text-[var(--landing-muted)]">
+          Present for the window? Swipe. Missed it? Copy or fade an agent next
+          time, then inspect the proof and receipt after settlement.
+        </footer>
+      </div>
     </div>
   );
 }

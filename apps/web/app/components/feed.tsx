@@ -18,7 +18,8 @@ const fraunces = Fraunces({
 });
 
 export function Feed() {
-  const { wallet, status, connect, connectors, disconnect } = useWalletConnection();
+  const { wallet, status, connect, connectors, disconnect } =
+    useWalletConnection();
   const [pulses, setPulses] = useState<FeedPulse[]>([]);
   const [context, setContext] = useState<FeedContext | null>(null);
   const [index, setIndex] = useState(0);
@@ -55,9 +56,12 @@ export function Feed() {
   }, []);
 
   useEffect(() => {
-    void load();
+    const first = setTimeout(() => void load(), 0);
     const id = setInterval(() => void load(), 5000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
   }, [load]);
 
   const current = pulses[index] ?? null;
@@ -89,16 +93,31 @@ export function Feed() {
               </Link>
               <DevnetBadge />
             </div>
-            <h1 className="text-2xl text-[var(--feed-fg)] sm:text-3xl">{COPIUM_TAGLINE}</h1>
+            <h1 className="text-2xl text-[var(--feed-fg)] sm:text-3xl">
+              {COPIUM_TAGLINE}
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-[var(--feed-muted)]">
+              One live Pulse per match moment: TxLINE triggers it, the crowd and
+              agents take sides, then proof settles it.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             {context ? (
               <div className="rounded-xl border border-[var(--feed-border)] bg-[#0b1f14] px-4 py-2 text-right">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--feed-kicker)]">
+                  {context.matchName}
+                </p>
                 <p className="text-xl tabular-nums">{context.score}</p>
                 <p className="font-mono text-xs text-[var(--feed-accent)]">
-                  {context.minute != null ? `${context.minute}'` : context.phase}
-                  {context.source === "txline" ? " · TxLINE" : context.source === "sim" ? " · sim" : null}
+                  {context.minute != null
+                    ? `${context.minute}'`
+                    : context.phase}
+                  {context.source === "txline"
+                    ? " · TxLINE"
+                    : context.source === "sim"
+                      ? " · sim"
+                      : null}
                 </p>
               </div>
             ) : null}
@@ -120,7 +139,9 @@ export function Feed() {
               <button
                 type="button"
                 onClick={() => {
-                  const phantom = connectors.find((c) => /phantom/i.test(c.name));
+                  const phantom = connectors.find((c) =>
+                    /phantom/i.test(c.name)
+                  );
                   void connect(phantom?.id ?? connectors[0]?.id ?? "");
                 }}
                 className="rounded-lg bg-[var(--feed-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#071510]"
@@ -131,21 +152,30 @@ export function Feed() {
           </div>
         </header>
 
-        {error ? <p className="text-sm text-[var(--feed-no)]">{error}</p> : null}
+        {error ? (
+          <p className="text-sm text-[var(--feed-no)]">{error}</p>
+        ) : null}
 
         {loading ? (
-          <p className="py-20 text-center text-sm text-[var(--feed-muted)]">Loading pulses…</p>
+          <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
+            Loading pulses…
+          </p>
         ) : pulses.length === 0 ? (
           <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
             No open pulses — run the simulator or orchestrator to spawn one.
           </p>
         ) : index >= pulses.length ? (
           <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
-            You&apos;re through the deck. Check back when new pulses open.
+            You&apos;re through the deck. Closed Pulses cannot be voted on; copy
+            or fade an agent when the next TxLINE-triggered Pulse opens.
           </p>
         ) : (
           <div className="grid flex-1 items-start gap-8 lg:grid-cols-2">
-            <CardStack pulses={pulses} currentIndex={index} onSwipe={handleSwipe} />
+            <CardStack
+              pulses={pulses}
+              currentIndex={index}
+              onSwipe={handleSwipe}
+            />
             <BetPanel
               pulse={current}
               onSuccess={() => {

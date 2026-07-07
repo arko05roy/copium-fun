@@ -27,7 +27,7 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
   if (!rows.length) {
     return (
       <p className="font-mono text-sm text-[var(--desk-muted)]">
-        No agent trades yet — spawn a pulse with copium gap &gt; 20pp.
+        No agent positions yet. Spawn a Pulse from TxLINE, then the agents trade the same pool the Feed shows.
       </p>
     );
   }
@@ -42,7 +42,7 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
             <th className="px-3 py-2">Side</th>
             <th className="px-3 py-2">Stake</th>
             <th className="px-3 py-2">Tx</th>
-            <th className="px-3 py-2">Copy</th>
+            <th className="px-3 py-2">Same pool</th>
           </tr>
         </thead>
         <tbody>

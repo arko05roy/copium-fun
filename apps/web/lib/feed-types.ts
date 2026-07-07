@@ -1,5 +1,6 @@
 export type FeedPulse = {
   id: string;
+  fixture_id: number | null;
   question: string;
   opens_at: string;
   closes_at: string;
@@ -7,6 +8,12 @@ export type FeedPulse = {
   crowd_yes_pct: number | null;
   status: string | null;
   onchain_pool_pubkey: string | null;
+  odds_message_id: string | null;
+  matchName: string;
+  triggerLabel: string;
+  createdBy: string;
+  windowLabel: string;
+  missedWindowCopy: string;
 };
 
 export type FeedContext = {
@@ -19,6 +26,7 @@ export type FeedContext = {
   crowdYesPct: number;
   linePct: number;
   fixtureId: number | null;
+  matchName: string;
   simSessionId: string | null;
   pulseQuestion: string | null;
   /** Where score/minute came from — txline API or sim replay fallback. */
