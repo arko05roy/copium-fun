@@ -17,6 +17,9 @@ type SpawnIntent = {
   pulseId?: string;
   poolPubkey?: string;
   signature?: string;
+  topic?: string;
+  sport?: string;
+  competitionName?: string | null;
   event?: { kind: string; fixtureId?: number };
   reason?: string;
   at?: string;
@@ -88,10 +91,15 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
   }, [sessionId]);
 
   useEffect(() => {
-    void refresh();
-    void refreshSpawnLog();
+    const first = setTimeout(() => {
+      void refresh();
+      void refreshSpawnLog();
+    }, 0);
     const id = setInterval(() => void refreshSpawnLog(), 3000);
-    return () => clearInterval(id);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
   }, [refresh, refreshSpawnLog]);
 
   const runSeek = useCallback(
@@ -180,9 +188,9 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
       <h1 className="text-2xl font-semibold">Track 1 recorder (§17A)</h1>
       <p className="text-zinc-600 text-xs">
         Simulator admin — goal inject → pool PDA · locked messageId · validate_stat →{" "}
-        <a href="/proof" className="underline">
+        <Link href="/proof" className="underline">
           /proof
-        </a>
+        </Link>
       </p>
       <p className="font-mono text-[10px] text-zinc-400">{sessionId}</p>
 
@@ -389,6 +397,10 @@ export default function SimSessionPage({ params }: { params: Promise<{ sessionId
                   <div className="font-semibold text-amber-900">spawned_pulse</div>
                   <div>{intent.pulse?.question}</div>
                   <div className="text-zinc-600">pulse {intent.pulseId}</div>
+                  <div className="text-zinc-600">
+                    {intent.topic ?? intent.sport ?? "live"} ·{" "}
+                    {intent.competitionName ?? "fixture"}
+                  </div>
                   {intent.poolPubkey ? (
                     <a
                       href={`https://explorer.solana.com/address/${intent.poolPubkey}?cluster=devnet`}

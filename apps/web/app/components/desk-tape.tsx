@@ -8,6 +8,9 @@ export type TapeRow = {
   agent_name: string;
   agent_kind?: "system" | "user";
   pulse_question: string;
+  pulse_topic?: string | null;
+  pulse_sport?: string | null;
+  pulse_competition_name?: string | null;
   side: string | null;
   stake: number | null;
   reasoning: string | null;
@@ -41,6 +44,7 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
           <tr className="border-b border-[var(--desk-border)] text-left text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
             <th className="px-3 py-2">Time</th>
             <th className="px-3 py-2">Agent</th>
+            <th className="px-3 py-2">Coverage</th>
             <th className="px-3 py-2">Side</th>
             <th className="px-3 py-2">Stake</th>
             <th className="px-3 py-2">Tx</th>
@@ -71,6 +75,18 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
                     user
                   </span>
                 ) : null}
+              </td>
+              <td className="px-3 py-2.5">
+                <div className="space-y-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
+                    {row.pulse_topic ?? row.pulse_sport ?? "live"}
+                  </p>
+                  {row.pulse_competition_name ? (
+                    <p className="max-w-[11rem] truncate text-[11px] text-[var(--desk-fg)]/70">
+                      {row.pulse_competition_name}
+                    </p>
+                  ) : null}
+                </div>
               </td>
               <td className="px-3 py-2.5 uppercase">{row.side ?? "—"}</td>
               <td className="px-3 py-2.5">{formatStake(row.stake)}</td>

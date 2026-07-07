@@ -2,6 +2,7 @@ import {
   AGENT_MODEL_OPTIONS,
   AGENT_TOPIC_OPTIONS,
   createUserAgent,
+  inferAgentTopics,
   listUserAgents,
   loadEnv,
   normalizeAgentTopics,
@@ -49,6 +50,9 @@ export async function POST(req: Request) {
     const provider = ALLOWED_MODELS.get(model);
     const style = body.style?.trim();
     const topics = normalizeAgentTopics(body.topics);
+    const resolvedTopics = topics.length
+      ? topics
+      : inferAgentTopics({ name, style });
     const apiKey = body.apiKey?.trim();
     if (!owner) return jsonError("owner required");
     if (!name) return jsonError("name required");
@@ -73,7 +77,7 @@ export async function POST(req: Request) {
       provider,
       model,
       style,
-      topics,
+      topics: resolvedTopics,
       source: "web",
       apiKey,
       permissionEnabled: Boolean(body.permissionEnabled),

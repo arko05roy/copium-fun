@@ -27,6 +27,17 @@ export function toUnixSec(ts: number): number {
   return ts > 1e12 ? Math.floor(ts / 1000) : Math.floor(ts);
 }
 
+function pulseWindowForIntent(input: {
+  event: { ts: number; sim?: boolean };
+  opensAt: number;
+}): { opensAtSec: number; closesAtSec: number } {
+  // ponytail: historical replay should exercise live trading windows, not recreate already-expired pools.
+  const opensAtSec = input.event.sim
+    ? Math.floor(Date.now() / 1000)
+    : toUnixSec(input.opensAt);
+  return { opensAtSec, closesAtSec: opensAtSec + PULSE_WINDOW_SEC };
+}
+
 function dedupKey(fixtureId: number, pulseType: string, opensAtSec: number): string {
   return `spawned:${fixtureId}:${pulseType}:${opensAtSec}`;
 }
@@ -60,8 +71,10 @@ export async function executeSpawnPulse(
     };
   }
 
-  const opensAtSec = toUnixSec(intent.pulse.opensAt);
-  const closesAtSec = opensAtSec + PULSE_WINDOW_SEC;
+  const { opensAtSec, closesAtSec } = pulseWindowForIntent({
+    event: intent.event as typeof intent.event & { sim?: boolean },
+    opensAt: intent.pulse.opensAt,
+  });
   const key = dedupKey(intent.fixtureId, intent.pulse.pulseType, opensAtSec);
   const claimed = await redis.set(key, "1", "EX", 86_400, "NX");
   if (claimed === null) {
@@ -82,6 +95,12 @@ export async function executeSpawnPulse(
       apiToken,
       fixtureId: intent.fixtureId,
     });
+    const resolvedPulseType =
+      fixtureMeta.sport === "soccer"
+        ? intent.pulse.pulseType
+        : intent.pulse.pulseType === "next_goal"
+          ? "next_score"
+          : intent.pulse.pulseType;
     const locked = await lockOddsSnapshot(
       apiOrigin,
       jwt,
@@ -91,13 +110,18 @@ export async function executeSpawnPulse(
       intent.pulse.linePct ?? ctx.linePct,
     );
 
-    const catalog = PULSE_CATALOG[intent.pulse.pulseType];
+    const catalog = PULSE_CATALOG[resolvedPulseType];
     const question = await generateSpawnQuestion({
       eventKind: intent.event.kind as "goal" | "phase_change" | "odds_move",
-      pulseType: intent.pulse.pulseType,
+      pulseType: resolvedPulseType,
       minute: ctx.minute,
       linePct: locked.linePct ?? ctx.linePct,
-      templateQuestion: intent.pulse.question,
+      templateQuestion:
+        resolvedPulseType === intent.pulse.pulseType
+          ? intent.pulse.question
+          : resolvedPulseType === "next_score"
+            ? `Another score before ${ctx.minute}?`
+            : intent.pulse.question,
       fixtureId: intent.fixtureId,
     });
 
@@ -105,8 +129,8 @@ export async function executeSpawnPulse(
       fixture_id: intent.fixtureId,
       sport: fixtureMeta.sport,
       topic: fixtureMeta.topic,
-      pulse_type: intent.pulse.pulseType,
-      template_id: intent.pulse.pulseType,
+      pulse_type: resolvedPulseType,
+      template_id: resolvedPulseType,
       trigger_source: intent.event.kind,
       question,
       opens_at: new Date(opensAtSec * 1000).toISOString(),
@@ -116,7 +140,7 @@ export async function executeSpawnPulse(
       odds_proof: JSON.parse(JSON.stringify(locked.proof)),
       settlement_meta: {
         provider: "txline",
-        templateId: intent.pulse.pulseType,
+        templateId: resolvedPulseType,
         eventKind: intent.event.kind,
         fixtureId: intent.fixtureId,
         competitionName: fixtureMeta.competitionName,
@@ -145,7 +169,8 @@ export async function executeSpawnPulse(
         fixtureId: intent.fixtureId,
         sport: row.sport,
         topic: row.topic,
-        pulseType: intent.pulse.pulseType,
+        competitionName: fixtureMeta.competitionName,
+        pulseType: resolvedPulseType,
         linePct: locked.linePct ?? ctx.linePct,
         oddsMessageId: locked.messageId,
         question,

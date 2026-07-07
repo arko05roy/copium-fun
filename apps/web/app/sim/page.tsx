@@ -1,6 +1,7 @@
 "use client";
 
 import { SOLANA_DEVNET } from "@copium/config";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -10,13 +11,22 @@ type StackHealth = {
   ingest: { reachable: boolean; service?: string; counters?: Record<string, number> };
   orchestrator: {
     reachable: boolean;
+    meta?: { fixtureRefreshMs?: number };
     spawnLogCount?: number;
     spawnLog?: Array<{
       action: string;
+      topic?: string;
+      sport?: string;
+      competitionName?: string | null;
       pulse?: { question: string; pulseType: string };
       at?: string;
     }>;
-    counters?: { wouldSpawn?: number; eventsSeen?: number };
+    counters?: {
+      wouldSpawn?: number;
+      eventsSeen?: number;
+      fixtureCoverageRefreshes?: number;
+      fixturesCovered?: number;
+    };
   };
   supabase: { ok: boolean; tables?: Record<string, number> };
 };
@@ -71,9 +81,9 @@ export default function SimIndexPage() {
       </div>
       <p className="text-zinc-600 text-xs">
         TxLINE historical → Redis replay → spawn → settlement. Record §17A from session +
-        <a href="/proof" className="ml-1 underline">
+        <Link href="/proof" className="ml-1 underline">
           /proof
-        </a>
+        </Link>
         .
       </p>
 
@@ -97,10 +107,24 @@ export default function SimIndexPage() {
             </span>
             <span>
               {health.orchestrator.reachable
-                ? `spawn ${health.orchestrator.counters?.wouldSpawn ?? 0}`
+                ? `spawn ${health.orchestrator.counters?.wouldSpawn ?? 0} · fixtures ${health.orchestrator.counters?.fixturesCovered ?? 0}`
                 : "offline — pnpm orchestrator:listen"}
             </span>
           </div>
+          {health.orchestrator.reachable ? (
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <StatusDot on={true} /> fixture coverage cache
+              </span>
+              <span>
+                refresh{" "}
+                {Math.round(
+                  (health.orchestrator.meta?.fixtureRefreshMs ?? 0) / 1000,
+                )}
+                s
+              </span>
+            </div>
+          ) : null}
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2">
               <StatusDot on={health.supabase.ok} /> Supabase
@@ -118,6 +142,10 @@ export default function SimIndexPage() {
                 <div key={i} className="truncate text-[10px]">
                   {row.action === "would_spawn_pulse" ? (
                     <span className="text-emerald-800">{row.pulse?.question}</span>
+                  ) : row.action === "spawned_pulse" ? (
+                    <span className="text-amber-800">
+                      {row.topic ?? row.sport ?? "live"} · {row.competitionName ?? "fixture"} 
+                    </span>
                   ) : (
                     <span className="text-zinc-400">skip</span>
                   )}

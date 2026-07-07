@@ -73,8 +73,12 @@ async function settlePulseRow(
   const apiToken = process.env.TXLINE_API_TOKEN?.trim();
   if (!apiToken) throw new Error("TXLINE_API_TOKEN missing");
 
-  const pulseType = pulse.pulse_type as "next_goal" | "over_under_ht";
-  if (pulseType !== "next_goal" && pulseType !== "over_under_ht") {
+  const pulseType = pulse.pulse_type as "next_goal" | "next_score" | "over_under_ht";
+  if (
+    pulseType !== "next_goal" &&
+    pulseType !== "next_score" &&
+    pulseType !== "over_under_ht"
+  ) {
     throw new Error(`unsupported pulse_type ${pulse.pulse_type}`);
   }
 

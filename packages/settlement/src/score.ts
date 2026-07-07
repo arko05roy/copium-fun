@@ -1,5 +1,6 @@
 import {
   settleNextGoal,
+  settleNextScore,
   settleOverUnderHt,
   SOCCER_GOAL_KEYS,
 } from "@copium/pulse-engine/pulse-catalog";
@@ -25,7 +26,7 @@ import { validateStatOnChain } from "./validate.js";
 
 export type ValidateScoreInput = {
   pulseId: string;
-  pulseType: "next_goal" | "over_under_ht";
+  pulseType: "next_goal" | "next_score" | "over_under_ht";
   fixtureId: number;
   opensAt: Date;
   closesAt: Date;
@@ -120,8 +121,11 @@ export async function validateScore(
   let openValue: number;
   let seq: number;
 
-  if (input.pulseType === "next_goal") {
-    winningSide = settleNextGoal(goalsAtOpen, goalsAtClose);
+  if (input.pulseType === "next_goal" || input.pulseType === "next_score") {
+    winningSide =
+      input.pulseType === "next_goal"
+        ? settleNextGoal(goalsAtOpen, goalsAtClose)
+        : settleNextScore(goalsAtOpen, goalsAtClose);
     const picked = pickGoalStatKey(goalsAtOpen, goalsAtClose);
     statKey = picked.statKey;
     openValue = picked.openValue;
@@ -143,7 +147,7 @@ export async function validateScore(
   );
 
   const validateResult =
-    input.pulseType === "next_goal"
+    input.pulseType === "next_goal" || input.pulseType === "next_score"
       ? await validateStatOnChain({
           validation,
           predicate: predicateGoalScored(openValue),

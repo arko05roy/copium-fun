@@ -53,7 +53,7 @@ import { goalValidationTarget, htValidationTarget } from "./target.js";
 import { validateStatOnChain } from "./validate.js";
 
 export type PulseStatValidation = {
-  pulseType: "next_goal" | "over_under_ht";
+  pulseType: "next_goal" | "next_score" | "over_under_ht";
   target: ReturnType<typeof goalValidationTarget> | ReturnType<typeof htValidationTarget>;
   validation: Awaited<ReturnType<typeof fetchStatValidation>>;
   result: Awaited<ReturnType<typeof validateStatOnChain>>;
@@ -65,9 +65,9 @@ export async function validatePulseFromBundle(
   jwt: string,
   apiToken: string,
   bundle: SimBundle,
-  pulseType: "next_goal" | "over_under_ht" = "next_goal",
+  pulseType: "next_goal" | "next_score" | "over_under_ht" = "next_goal",
 ): Promise<PulseStatValidation> {
-  if (pulseType === "next_goal") {
+  if (pulseType === "next_goal" || pulseType === "next_score") {
     const target = goalValidationTarget(bundle);
     if (!target) throw new Error("bundle has no goal validation target");
 

@@ -34,7 +34,29 @@ export function derivePulseTopic(input: {
 }): string {
   const name = input.competitionName?.toLowerCase() ?? "";
   if (input.sport === "soccer" && name.includes("world cup")) return "world-cup";
+  if (input.sport === "football" && name.includes("ncaa")) return "ncaa-football";
+  if (input.sport === "basketball" && name.includes("ncaa"))
+    return "ncaa-basketball";
   return input.sport;
+}
+
+export function deriveFixtureSport(competitionName: string | null): string {
+  const name = competitionName?.toLowerCase() ?? "";
+  if (
+    /ncaa|college/.test(name) &&
+    /(basketball|march madness|hoops)/.test(name)
+  ) {
+    return "basketball";
+  }
+  if (/nba|basketball|wnba|euroleague/.test(name)) return "basketball";
+  if (
+    /ncaa|college/.test(name) &&
+    /(football|cfb|fbs|touchdown)/.test(name)
+  ) {
+    return "football";
+  }
+  if (/nfl|football|super bowl|cfb|fbs/.test(name)) return "football";
+  return "soccer";
 }
 
 function kickoffFromSnapshot(row: FixtureSnapshotRow): string | null {
@@ -91,7 +113,7 @@ export async function ensureFixtureCoverageForFixture(input: {
     fixture = await getFixture(input.fixtureId);
   }
 
-  const sport = "soccer";
+  const sport = deriveFixtureSport(fixture?.competition_name ?? null);
   const competitionName = fixture?.competition_name ?? null;
   return {
     sport,

@@ -27,13 +27,15 @@ export type ValidateStatResult = {
   method: "view" | "simulate";
 };
 
+const BN = anchor.default.BN;
+
 function buildFixtureSummary(validation: StatValidationPayload) {
   return {
-    fixtureId: new anchor.BN(validation.summary.fixtureId),
+    fixtureId: new BN(validation.summary.fixtureId),
     updateStats: {
       updateCount: validation.summary.updateStats.updateCount,
-      minTimestamp: new anchor.BN(validation.summary.updateStats.minTimestamp),
-      maxTimestamp: new anchor.BN(validation.summary.updateStats.maxTimestamp),
+      minTimestamp: new BN(validation.summary.updateStats.minTimestamp),
+      maxTimestamp: new BN(validation.summary.updateStats.maxTimestamp),
     },
     eventsSubTreeRoot: toBytes32(validation.summary.eventStatsSubTreeRoot),
   };
@@ -108,7 +110,7 @@ export async function validateStatOnChain(
 
   const builder = program.methods
     .validateStat(
-      new anchor.BN(targetTs),
+      new BN(targetTs),
       buildFixtureSummary(validation),
       toProofNodes(validation.subTreeProof),
       toProofNodes(validation.mainTreeProof),

@@ -19,6 +19,12 @@ export function AgentReasoning({ rows }: { rows: TapeRow[] }) {
         <p className="mt-2 text-sm leading-relaxed text-[var(--desk-fg)]">
           {latest.reasoning}
         </p>
+        <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
+          {latest.pulse_topic ?? latest.pulse_sport ?? "live"}
+          {latest.pulse_competition_name
+            ? ` · ${latest.pulse_competition_name}`
+            : ""}
+        </p>
         <p className="mt-2 truncate font-mono text-[10px] text-[var(--desk-muted)]">
           {latest.pulse_question}
         </p>
@@ -27,6 +33,9 @@ export function AgentReasoning({ rows }: { rows: TapeRow[] }) {
         row.reasoning ? (
           <div key={row.id} className="border-t border-[var(--desk-border)] pt-3">
             <p className="font-mono text-[10px] text-[var(--desk-muted)]">{row.agent_name}</p>
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]">
+              {row.pulse_topic ?? row.pulse_sport ?? "live"}
+            </p>
             <p className="mt-1 text-xs text-[var(--desk-fg)]/80">{row.reasoning}</p>
           </div>
         ) : null,

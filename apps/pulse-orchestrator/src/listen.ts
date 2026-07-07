@@ -24,9 +24,12 @@ type OrchestratorCounters = {
   wouldSpawn: number;
   spawned: number;
   skipped: number;
+  fixtureCoverageRefreshes: number;
+  fixturesCovered: number;
   startedAt: string;
   lastEventAt?: string;
   lastSpawnAt?: string;
+  lastFixtureRefreshAt?: string;
 };
 
 const counters: OrchestratorCounters = {
@@ -34,6 +37,8 @@ const counters: OrchestratorCounters = {
   wouldSpawn: 0,
   spawned: 0,
   skipped: 0,
+  fixtureCoverageRefreshes: 0,
+  fixturesCovered: 0,
   startedAt: new Date().toISOString(),
 };
 
@@ -113,6 +118,9 @@ export async function startListener(): Promise<{
   const runFixtureRefresh = async (): Promise<void> => {
     const { jwt, apiOrigin } = await startGuestSession();
     const updated = await refreshFixtureCoverage({ apiOrigin, jwt, apiToken });
+    counters.fixtureCoverageRefreshes += 1;
+    counters.fixturesCovered = updated;
+    counters.lastFixtureRefreshAt = new Date().toISOString();
     console.log(
       JSON.stringify({
         action: "fixture_coverage_refresh",
@@ -210,6 +218,7 @@ export async function startListener(): Promise<{
     startedAt: counters.startedAt,
     healthPort: HEALTH_PORT,
     redisUrl: REDIS_URL.replace(/:[^:@/]+@/, ":***@"),
+    fixtureRefreshMs: FIXTURE_REFRESH_MS,
   };
   await redis.set(ORCHESTRATOR_META_KEY, JSON.stringify(meta));
 

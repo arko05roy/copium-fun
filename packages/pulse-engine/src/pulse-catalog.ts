@@ -3,6 +3,7 @@
  * period key = (period × 1000) + base · base 1 = P1 goals · base 2 = P2 goals
  */
 export const SOCCER_GOAL_KEYS = [1, 2] as const;
+export const TOTAL_SCORE_KEYS = [1, 2] as const;
 export const H1_GOAL_KEYS = [1001, 1002] as const;
 
 /** AGILE-PLAN §2.3 — NS=1, H1=2, HT=3, H2=4, F=5 */
@@ -14,7 +15,7 @@ export const GAME_PHASE = {
   F: 5,
 } as const;
 
-export type PulseType = "next_goal" | "over_under_ht";
+export type PulseType = "next_goal" | "next_score" | "over_under_ht";
 
 export type PulseCatalogEntry = {
   pulseType: PulseType;
@@ -33,6 +34,13 @@ export const PULSE_CATALOG: Record<PulseType, PulseCatalogEntry> = {
     pulseTypeCode: 1,
     settleNote: "score keys @ window end",
     statKeys: SOCCER_GOAL_KEYS,
+  },
+  next_score: {
+    pulseType: "next_score",
+    questionTemplate: "Another score before {minute}?",
+    pulseTypeCode: 3,
+    settleNote: "total score keys @ window end",
+    statKeys: TOTAL_SCORE_KEYS,
   },
   over_under_ht: {
     pulseType: "over_under_ht",
@@ -58,7 +66,7 @@ export function formatPulseQuestion(
 }
 
 /** Another goal scored between open and close snapshots → YES. */
-export function settleNextGoal(
+export function settleNextScore(
   goalsAtOpen: Readonly<Record<number, number>>,
   goalsAtClose: Readonly<Record<number, number>>,
 ): "yes" | "no" {
@@ -66,6 +74,8 @@ export function settleNextGoal(
   const closeTotal = (goalsAtClose[1] ?? 0) + (goalsAtClose[2] ?? 0);
   return closeTotal > openTotal ? "yes" : "no";
 }
+
+export const settleNextGoal = settleNextScore;
 
 /** H1 combined goals > 0 → YES on over 0.5. */
 export function settleOverUnderHt(

@@ -5,12 +5,15 @@ loadEnv();
 
 function pulseTriggerLabel(pulseType: string): string {
   if (pulseType === "next_goal") return "TxLINE score event";
+  if (pulseType === "next_score") return "TxLINE scoring event";
   if (pulseType === "over_under_ht") return "TxLINE phase window";
   return "TxLINE odds or match event";
 }
 
 function settlementLabel(pulseType: string): string {
   if (pulseType === "next_goal") return "Auto-settles from the next verified goal";
+  if (pulseType === "next_score")
+    return "Auto-settles from the next verified scoring change";
   if (pulseType === "over_under_ht")
     return "Auto-settles from verified first-half goal totals";
   return "Auto-settles from verified TxLINE data";

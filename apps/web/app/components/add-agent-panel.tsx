@@ -1,7 +1,7 @@
 "use client";
 
 import { useWalletConnection } from "@solana/react-hooks";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UserAgent = {
   id: string;
@@ -129,6 +129,27 @@ const TOPIC_OPTIONS = [
   { id: "ncaa-basketball", label: "NCAA basketball" },
 ] as const;
 
+function inferTopics(name: string, style: string): string[] {
+  const text = `${name} ${style}`.toLowerCase();
+  if (/(world\s*cup|fifa|wc\b|international friendl)/i.test(text)) {
+    return ["world-cup"];
+  }
+  if (/ncaa/.test(text) && /basketball|hoops/.test(text)) {
+    return ["ncaa-basketball", "basketball"];
+  }
+  if (/ncaa/.test(text) && /football|cfb/.test(text)) {
+    return ["ncaa-football", "football"];
+  }
+  if (/basketball|nba|hoops/.test(text)) return ["basketball"];
+  if (/\bfootball\b|nfl|touchdown|quarterback|field goal/.test(text)) {
+    return ["football"];
+  }
+  if (/soccer|goal|futbol|premier league|champions league/.test(text)) {
+    return ["soccer"];
+  }
+  return ["soccer"];
+}
+
 export function AddAgentPanel() {
   const { wallet, status, connect, connectors } = useWalletConnection();
   const [agents, setAgents] = useState<UserAgent[]>([]);
@@ -138,6 +159,7 @@ export function AddAgentPanel() {
   const [style, setStyle] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [topics, setTopics] = useState<string[]>(["soccer"]);
+  const [topicsTouched, setTopicsTouched] = useState(false);
   const [permissionEnabled, setPermissionEnabled] = useState(false);
   const [maxStake, setMaxStake] = useState(100_000);
   const [pending, setPending] = useState(false);
@@ -147,6 +169,8 @@ export function AddAgentPanel() {
   const owner = wallet?.account.address.toString();
   const selectedModel =
     MODEL_OPTIONS.find((option) => option.model === model) ?? MODEL_OPTIONS[0]!;
+  const suggestedTopics = useMemo(() => inferTopics(name, style), [name, style]);
+  const effectiveTopics = topicsTouched ? topics : suggestedTopics;
 
   const ensureWallet = useCallback(async () => {
     if (status === "connected" && owner) return owner;
@@ -215,7 +239,7 @@ export function AddAgentPanel() {
           provider: selectedModel.provider,
           model,
           style,
-          topics,
+          topics: effectiveTopics,
           apiKey,
           permissionEnabled,
           maxStake,
@@ -227,6 +251,7 @@ export function AddAgentPanel() {
       setStyle("");
       setApiKey("");
       setTopics(["soccer"]);
+      setTopicsTouched(false);
       setPermissionEnabled(false);
       setMessage(`Created ${json.agent?.display_name ?? "agent"}`);
       await loadAgents();
@@ -263,11 +288,13 @@ export function AddAgentPanel() {
   }
 
   function toggleTopic(topic: string) {
-    setTopics((current) =>
-      current.includes(topic)
-        ? current.filter((value) => value !== topic)
-        : [...current, topic],
-    );
+    setTopicsTouched(true);
+    setTopics((current) => {
+      const base = topicsTouched ? current : effectiveTopics;
+      return base.includes(topic)
+        ? base.filter((value) => value !== topic)
+        : [...base, topic];
+    });
   }
 
   return (
@@ -334,9 +361,12 @@ export function AddAgentPanel() {
                 Agents only see matching pulses.
               </p>
             </div>
+            <p className="text-[11px] text-[var(--desk-muted)]">
+              Suggested: {suggestedTopics.join(", ")}
+            </p>
             <div className="flex flex-wrap gap-2">
               {TOPIC_OPTIONS.map((topic) => {
-                const active = topics.includes(topic.id);
+                const active = effectiveTopics.includes(topic.id);
                 return (
                   <button
                     key={topic.id}

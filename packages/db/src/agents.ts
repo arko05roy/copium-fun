@@ -5,6 +5,7 @@ import {
   randomBytes,
 } from "node:crypto";
 import { createDbClient } from "./client.js";
+import { getFixture } from "./pulses.js";
 
 const SUPPORTED_AGENT_PROVIDERS = ["openai", "anthropic", "groq"] as const;
 export type AgentProvider = (typeof SUPPORTED_AGENT_PROVIDERS)[number];
@@ -240,6 +241,9 @@ export type AgentTradeWithAgent = AgentTradeRow & {
   agent_name: string;
   agent_kind: "system" | "user";
   pulse_question: string;
+  pulse_topic: string | null;
+  pulse_sport: string | null;
+  pulse_competition_name: string | null;
 };
 
 export type AgentTradeDetail = AgentTradeWithAgent & {
@@ -498,6 +502,42 @@ export function normalizeAgentTopics(topics?: string[]): string[] {
   return [...unique];
 }
 
+export function inferAgentTopics(input: {
+  name?: string;
+  style?: string;
+}): string[] {
+  const text = `${input.name ?? ""} ${input.style ?? ""}`.toLowerCase();
+  if (/(world\s*cup|fifa|wc\b|international friendl)/i.test(text)) {
+    return ["world-cup"];
+  }
+  if (/ncaa/.test(text) && /basketball|hoops/.test(text)) {
+    return ["ncaa-basketball", "basketball"];
+  }
+  if (/ncaa/.test(text) && /football|cfb/.test(text)) {
+    return ["ncaa-football", "football"];
+  }
+  if (/basketball|nba|hoops/.test(text)) {
+    return ["basketball"];
+  }
+  if (/\bfootball\b|nfl|touchdown|quarterback|field goal/.test(text)) {
+    return ["football"];
+  }
+  if (/soccer|goal|futbol|premier league|champions league/.test(text)) {
+    return ["soccer"];
+  }
+  return ["soccer"];
+}
+
+export function resolveAgentTopics(input: {
+  name?: string;
+  style?: string;
+  topics?: string[];
+}): string[] {
+  const explicit = normalizeAgentTopics(input.topics);
+  if (explicit.length) return explicit;
+  return inferAgentTopics(input);
+}
+
 export function normalizeAgentSlug(name: string): string {
   const base = name
     .trim()
@@ -527,7 +567,11 @@ export async function createUserAgent(input: {
   maxStake?: number;
 }): Promise<AgentRow> {
   const style = normalizeAgentStyle(input.style);
-  const topics = normalizeAgentTopics(input.topics);
+  const topics = resolveAgentTopics({
+    name: input.name,
+    style,
+    topics: input.topics,
+  });
   if (!style) throw new Error("agent style required");
   if (!SUPPORTED_AGENT_PROVIDERS.includes(input.provider))
     throw new Error("unsupported provider");
@@ -672,6 +716,11 @@ export async function redeemAgentClaimCode(
     throw new Error("agent not found");
   const nextConfig: UserAgentConfig = {
     ...agent.config,
+    topics: resolveAgentTopics({
+      name: agent.display_name,
+      style: agent.config.style,
+      topics: agent.config.topics,
+    }),
     ownerWallet: wallet,
   };
   const updated = await updateAgentConfig(agent.id, nextConfig);
@@ -774,43 +823,46 @@ export async function listAgentTape(
     if (data) agentsById.set(id, data);
   }
 
-  const pulsesById = new Map<string, string>();
+  const pulsesById = new Map<string, PulseMeta>();
+  const competitionByFixtureId = new Map<number, string | null>();
   for (const id of pulseIds) {
-    const { data } = await (
-      createDbClient().from("pulses") as unknown as {
-        select: (cols: string) => {
-          eq: (
-            col: string,
-            val: string,
-          ) => {
-            single: () => Promise<{
-              data: { question: string } | null;
-              error: unknown;
-            }>;
-          };
-        };
+    const data = await fetchPulseMeta(id);
+    if (data) {
+      pulsesById.set(id, data);
+      if (data.fixture_id != null && !competitionByFixtureId.has(data.fixture_id)) {
+        const fixture = await getFixture(data.fixture_id);
+        competitionByFixtureId.set(
+          data.fixture_id,
+          fixture?.competition_name ?? null,
+        );
       }
-    )
-      .select("question")
-      .eq("id", id)
-      .single();
-    if (data?.question) pulsesById.set(id, data.question);
+    }
   }
 
   return trades.map((row) => {
     const agent = agentsById.get(row.agent_id);
+    const pulse = pulsesById.get(row.pulse_id);
     return {
       ...row,
       agent_slug: agent?.slug ?? "unknown",
       agent_name: agent?.display_name ?? "Agent",
       agent_kind: isUserAgentConfig(agent?.config) ? "user" : "system",
-      pulse_question: pulsesById.get(row.pulse_id) ?? "",
+      pulse_question: pulse?.question ?? "",
+      pulse_topic: pulse?.topic ?? null,
+      pulse_sport: pulse?.sport ?? null,
+      pulse_competition_name:
+        pulse?.fixture_id != null
+          ? (competitionByFixtureId.get(pulse.fixture_id) ?? null)
+          : null,
     };
   });
 }
 
 type PulseMeta = {
   question: string;
+  topic: string | null;
+  sport: string | null;
+  fixture_id: number | null;
   status: string | null;
   onchain_pool_pubkey: string | null;
   odds_message_id: string | null;
@@ -828,6 +880,9 @@ async function fetchPulseMeta(pulseId: string): Promise<PulseMeta | null> {
           single: () => Promise<{
             data: {
               question: string;
+              topic: string | null;
+              sport: string | null;
+              fixture_id: number | null;
               status: string | null;
               onchain_pool_pubkey: string | null;
               odds_message_id: string | null;
@@ -840,7 +895,7 @@ async function fetchPulseMeta(pulseId: string): Promise<PulseMeta | null> {
     }
   )
     .select(
-      "question, status, onchain_pool_pubkey, odds_message_id, winning_side",
+      "question, topic, sport, fixture_id, status, onchain_pool_pubkey, odds_message_id, winning_side",
     )
     .eq("id", pulseId)
     .single();
@@ -881,6 +936,10 @@ export async function getAgentTradeById(
     .single();
   const pulse = await fetchPulseMeta(trade.pulse_id);
   if (!agent || !pulse) return null;
+  const competitionName =
+    pulse.fixture_id != null
+      ? ((await getFixture(pulse.fixture_id))?.competition_name ?? null)
+      : null;
 
   return {
     ...trade,
@@ -888,6 +947,9 @@ export async function getAgentTradeById(
     agent_name: agent.display_name,
     agent_kind: isUserAgentConfig(agent.config) ? "user" : "system",
     pulse_question: pulse.question,
+    pulse_topic: pulse.topic,
+    pulse_sport: pulse.sport,
+    pulse_competition_name: competitionName,
     onchain_pool_pubkey: pulse.onchain_pool_pubkey,
     odds_message_id: pulse.odds_message_id,
     pulse_status: pulse.status,

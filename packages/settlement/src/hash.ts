@@ -5,7 +5,7 @@ import type { ValidateStatResult } from "./validate.js";
 
 export type PulseTruthBundle = {
   pulseId: string;
-  pulseType: "next_goal" | "over_under_ht";
+  pulseType: "next_goal" | "next_score" | "over_under_ht";
   fixtureId: number;
   winningSide: "yes" | "no";
   goalsAtOpen: Readonly<Record<number, number>>;

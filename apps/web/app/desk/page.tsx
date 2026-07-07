@@ -162,6 +162,16 @@ export default function DeskPage() {
                     {activePulse.matchName} · {activePulse.triggerLabel} ·{" "}
                     {activePulse.windowLabel}
                   </p>
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]">
+                      {activePulse.topic ?? activePulse.sport ?? "live"}
+                    </span>
+                    {activePulse.template_id ? (
+                      <span className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]">
+                        {activePulse.template_id.replace(/_/g, " ")}
+                      </span>
+                    ) : null}
+                  </div>
                 </>
               ) : (
                 <p className="text-sm text-[var(--desk-muted)]">

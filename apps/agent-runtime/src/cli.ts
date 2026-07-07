@@ -8,6 +8,7 @@ import {
   type AgentProvider,
   createAgentClaimCode,
   createUserAgent,
+  inferAgentTopics,
   loadEnv as loadDbEnv,
 } from "@copium/db";
 import { Keypair } from "@solana/web3.js";
@@ -105,11 +106,12 @@ async function askMissingAgentFields(defaults: {
         ] ?? defaultOption);
     const style =
       defaults.style ?? (await ask("One-line trading style: ")).trim();
+    const inferredTopics = inferAgentTopics({ name, style });
     const topics =
       defaults.topics ??
       (
         await ask(
-          `Topics [${AGENT_TOPIC_OPTIONS.join(", ")}] (${["soccer"].join(", ")}): `,
+          `Topics [${AGENT_TOPIC_OPTIONS.join(", ")}] (${inferredTopics.join(", ")}): `,
         )
       )
         .split(",")
@@ -141,7 +143,7 @@ async function askMissingAgentFields(defaults: {
       provider: selectedOption.provider,
       model: selectedOption.model,
       style,
-      topics: topics.length ? topics : ["soccer"],
+      topics: topics.length ? topics : inferredTopics,
       apiKey: apiKey || process.env[selectedOption.env]?.trim(),
       maxStake: Number(maxStakeRaw || defaults.maxStake || 100_000),
       enabled,

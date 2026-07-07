@@ -11,6 +11,7 @@ import {
   PULSE_CATALOG,
   pulseClosesAt,
   settleNextGoal,
+  settleNextScore,
   settleOverUnderHt,
 } from "./pulse-catalog.js";
 import { FEE_BPS, PULSE_WINDOW_SEC } from "./calibration.js";
@@ -191,6 +192,7 @@ describe("pulse-catalog", () => {
 
   it("P0 catalog has two pulse types", () => {
     assert.equal(PULSE_CATALOG.next_goal.pulseTypeCode, 1);
+    assert.equal(PULSE_CATALOG.next_score.pulseTypeCode, 3);
     assert.equal(PULSE_CATALOG.over_under_ht.statKeys.length, 2);
   });
 
@@ -210,6 +212,11 @@ describe("pulse-catalog", () => {
       settleNextGoal({ 1: 1, 2: 0 }, { 1: 1, 2: 0 }),
       "no",
     );
+  });
+
+  it("settleNextScore YES when totals increase", () => {
+    assert.equal(settleNextScore({ 1: 10, 2: 7 }, { 1: 10, 2: 10 }), "yes");
+    assert.equal(settleNextScore({ 1: 10, 2: 7 }, { 1: 10, 2: 7 }), "no");
   });
 
   it("settleOverUnderHt uses H1 keys", () => {
