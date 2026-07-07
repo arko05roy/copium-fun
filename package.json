@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:stack": "node --import tsx scripts/dev-stack.ts",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "pnpm --filter @copium/db migrate",
