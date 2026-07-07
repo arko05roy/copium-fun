@@ -1,4 +1,26 @@
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+} from "node:crypto";
 import { createDbClient } from "./client.js";
+
+const SUPPORTED_AGENT_PROVIDERS = ["openai"] as const;
+export type AgentProvider = (typeof SUPPORTED_AGENT_PROVIDERS)[number];
+
+export type UserAgentConfig = {
+  kind: "user";
+  ownerWallet?: string;
+  provider: AgentProvider;
+  model: string;
+  style: string;
+  source: "cli" | "web";
+  permission: {
+    enabled: boolean;
+    maxStake: number;
+  };
+};
 
 export type AgentRow = {
   id: string;
@@ -24,6 +46,7 @@ export type AgentTradeRow = {
 export type AgentTradeWithAgent = AgentTradeRow & {
   agent_slug: string;
   agent_name: string;
+  agent_kind: "system" | "user";
   pulse_question: string;
 };
 
@@ -37,17 +60,25 @@ export type AgentTradeDetail = AgentTradeWithAgent & {
 export type AgentPnlRow = {
   agent_slug: string;
   agent_name: string;
+  kind: "system" | "user";
   fills: number;
   wins: number;
   losses: number;
   open_fills: number;
   pnl_usdt: number;
+  win_rate: number;
 };
 
 type AgentInsert = {
   slug: string;
   display_name: string;
   wallet_pubkey: string;
+  config?: Record<string, unknown>;
+};
+
+type AgentUpdate = {
+  display_name?: string;
+  wallet_pubkey?: string;
   config?: Record<string, unknown>;
 };
 
@@ -68,7 +99,10 @@ function agents() {
       opts: { onConflict: string },
     ) => {
       select: (cols: string) => {
-        single: () => Promise<{ data: AgentRow | null; error: { message: string } | null }>;
+        single: () => Promise<{
+          data: AgentRow | null;
+          error: { message: string } | null;
+        }>;
       };
     };
     select: (cols: string) => {
@@ -76,8 +110,90 @@ function agents() {
         col: string,
         val: string,
       ) => {
-        single: () => Promise<{ data: AgentRow | null; error: { message: string } | null }>;
+        single: () => Promise<{
+          data: AgentRow | null;
+          error: { message: string } | null;
+        }>;
       };
+    };
+    update: (row: AgentUpdate) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        select: (cols: string) => {
+          single: () => Promise<{
+            data: AgentRow | null;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    };
+  };
+}
+
+function agentSecrets() {
+  return createDbClient().from("agent_secrets") as unknown as {
+    upsert: (
+      row: {
+        agent_id: string;
+        provider: string;
+        encrypted_api_key: string;
+        encrypted_wallet_secret?: string | null;
+        updated_at?: string;
+      },
+      opts: { onConflict: string },
+    ) => Promise<{ error: { message: string } | null }>;
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        single: () => Promise<{
+          data: {
+            agent_id: string;
+            provider: string;
+            encrypted_api_key: string;
+            encrypted_wallet_secret: string | null;
+          } | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+  };
+}
+
+function agentClaimCodes() {
+  return createDbClient().from("agent_claim_codes") as unknown as {
+    insert: (row: {
+      code: string;
+      agent_id: string;
+      expires_at: string;
+    }) => Promise<{
+      error: { message: string } | null;
+    }>;
+    select: (cols: string) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => {
+        single: () => Promise<{
+          data: {
+            code: string;
+            agent_id: string | null;
+            expires_at: string;
+            claimed_at: string | null;
+            claimed_by_wallet: string | null;
+          } | null;
+          error: { message: string } | null;
+        }>;
+      };
+    };
+    update: (row: { claimed_at: string; claimed_by_wallet: string }) => {
+      eq: (
+        col: string,
+        val: string,
+      ) => Promise<{ error: { message: string } | null }>;
     };
   };
 }
@@ -86,7 +202,10 @@ function agentTrades() {
   return createDbClient().from("agent_trades") as unknown as {
     insert: (row: TradeInsert) => {
       select: (cols: string) => {
-        single: () => Promise<{ data: AgentTradeRow | null; error: { message: string } | null }>;
+        single: () => Promise<{
+          data: AgentTradeRow | null;
+          error: { message: string } | null;
+        }>;
       };
     };
     select: (cols: string) => {
@@ -106,7 +225,9 @@ function agentTrades() {
 export async function ensureAgent(row: AgentInsert): Promise<AgentRow> {
   const { data, error } = await agents()
     .upsert(row, { onConflict: "slug" })
-    .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+    .select(
+      "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+    )
     .single();
   if (error || !data) throw new Error(error?.message ?? "agent upsert failed");
   return data;
@@ -114,40 +235,304 @@ export async function ensureAgent(row: AgentInsert): Promise<AgentRow> {
 
 export async function getAgentBySlug(slug: string): Promise<AgentRow | null> {
   const { data, error } = await agents()
-    .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+    .select(
+      "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+    )
     .eq("slug", slug)
     .single();
   if (error) return null;
   return data;
 }
 
-export async function insertAgentTrade(row: TradeInsert): Promise<AgentTradeRow> {
+function encryptionKey(): Buffer {
+  const seed =
+    process.env.AGENT_SECRET_KEY?.trim() ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ??
+    "copium-devnet-agent-secret";
+  return createHash("sha256").update(seed).digest();
+}
+
+export function encryptAgentApiKey(apiKey: string): string {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", encryptionKey(), iv);
+  const encrypted = Buffer.concat([
+    cipher.update(apiKey, "utf8"),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  return `${iv.toString("base64")}.${tag.toString("base64")}.${encrypted.toString("base64")}`;
+}
+
+export function decryptAgentApiKey(payload: string): string {
+  const [ivRaw, tagRaw, encryptedRaw] = payload.split(".");
+  if (!ivRaw || !tagRaw || !encryptedRaw)
+    throw new Error("invalid agent secret");
+  const decipher = createDecipheriv(
+    "aes-256-gcm",
+    encryptionKey(),
+    Buffer.from(ivRaw, "base64"),
+  );
+  decipher.setAuthTag(Buffer.from(tagRaw, "base64"));
+  return Buffer.concat([
+    decipher.update(Buffer.from(encryptedRaw, "base64")),
+    decipher.final(),
+  ]).toString("utf8");
+}
+
+export function isUserAgentConfig(config: unknown): config is UserAgentConfig {
+  if (!config || typeof config !== "object") return false;
+  const c = config as Partial<UserAgentConfig>;
+  return (
+    c.kind === "user" && c.provider === "openai" && typeof c.style === "string"
+  );
+}
+
+export function normalizeAgentStyle(style: string): string {
+  return style.trim().replace(/\s+/g, " ").slice(0, 120);
+}
+
+export function normalizeAgentSlug(name: string): string {
+  const base = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 32);
+  return `user-${base || "agent"}-${randomBytes(3).toString("hex")}`;
+}
+
+export function generateAgentClaimCode(): string {
+  return randomBytes(5).toString("base64url").toUpperCase();
+}
+
+export async function createUserAgent(input: {
+  name: string;
+  ownerWallet?: string;
+  walletPubkey: string;
+  provider: AgentProvider;
+  model: string;
+  style: string;
+  source: "cli" | "web";
+  apiKey?: string;
+  walletSecret?: number[];
+  permissionEnabled?: boolean;
+  maxStake?: number;
+}): Promise<AgentRow> {
+  const style = normalizeAgentStyle(input.style);
+  if (!style) throw new Error("agent style required");
+  if (!SUPPORTED_AGENT_PROVIDERS.includes(input.provider))
+    throw new Error("unsupported provider");
+  const agent = await ensureAgent({
+    slug: normalizeAgentSlug(input.name),
+    display_name: input.name.trim().slice(0, 48) || "User Agent",
+    wallet_pubkey: input.walletPubkey,
+    config: {
+      kind: "user",
+      ownerWallet: input.ownerWallet,
+      provider: input.provider,
+      model: input.model.trim(),
+      style,
+      source: input.source,
+      permission: {
+        enabled: Boolean(input.permissionEnabled),
+        maxStake: input.maxStake ?? 100_000,
+      },
+    } satisfies UserAgentConfig,
+  });
+  await storeAgentSecrets(agent.id, input.provider, {
+    apiKey: input.apiKey?.trim(),
+    walletSecret: input.walletSecret,
+  });
+  return agent;
+}
+
+export async function updateAgentConfig(
+  agentId: string,
+  config: UserAgentConfig,
+): Promise<AgentRow> {
+  const { data, error } = await agents()
+    .update({ config: config as unknown as Record<string, unknown> })
+    .eq("id", agentId)
+    .select(
+      "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+    )
+    .single();
+  if (error || !data) throw new Error(error?.message ?? "agent update failed");
+  return data;
+}
+
+export async function listUserAgents(
+  ownerWallet?: string,
+): Promise<AgentRow[]> {
+  const { data, error } = await (
+    createDbClient().from("agents") as unknown as {
+      select: (cols: string) => Promise<{
+        data: AgentRow[] | null;
+        error: { message: string } | null;
+      }>;
+    }
+  ).select(
+    "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+  );
+  if (error) throw new Error(error.message);
+  return (data ?? []).filter((agent) => {
+    if (!isUserAgentConfig(agent.config)) return false;
+    return !ownerWallet || agent.config.ownerWallet === ownerWallet;
+  });
+}
+
+export async function storeAgentSecrets(
+  agentId: string,
+  provider: AgentProvider,
+  secrets: { apiKey?: string; walletSecret?: number[] },
+): Promise<void> {
+  if (!secrets.apiKey && !secrets.walletSecret) return;
+  const { error } = await agentSecrets().upsert(
+    {
+      agent_id: agentId,
+      provider,
+      encrypted_api_key: encryptAgentApiKey(secrets.apiKey ?? ""),
+      encrypted_wallet_secret: secrets.walletSecret
+        ? encryptAgentApiKey(JSON.stringify(secrets.walletSecret))
+        : null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "agent_id" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function storeAgentApiKey(
+  agentId: string,
+  provider: AgentProvider,
+  apiKey: string,
+): Promise<void> {
+  await storeAgentSecrets(agentId, provider, { apiKey });
+}
+
+export async function getAgentApiKey(agentId: string): Promise<string | null> {
+  const { data, error } = await agentSecrets()
+    .select("agent_id, provider, encrypted_api_key, encrypted_wallet_secret")
+    .eq("agent_id", agentId)
+    .single();
+  if (error || !data) return null;
+  return decryptAgentApiKey(data.encrypted_api_key);
+}
+
+export async function getAgentWalletSecret(
+  agentId: string,
+): Promise<number[] | null> {
+  const { data, error } = await agentSecrets()
+    .select("agent_id, provider, encrypted_api_key, encrypted_wallet_secret")
+    .eq("agent_id", agentId)
+    .single();
+  if (error || !data?.encrypted_wallet_secret) return null;
+  return JSON.parse(
+    decryptAgentApiKey(data.encrypted_wallet_secret),
+  ) as number[];
+}
+
+export async function createAgentClaimCode(agentId: string): Promise<string> {
+  const code = generateAgentClaimCode();
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString();
+  const { error } = await agentClaimCodes().insert({
+    code,
+    agent_id: agentId,
+    expires_at: expiresAt,
+  });
+  if (error) throw new Error(error.message);
+  return code;
+}
+
+export async function redeemAgentClaimCode(
+  codeRaw: string,
+  wallet: string,
+): Promise<AgentRow> {
+  const code = codeRaw.trim().toUpperCase();
+  const { data, error } = await agentClaimCodes()
+    .select("code, agent_id, expires_at, claimed_at, claimed_by_wallet")
+    .eq("code", code)
+    .single();
+  if (error || !data?.agent_id) throw new Error("claim code not found");
+  if (data.claimed_at) throw new Error("claim code already used");
+  if (new Date(data.expires_at).getTime() < Date.now())
+    throw new Error("claim code expired");
+  const agent = await getAgentById(data.agent_id);
+  if (!agent || !isUserAgentConfig(agent.config))
+    throw new Error("agent not found");
+  const nextConfig: UserAgentConfig = {
+    ...agent.config,
+    ownerWallet: wallet,
+  };
+  const updated = await updateAgentConfig(agent.id, nextConfig);
+  const update = await agentClaimCodes()
+    .update({ claimed_at: new Date().toISOString(), claimed_by_wallet: wallet })
+    .eq("code", code);
+  if (update.error) throw new Error(update.error.message);
+  return updated;
+}
+
+export async function getAgentById(agentId: string): Promise<AgentRow | null> {
+  const { data, error } = await (
+    createDbClient().from("agents") as unknown as {
+      select: (cols: string) => {
+        eq: (
+          col: string,
+          val: string,
+        ) => {
+          single: () => Promise<{
+            data: AgentRow | null;
+            error: { message: string } | null;
+          }>;
+        };
+      };
+    }
+  )
+    .select(
+      "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+    )
+    .eq("id", agentId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function insertAgentTrade(
+  row: TradeInsert,
+): Promise<AgentTradeRow> {
   const { data, error } = await agentTrades()
     .insert(row)
-    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+    .select(
+      "id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at",
+    )
     .single();
-  if (error || !data) throw new Error(error?.message ?? "agent_trades insert failed");
+  if (error || !data)
+    throw new Error(error?.message ?? "agent_trades insert failed");
   return data;
 }
 
 /** Desk tape — newest trades with agent + pulse question. */
-export async function listAgentTape(limit = 40): Promise<AgentTradeWithAgent[]> {
-  const { data: trades, error: tradeErr } = await (createDbClient().from(
-    "agent_trades",
-  ) as unknown as {
-    select: (cols: string) => {
-      order: (
-        col: string,
-        opts: { ascending: boolean },
-      ) => {
-        limit: (n: number) => Promise<{
-          data: AgentTradeRow[] | null;
-          error: { message: string } | null;
-        }>;
+export async function listAgentTape(
+  limit = 40,
+): Promise<AgentTradeWithAgent[]> {
+  const { data: trades, error: tradeErr } = await (
+    createDbClient().from("agent_trades") as unknown as {
+      select: (cols: string) => {
+        order: (
+          col: string,
+          opts: { ascending: boolean },
+        ) => {
+          limit: (n: number) => Promise<{
+            data: AgentTradeRow[] | null;
+            error: { message: string } | null;
+          }>;
+        };
       };
-    };
-  })
-    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+    }
+  )
+    .select(
+      "id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at",
+    )
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -159,17 +544,21 @@ export async function listAgentTape(limit = 40): Promise<AgentTradeWithAgent[]> 
 
   const agentsById = new Map<string, AgentRow>();
   for (const id of agentIds) {
-    const { data } = await (createDbClient().from("agents") as unknown as {
-      select: (cols: string) => {
-        eq: (
-          col: string,
-          val: string,
-        ) => {
-          single: () => Promise<{ data: AgentRow | null; error: unknown }>;
+    const { data } = await (
+      createDbClient().from("agents") as unknown as {
+        select: (cols: string) => {
+          eq: (
+            col: string,
+            val: string,
+          ) => {
+            single: () => Promise<{ data: AgentRow | null; error: unknown }>;
+          };
         };
-      };
-    })
-      .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+      }
+    )
+      .select(
+        "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+      )
       .eq("id", id)
       .single();
     if (data) agentsById.set(id, data);
@@ -177,16 +566,21 @@ export async function listAgentTape(limit = 40): Promise<AgentTradeWithAgent[]> 
 
   const pulsesById = new Map<string, string>();
   for (const id of pulseIds) {
-    const { data } = await (createDbClient().from("pulses") as unknown as {
-      select: (cols: string) => {
-        eq: (
-          col: string,
-          val: string,
-        ) => {
-          single: () => Promise<{ data: { question: string } | null; error: unknown }>;
+    const { data } = await (
+      createDbClient().from("pulses") as unknown as {
+        select: (cols: string) => {
+          eq: (
+            col: string,
+            val: string,
+          ) => {
+            single: () => Promise<{
+              data: { question: string } | null;
+              error: unknown;
+            }>;
+          };
         };
-      };
-    })
+      }
+    )
       .select("question")
       .eq("id", id)
       .single();
@@ -199,6 +593,7 @@ export async function listAgentTape(limit = 40): Promise<AgentTradeWithAgent[]> 
       ...row,
       agent_slug: agent?.slug ?? "unknown",
       agent_name: agent?.display_name ?? "Agent",
+      agent_kind: isUserAgentConfig(agent?.config) ? "user" : "system",
       pulse_question: pulsesById.get(row.pulse_id) ?? "",
     };
   });
@@ -213,25 +608,27 @@ type PulseMeta = {
 };
 
 async function fetchPulseMeta(pulseId: string): Promise<PulseMeta | null> {
-  const { data } = await (createDbClient().from("pulses") as unknown as {
-    select: (cols: string) => {
-      eq: (
-        col: string,
-        val: string,
-      ) => {
-        single: () => Promise<{
-          data: {
-            question: string;
-            status: string | null;
-            onchain_pool_pubkey: string | null;
-            odds_message_id: string | null;
-            winning_side: string | null;
-          } | null;
-          error: unknown;
-        }>;
+  const { data } = await (
+    createDbClient().from("pulses") as unknown as {
+      select: (cols: string) => {
+        eq: (
+          col: string,
+          val: string,
+        ) => {
+          single: () => Promise<{
+            data: {
+              question: string;
+              status: string | null;
+              onchain_pool_pubkey: string | null;
+              odds_message_id: string | null;
+              winning_side: string | null;
+            } | null;
+            error: unknown;
+          }>;
+        };
       };
-    };
-  })
+    }
+  )
     .select(
       "question, status, onchain_pool_pubkey, odds_message_id, winning_side",
     )
@@ -241,24 +638,35 @@ async function fetchPulseMeta(pulseId: string): Promise<PulseMeta | null> {
 }
 
 /** Copy/fade Blink — trade + open pulse pool. */
-export async function getAgentTradeById(tradeId: string): Promise<AgentTradeDetail | null> {
-  const { data: trade, error } = await (createDbClient().from("agent_trades") as unknown as {
-    select: (cols: string) => {
-      eq: (
-        col: string,
-        val: string,
-      ) => {
-        single: () => Promise<{ data: AgentTradeRow | null; error: { message: string } | null }>;
+export async function getAgentTradeById(
+  tradeId: string,
+): Promise<AgentTradeDetail | null> {
+  const { data: trade, error } = await (
+    createDbClient().from("agent_trades") as unknown as {
+      select: (cols: string) => {
+        eq: (
+          col: string,
+          val: string,
+        ) => {
+          single: () => Promise<{
+            data: AgentTradeRow | null;
+            error: { message: string } | null;
+          }>;
+        };
       };
-    };
-  })
-    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+    }
+  )
+    .select(
+      "id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at",
+    )
     .eq("id", tradeId)
     .single();
   if (error || !trade) return null;
 
   const { data: agent } = await agents()
-    .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+    .select(
+      "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+    )
     .eq("id", trade.agent_id)
     .single();
   const pulse = await fetchPulseMeta(trade.pulse_id);
@@ -268,6 +676,7 @@ export async function getAgentTradeById(tradeId: string): Promise<AgentTradeDeta
     ...trade,
     agent_slug: agent.slug,
     agent_name: agent.display_name,
+    agent_kind: isUserAgentConfig(agent.config) ? "user" : "system",
     pulse_question: pulse.question,
     onchain_pool_pubkey: pulse.onchain_pool_pubkey,
     odds_message_id: pulse.odds_message_id,
@@ -278,15 +687,22 @@ export async function getAgentTradeById(tradeId: string): Promise<AgentTradeDeta
 
 /** Settled pulse PnL — wins/losses from real winning_side only. */
 export async function listAgentPnl(): Promise<AgentPnlRow[]> {
-  const { data: trades, error } = await (createDbClient().from("agent_trades") as unknown as {
-    select: (cols: string) => {
-      order: (
-        col: string,
-        opts: { ascending: boolean },
-      ) => Promise<{ data: AgentTradeRow[] | null; error: { message: string } | null }>;
-    };
-  })
-    .select("id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at")
+  const { data: trades, error } = await (
+    createDbClient().from("agent_trades") as unknown as {
+      select: (cols: string) => {
+        order: (
+          col: string,
+          opts: { ascending: boolean },
+        ) => Promise<{
+          data: AgentTradeRow[] | null;
+          error: { message: string } | null;
+        }>;
+      };
+    }
+  )
+    .select(
+      "id, agent_id, pulse_id, side, stake, reasoning, signature, execute_tx, created_at",
+    )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   if (!trades?.length) return [];
@@ -297,7 +713,9 @@ export async function listAgentPnl(): Promise<AgentPnlRow[]> {
   const agentsById = new Map<string, AgentRow>();
   for (const id of agentIds) {
     const { data } = await agents()
-      .select("id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config")
+      .select(
+        "id, slug, display_name, wallet_pubkey, onchain_agent_pubkey, config",
+      )
       .eq("id", id)
       .single();
     if (data) agentsById.set(id, data);
@@ -318,11 +736,13 @@ export async function listAgentPnl(): Promise<AgentPnlRow[]> {
       ({
         agent_slug: slug,
         agent_name: agent?.display_name ?? "Agent",
+        kind: isUserAgentConfig(agent?.config) ? "user" : "system",
         fills: 0,
         wins: 0,
         losses: 0,
         open_fills: 0,
         pnl_usdt: 0,
+        win_rate: 0,
       } satisfies AgentPnlRow);
     row.fills += 1;
 
@@ -337,6 +757,8 @@ export async function listAgentPnl(): Promise<AgentPnlRow[]> {
       row.losses += 1;
       row.pnl_usdt -= stakeUsdt;
     }
+    const closed = row.wins + row.losses;
+    row.win_rate = closed > 0 ? row.wins / closed : 0;
     board.set(slug, row);
   }
 

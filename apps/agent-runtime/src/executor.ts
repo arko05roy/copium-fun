@@ -13,13 +13,27 @@ import {
 import { TXLINE_DEVNET } from "@copium/config";
 import {
   ensureAgent,
+  getAgentApiKey,
+  getAgentWalletSecret,
   getPulse,
   insertAgentTrade,
+  isUserAgentConfig,
   listAgentTape,
+  listUserAgents,
   loadEnv as loadDbEnv,
+  type AgentRow,
+  type UserAgentConfig,
 } from "@copium/db";
 import { openPositionOnChain } from "@copium/pulses-client";
-import { loadEnv, loadServiceKeypair, requestDevnetUsdtFaucet, solanaRpcUrl } from "@copium/txline";
+import {
+  loadEnv,
+  loadServiceKeypair,
+  requestDevnetUsdtFaucet,
+  solanaRpcUrl,
+} from "@copium/txline";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateObject } from "ai";
+import { z } from "zod";
 import { officerDecision } from "./agents/officer.js";
 import { quantDecision } from "./agents/quant.js";
 import { loadAgentKeypair } from "./wallet.js";
@@ -32,7 +46,13 @@ const DEFAULT_STAKE = 100_000n;
 type AgentSpec = {
   slug: string;
   name: string;
-  decide: (linePct: number, crowdYes: number) => { side: "yes" | "no"; reasoning: string } | null;
+  row?: AgentRow;
+  config?: UserAgentConfig;
+  decide: (
+    linePct: number,
+    crowdYes: number,
+  ) => { side: "yes" | "no"; reasoning: string } | null;
+  decideAsync?: () => Promise<{ side: "yes" | "no"; reasoning: string } | null>;
 };
 
 const AGENTS: AgentSpec[] = [
@@ -48,6 +68,12 @@ const AGENTS: AgentSpec[] = [
   },
 ];
 
+const userAgentDecisionSchema = z.object({
+  side: z.enum(["yes", "no", "skip"]),
+  reason: z.string().max(160),
+  confidence: z.number().min(0).max(1),
+});
+
 async function ensureUsdtBalance(
   connection: Connection,
   owner: PublicKey,
@@ -61,7 +87,12 @@ async function ensureUsdtBalance(
   if (owner.equals(funder.publicKey)) {
     if (!info) {
       const tx = new Transaction().add(
-        createAssociatedTokenAccountInstruction(funder.publicKey, ata, owner, mint),
+        createAssociatedTokenAccountInstruction(
+          funder.publicKey,
+          ata,
+          owner,
+          mint,
+        ),
       );
       const sig = await connection.sendTransaction(tx, [funder]);
       await connection.confirmTransaction(sig, "confirmed");
@@ -86,11 +117,23 @@ async function ensureUsdtBalance(
   if (!info) {
     const funderAta = getAssociatedTokenAddressSync(mint, funder.publicKey);
     const tx = new Transaction().add(
-      createAssociatedTokenAccountInstruction(funder.publicKey, ata, owner, mint),
+      createAssociatedTokenAccountInstruction(
+        funder.publicKey,
+        ata,
+        owner,
+        mint,
+      ),
     );
     const sig = await connection.sendTransaction(tx, [funder]);
     await connection.confirmTransaction(sig, "confirmed");
-    await transfer(connection, funder, funderAta, ata, funder, Number(minAmount));
+    await transfer(
+      connection,
+      funder,
+      funderAta,
+      ata,
+      funder,
+      Number(minAmount),
+    );
     return ata;
   }
 
@@ -143,6 +186,85 @@ async function alreadyTraded(pulseId: string, slug: string): Promise<boolean> {
   return tape.some((t) => t.pulse_id === pulseId && t.agent_slug === slug);
 }
 
+async function userAgentDecision(input: {
+  agent: AgentRow;
+  config: UserAgentConfig;
+  question: string;
+  linePct: number;
+  crowdYes: number;
+}): Promise<{ side: "yes" | "no"; reasoning: string } | null> {
+  if (!input.config.permission.enabled) return null;
+  const apiKey = await getAgentApiKey(input.agent.id);
+  if (!apiKey) return null;
+  let object: z.infer<typeof userAgentDecisionSchema>;
+  try {
+    const openai = createOpenAI({ apiKey });
+    const result = await generateObject({
+      model: openai(input.config.model),
+      schema: userAgentDecisionSchema,
+      prompt: [
+        "You are a devnet sports Pulse trading agent.",
+        "Return skip unless the one-line style gives a clear YES or NO lean.",
+        `Style: ${input.config.style}`,
+        `Pulse: ${input.question}`,
+        `TxLINE line YES probability: ${input.linePct}%`,
+        `Crowd YES probability: ${input.crowdYes}%`,
+      ].join("\n"),
+    });
+    object = result.object;
+  } catch (err) {
+    console.warn(
+      JSON.stringify({
+        action: "user_agent_skip",
+        agent: input.agent.slug,
+        reason: err instanceof Error ? err.message : "model call failed",
+      }),
+    );
+    return null;
+  }
+  if (object.side === "skip") return null;
+  return {
+    side: object.side,
+    reasoning: `${input.config.style} — ${object.reason} (${Math.round(object.confidence * 100)}%)`,
+  };
+}
+
+async function loadExecutableAgents(pulse: {
+  question: string;
+  line_pct: number | null;
+  crowd_yes_pct: number | null;
+}): Promise<AgentSpec[]> {
+  const linePct = Number(pulse.line_pct);
+  const crowdYes =
+    pulse.crowd_yes_pct != null ? Number(pulse.crowd_yes_pct) : 50;
+  const userAgents = await listUserAgents();
+  return [
+    ...AGENTS,
+    ...userAgents
+      .filter((agent) => isUserAgentConfig(agent.config))
+      .map((agent) => {
+        const config = agent.config as UserAgentConfig;
+        return {
+          slug: agent.slug,
+          name: agent.display_name,
+          row: agent,
+          config,
+          decide: () => {
+            throw new Error("user agent decisions are async");
+          },
+          decideAsync: () =>
+            userAgentDecision({
+              agent,
+              config,
+              question: pulse.question,
+              linePct,
+              crowdYes,
+            }),
+        };
+      }),
+  ] as AgentSpec[];
+}
+
 export async function executeAgentTrade(
   pulseId: string,
   agent: AgentSpec,
@@ -163,30 +285,57 @@ export async function executeAgentTrade(
   }
 
   const linePct = Number(pulse.line_pct);
-  const crowdYes = pulse.crowd_yes_pct != null ? Number(pulse.crowd_yes_pct) : 50;
-  const decision = agent.decide(linePct, crowdYes);
-  if (!decision) {
-    return { skipped: true, reason: `${agent.slug} no signal at line ${linePct}%` };
+  const crowdYes =
+    pulse.crowd_yes_pct != null ? Number(pulse.crowd_yes_pct) : 50;
+  if (agent.config && !agent.config.permission.enabled) {
+    return { skipped: true, reason: `${agent.slug} permission off` };
   }
 
-  const agentKey = loadAgentKeypair(agent.slug);
-  const row = await ensureAgent({
-    slug: agent.slug,
-    display_name: agent.name,
-    wallet_pubkey: agentKey.publicKey.toBase58(),
-  });
+  const decision =
+    "decideAsync" in agent && typeof agent.decideAsync === "function"
+      ? await agent.decideAsync()
+      : agent.decide(linePct, crowdYes);
+  if (!decision) {
+    return {
+      skipped: true,
+      reason: `${agent.slug} no signal at line ${linePct}%`,
+    };
+  }
+
+  const stake = BigInt(
+    Math.max(
+      1,
+      Math.min(
+        Number(DEFAULT_STAKE),
+        agent.config?.permission.maxStake ?? Number(DEFAULT_STAKE),
+      ),
+    ),
+  );
+  const storedSecret = agent.row
+    ? await getAgentWalletSecret(agent.row.id)
+    : null;
+  const agentKey = storedSecret
+    ? Keypair.fromSecretKey(Uint8Array.from(storedSecret))
+    : loadAgentKeypair(agent.slug);
+  const row =
+    agent.row ??
+    (await ensureAgent({
+      slug: agent.slug,
+      display_name: agent.name,
+      wallet_pubkey: agentKey.publicKey.toBase58(),
+    }));
 
   const connection = new Connection(solanaRpcUrl(), "confirmed");
   const mint = new PublicKey(TXLINE_DEVNET.usdtMint);
   const funder = loadServiceKeypair();
   await ensureSol(connection, agentKey.publicKey, funder);
-  await ensureUsdtBalance(connection, agentKey.publicKey, mint, DEFAULT_STAKE, funder);
+  await ensureUsdtBalance(connection, agentKey.publicKey, mint, stake, funder);
 
   const onchain = await openPositionOnChain({
     owner: agentKey,
     pool: pulse.onchain_pool_pubkey,
     side: decision.side,
-    stake: DEFAULT_STAKE,
+    stake,
     oddsMessageId: pulse.odds_message_id,
   });
 
@@ -194,7 +343,7 @@ export async function executeAgentTrade(
     agent_id: row.id,
     pulse_id: pulseId,
     side: decision.side,
-    stake: Number(DEFAULT_STAKE),
+    stake: Number(stake),
     reasoning: decision.reasoning,
     signature: onchain.signature,
     execute_tx: onchain.signature,
@@ -210,16 +359,30 @@ export async function executeAgentTrade(
 }
 
 /** D16 — Officer + Quant both evaluate; return all fills. */
-export async function executeAllAgentsOnPulse(pulseId: string): Promise<ExecuteAgentResult[]> {
+export async function executeAllAgentsOnPulse(
+  pulseId: string,
+): Promise<ExecuteAgentResult[]> {
   const results: ExecuteAgentResult[] = [];
-  for (const agent of AGENTS) {
-    results.push(await executeAgentTrade(pulseId, agent));
+  const pulse = await getPulse(pulseId);
+  const agents = await loadExecutableAgents(pulse);
+  for (const agent of agents) {
+    try {
+      results.push(await executeAgentTrade(pulseId, agent));
+    } catch (err) {
+      results.push({
+        skipped: true,
+        agentSlug: agent.slug,
+        reason: err instanceof Error ? err.message : "agent execution failed",
+      });
+    }
   }
   return results;
 }
 
 /** D15 — first devnet fill: Officer if gap>20pp, else Quant toward line. */
-export async function executeFirstAgentOnPulse(pulseId: string): Promise<ExecuteAgentResult> {
+export async function executeFirstAgentOnPulse(
+  pulseId: string,
+): Promise<ExecuteAgentResult> {
   for (const agent of AGENTS) {
     const result = await executeAgentTrade(pulseId, agent);
     if (!result.skipped) return result;
@@ -227,6 +390,8 @@ export async function executeFirstAgentOnPulse(pulseId: string): Promise<Execute
   return { skipped: true, reason: "no agent signal for pulse" };
 }
 
-export async function executeOfficerTrade(pulseId: string): Promise<ExecuteAgentResult> {
+export async function executeOfficerTrade(
+  pulseId: string,
+): Promise<ExecuteAgentResult> {
   return executeAgentTrade(pulseId, AGENTS[0]!);
 }

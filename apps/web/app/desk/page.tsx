@@ -5,6 +5,7 @@ import { IBM_Plex_Mono, Newsreader } from "next/font/google";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
+import { AddAgentPanel } from "../components/add-agent-panel";
 import { AgentReasoning } from "../components/agent-reasoning";
 import { DeskTape, type TapeRow } from "../components/desk-tape";
 import { DevnetBadge } from "../components/devnet-badge";
@@ -187,6 +188,8 @@ export default function DeskPage() {
             </div>
           </div>
         </section>
+
+        <AddAgentPanel />
 
         <div className="mb-8 grid gap-4 sm:grid-cols-3">
           <div className="border border-[var(--desk-border)] p-4">

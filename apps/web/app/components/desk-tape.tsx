@@ -6,6 +6,7 @@ export type TapeRow = {
   id: string;
   agent_slug: string;
   agent_name: string;
+  agent_kind?: "system" | "user";
   pulse_question: string;
   side: string | null;
   stake: number | null;
@@ -27,7 +28,8 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
   if (!rows.length) {
     return (
       <p className="font-mono text-sm text-[var(--desk-muted)]">
-        No agent positions yet. Spawn a Pulse from TxLINE, then the agents trade the same pool the Feed shows.
+        No agent positions yet. Spawn a Pulse from TxLINE, then the agents trade
+        the same pool the Feed shows.
       </p>
     );
   }
@@ -61,11 +63,16 @@ export function DeskTape({ rows }: { rows: TapeRow[] }) {
                   : "—"}
               </td>
               <td className="px-3 py-2.5">
-                <span className="text-[var(--desk-accent)]">{row.agent_name}</span>
+                <span className="text-[var(--desk-accent)]">
+                  {row.agent_name}
+                </span>
+                {row.agent_kind === "user" ? (
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
+                    user
+                  </span>
+                ) : null}
               </td>
-              <td className="px-3 py-2.5 uppercase">
-                {row.side ?? "—"}
-              </td>
+              <td className="px-3 py-2.5 uppercase">{row.side ?? "—"}</td>
               <td className="px-3 py-2.5">{formatStake(row.stake)}</td>
               <td className="max-w-[8rem] truncate px-3 py-2.5">
                 {row.execute_tx ? (

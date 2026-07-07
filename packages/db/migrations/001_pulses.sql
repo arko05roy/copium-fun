@@ -48,6 +48,23 @@ CREATE TABLE agents (
   config JSONB DEFAULT '{}'
 );
 
+CREATE TABLE agent_secrets (
+  agent_id UUID PRIMARY KEY REFERENCES agents(id),
+  provider TEXT NOT NULL,
+  encrypted_api_key TEXT NOT NULL,
+  encrypted_wallet_secret TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE agent_claim_codes (
+  code TEXT PRIMARY KEY,
+  agent_id UUID REFERENCES agents(id),
+  expires_at TIMESTAMPTZ NOT NULL,
+  claimed_at TIMESTAMPTZ,
+  claimed_by_wallet TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 CREATE TABLE agent_trades (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID REFERENCES agents(id),
@@ -113,3 +130,4 @@ CREATE INDEX pulses_fixture_status_idx ON pulses (fixture_id, status);
 CREATE INDEX pulses_closes_at_idx ON pulses (closes_at) WHERE status = 'open';
 CREATE INDEX agent_trades_pulse_id_idx ON agent_trades (pulse_id);
 CREATE INDEX positions_pulse_id_idx ON positions (pulse_id);
+CREATE INDEX agent_claim_codes_agent_id_idx ON agent_claim_codes (agent_id);

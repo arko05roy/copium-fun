@@ -1,9 +1,148 @@
+import { createInterface } from "node:readline/promises";
+import { readFileSync } from "node:fs";
+import { stdin as input, stdout as output } from "node:process";
 import { loadEnv } from "@copium/txline";
+import {
+  createAgentClaimCode,
+  createUserAgent,
+  loadEnv as loadDbEnv,
+} from "@copium/db";
+import { Keypair } from "@solana/web3.js";
 
 loadEnv();
+loadDbEnv();
+
+function argValue(flag: string): string | undefined {
+  const index = process.argv.indexOf(flag);
+  if (index === -1) return undefined;
+  return process.argv[index + 1];
+}
+
+function hasFlag(flag: string): boolean {
+  return process.argv.includes(flag);
+}
+
+async function askMissingAgentFields(defaults: {
+  name?: string;
+  model?: string;
+  style?: string;
+  apiKey?: string;
+  maxStake?: number;
+  enabled?: boolean;
+}): Promise<{
+  name: string;
+  model: string;
+  style: string;
+  apiKey?: string;
+  maxStake: number;
+  enabled: boolean;
+}> {
+  const pipedAnswers = input.isTTY
+    ? []
+    : readFileSync(0, "utf8")
+        .split(/\r?\n/)
+        .map((line) => line.trim());
+  let pipedIndex = 0;
+  const rl = createInterface({ input, output });
+  const ask = async (question: string): Promise<string> => {
+    if (pipedAnswers.length) {
+      output.write(question);
+      const answer = pipedAnswers[pipedIndex++] ?? "";
+      output.write(`${answer ? "******" : ""}\n`);
+      return answer;
+    }
+    return rl.question(question);
+  };
+  try {
+    const name = defaults.name ?? (await ask("Agent name: ")).trim();
+    const model =
+      defaults.model ??
+      ((await ask("Model [gpt-4o-mini]: ")).trim() || "gpt-4o-mini");
+    const style =
+      defaults.style ?? (await ask("One-line trading style: ")).trim();
+    const apiKey =
+      defaults.apiKey ??
+      (await ask("OpenAI API key [uses OPENAI_API_KEY if blank]: ")).trim() ??
+      undefined;
+    const maxStakeRaw = await ask(
+      `Max devnet stake in micro-USDT [${defaults.maxStake ?? 100_000}]: `,
+    );
+    const enabledRaw = await ask(
+      `Allow autonomous devnet positions now? [${defaults.enabled ? "Y/n" : "y/N"}]: `,
+    );
+    const enabledAnswer = enabledRaw.trim().toLowerCase();
+    const enabled =
+      enabledAnswer === ""
+        ? Boolean(defaults.enabled)
+        : enabledAnswer === "y" || enabledAnswer === "yes";
+    if (!name) throw new Error("agent name required");
+    if (!style) throw new Error("one-line trading style required");
+    return {
+      name,
+      model,
+      style,
+      apiKey: apiKey || process.env.OPENAI_API_KEY?.trim(),
+      maxStake: Number(maxStakeRaw || defaults.maxStake || 100_000),
+      enabled,
+    };
+  } finally {
+    rl.close();
+  }
+}
 
 async function main(): Promise<void> {
   const command = process.argv[2];
+  if (command === "create-agent") {
+    const answers = await askMissingAgentFields({
+      name: argValue("--name"),
+      model: argValue("--model"),
+      style: argValue("--style"),
+      apiKey: argValue("--api-key") ?? process.env.OPENAI_API_KEY,
+      maxStake: Number(argValue("--max-stake") ?? 100_000),
+      enabled: hasFlag("--enable"),
+    });
+    const keypair = Keypair.generate();
+    const agent = await createUserAgent({
+      name: answers.name,
+      walletPubkey: keypair.publicKey.toBase58(),
+      walletSecret: Array.from(keypair.secretKey),
+      provider: "openai",
+      model: answers.model,
+      style: answers.style,
+      source: "cli",
+      apiKey: answers.apiKey,
+      permissionEnabled: answers.enabled,
+      maxStake: answers.maxStake,
+    });
+    const code = await createAgentClaimCode(agent.id);
+    const payload = {
+      ok: true,
+      agent: {
+        id: agent.id,
+        slug: agent.slug,
+        name: agent.display_name,
+        wallet: agent.wallet_pubkey,
+      },
+      claimCode: code,
+      permission: answers.enabled ? "enabled" : "off",
+      next: "Open /desk, click Add Agent, paste this code.",
+    };
+    if (hasFlag("--json")) {
+      console.log(JSON.stringify(payload));
+    } else {
+      console.log("");
+      console.log("Agent created");
+      console.log(`Name:       ${payload.agent.name}`);
+      console.log(`Model:      ${answers.model}`);
+      console.log(`Style:      ${answers.style}`);
+      console.log(`Permission: ${payload.permission}`);
+      console.log("");
+      console.log(`Claim code: ${payload.claimCode}`);
+      console.log(payload.next);
+    }
+    return;
+  }
+
   if (command === "listen") {
     const { startAgentRuntime } = await import("./listen.js");
     await startAgentRuntime();
@@ -22,7 +161,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  throw new Error("usage: listen | execute-officer <pulseId>");
+  throw new Error(
+    "usage: listen | execute-officer <pulseId> | create-agent --name <name> --style <one-line>",
+  );
 }
 
 main().catch((err: unknown) => {

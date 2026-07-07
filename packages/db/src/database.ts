@@ -109,6 +109,46 @@ export type Database = {
         };
         Update: Partial<Database["public"]["Tables"]["agents"]["Insert"]>;
       };
+      agent_secrets: {
+        Row: {
+          agent_id: string;
+          provider: string;
+          encrypted_api_key: string;
+          encrypted_wallet_secret: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          agent_id: string;
+          provider: string;
+          encrypted_api_key: string;
+          encrypted_wallet_secret?: string | null;
+          updated_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["agent_secrets"]["Insert"]
+        >;
+      };
+      agent_claim_codes: {
+        Row: {
+          code: string;
+          agent_id: string | null;
+          expires_at: string;
+          claimed_at: string | null;
+          claimed_by_wallet: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          code: string;
+          agent_id?: string | null;
+          expires_at: string;
+          claimed_at?: string | null;
+          claimed_by_wallet?: string | null;
+          created_at?: string | null;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["agent_claim_codes"]["Insert"]
+        >;
+      };
       agent_trades: {
         Row: {
           id: string;
@@ -200,7 +240,9 @@ export type Database = {
           bundle_json?: Json | null;
           created_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["proof_bundles"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["proof_bundles"]["Insert"]
+        >;
       };
       simulator_sessions: {
         Row: {
@@ -217,7 +259,9 @@ export type Database = {
           cursor?: number | null;
           created_at?: string | null;
         };
-        Update: Partial<Database["public"]["Tables"]["simulator_sessions"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["simulator_sessions"]["Insert"]
+        >;
         Relationships: [];
       };
       copy_subscriptions: {
@@ -233,7 +277,9 @@ export type Database = {
           max_stake?: number | null;
           mode?: "copy" | "fade" | null;
         };
-        Update: Partial<Database["public"]["Tables"]["copy_subscriptions"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["copy_subscriptions"]["Insert"]
+        >;
       };
     };
     Views: Record<string, never>;

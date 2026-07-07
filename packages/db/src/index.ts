@@ -21,18 +21,32 @@ export type { FixtureRow, PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";
 export {
   ensureAgent,
+  createAgentClaimCode,
+  createUserAgent,
+  getAgentApiKey,
+  getAgentById,
   getAgentBySlug,
   getAgentTradeById,
+  getAgentWalletSecret,
   insertAgentTrade,
+  isUserAgentConfig,
   listAgentPnl,
   listAgentTape,
+  listUserAgents,
+  normalizeAgentStyle,
+  redeemAgentClaimCode,
+  storeAgentApiKey,
+  storeAgentSecrets,
+  updateAgentConfig,
 } from "./agents.js";
 export type {
   AgentRow,
+  AgentProvider,
   AgentTradeRow,
   AgentTradeDetail,
   AgentTradeWithAgent,
   AgentPnlRow,
+  UserAgentConfig,
 } from "./agents.js";
 export {
   getProofBundle,
