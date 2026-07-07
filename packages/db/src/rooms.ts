@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { createDbClient } from "./client.js";
+import { updatePulseCrowdPct } from "./pulses.js";
 
 export type RoomRow = {
   id: string;
@@ -204,6 +205,30 @@ export async function listCrowdPositionsForPulse(pulseId: string): Promise<
     .eq("pulse_id", pulseId);
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+function crowdYesFromPositions(
+  positions: { side: "yes" | "no" | null }[],
+): number {
+  let yes = 0;
+  let no = 0;
+  for (const p of positions) {
+    if (p.side === "yes") yes += 1;
+    else if (p.side === "no") no += 1;
+  }
+  const total = yes + no;
+  if (total === 0) return 50;
+  return Math.round((yes / total) * 10_000) / 100;
+}
+
+/** Recompute pulses.crowd_yes_pct from position vote counts. */
+export async function refreshPulseCrowdFromPositions(
+  pulseId: string,
+): Promise<{ crowdYesPct: number }> {
+  const positions = await listCrowdPositionsForPulse(pulseId);
+  const crowdYesPct = crowdYesFromPositions(positions);
+  await updatePulseCrowdPct(pulseId, crowdYesPct);
+  return { crowdYesPct };
 }
 
 export async function listRoomsForFixture(fixtureId: number): Promise<RoomRow[]> {

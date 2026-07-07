@@ -1,12 +1,15 @@
-import { getPulse, insertCrowdPosition, loadEnv } from "@copium/db";
+import { insertCrowdPosition, loadEnv, refreshPulseCrowdFromPositions } from "@copium/db";
 import { SOLANA_DEVNET } from "@copium/config";
 import { buildOpenPositionTransaction } from "@copium/pulses-client";
 import { createPostResponse, type ActionGetResponse } from "@solana/actions";
 import { PublicKey } from "@solana/web3.js";
 
+import { ensurePulsePool } from "./ensure-pulse-pool";
+
 loadEnv();
 
 const PULSE_PICK_STAKE = Number(process.env.PULSE_PICK_STAKE ?? 50_000);
+const ALLOWED_STAKES = new Set([1_000_000, 5_000_000, 10_000_000]);
 
 function parseSide(raw: string | null): "yes" | "no" | null {
   const s = raw?.trim().toLowerCase();
@@ -14,11 +17,17 @@ function parseSide(raw: string | null): "yes" | "no" | null {
   return null;
 }
 
+function parseStake(raw: string | null): number {
+  const n = Number(raw);
+  if (ALLOWED_STAKES.has(n)) return n;
+  return PULSE_PICK_STAKE;
+}
+
 export async function buildPulsePickGet(
   pulseId: string,
   baseUrl: string,
 ): Promise<ActionGetResponse | { error: string }> {
-  const pulse = await getPulse(pulseId);
+  const pulse = await ensurePulsePool(pulseId);
   if (pulse.status !== "open") return { error: `pulse ${pulse.status ?? "closed"}` };
   if (!pulse.onchain_pool_pubkey || !pulse.odds_message_id) {
     return { error: "pulse missing on-chain pool" };
@@ -55,11 +64,13 @@ export async function buildPulsePickPost(
   pulseId: string,
   account: string,
   sideRaw: string | null,
+  stakeRaw: string | null = null,
 ): Promise<{ transaction: string; message: string } | { error: string }> {
   const side = parseSide(sideRaw);
   if (!side) return { error: "side=yes|no required" };
+  const stake = parseStake(stakeRaw);
 
-  const pulse = await getPulse(pulseId);
+  const pulse = await ensurePulsePool(pulseId);
   if (pulse.status !== "open") return { error: `pulse ${pulse.status ?? "closed"}` };
   if (!pulse.onchain_pool_pubkey || !pulse.odds_message_id) {
     return { error: "pulse missing on-chain pool" };
@@ -76,7 +87,7 @@ export async function buildPulsePickPost(
     feePayer,
     pool: pulse.onchain_pool_pubkey,
     side,
-    stake: BigInt(PULSE_PICK_STAKE),
+    stake: BigInt(stake),
     oddsMessageId: pulse.odds_message_id,
   });
 
@@ -84,8 +95,9 @@ export async function buildPulsePickPost(
     pulseId,
     walletPubkey: account,
     side,
-    stake: PULSE_PICK_STAKE,
+    stake,
   });
+  await refreshPulseCrowdFromPositions(pulseId);
 
   const post = await createPostResponse({
     fields: {

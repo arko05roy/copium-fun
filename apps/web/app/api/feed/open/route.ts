@@ -10,7 +10,8 @@ export async function GET(req: Request) {
   );
 
   try {
-    const pulses = await listOpenPulses(limit);
+    const all = await listOpenPulses(limit * 3);
+    const pulses = all.filter((p) => p.odds_message_id).slice(0, limit);
     return NextResponse.json({ ok: true, count: pulses.length, pulses });
   } catch (err) {
     const message = err instanceof Error ? err.message : "feed fetch failed";

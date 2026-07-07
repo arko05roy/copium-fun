@@ -159,6 +159,17 @@ export async function listOpenPulses(limit = 10): Promise<PulseRow[]> {
   return data ?? [];
 }
 
+export async function updatePulseCrowdPct(pulseId: string, crowdYesPct: number): Promise<void> {
+  const { error } = await (createDbClient().from("pulses") as unknown as {
+    update: (row: { crowd_yes_pct: number }) => {
+      eq: (col: string, val: string) => Promise<{ error: { message: string } | null }>;
+    };
+  })
+    .update({ crowd_yes_pct: crowdYesPct })
+    .eq("id", pulseId);
+  if (error) throw new Error(error.message);
+}
+
 export async function listRecentPulses(limit = 20): Promise<PulseRow[]> {
   const { data, error } = await pulses()
     .select(

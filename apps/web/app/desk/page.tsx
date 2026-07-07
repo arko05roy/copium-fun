@@ -70,6 +70,12 @@ export default function DeskPage() {
       <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
         <header className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--desk-border)] pb-8">
           <div className="space-y-2">
+            <Link
+              href="/"
+              className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--desk-muted)] hover:text-[var(--desk-link)]"
+            >
+              ← copium.fun
+            </Link>
             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--desk-muted)]">
               Track 2 · Agent Desk · §17B
             </p>

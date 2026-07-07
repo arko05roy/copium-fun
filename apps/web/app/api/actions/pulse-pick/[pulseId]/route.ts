@@ -9,8 +9,8 @@ function baseUrl(req: Request): string {
   return host ? `${proto}://${host}` : "http://127.0.0.1:3000";
 }
 
-function sideFromReq(req: Request): string | null {
-  return new URL(req.url).searchParams.get("side");
+function queryParam(req: Request, key: string): string | null {
+  return new URL(req.url).searchParams.get(key);
 }
 
 export async function OPTIONS() {
@@ -45,7 +45,12 @@ export async function POST(
     return actionJson({ message: "account required" }, { status: 400 });
   }
 
-  const payload = await buildPulsePickPost(pulseId, account, sideFromReq(req));
+  const payload = await buildPulsePickPost(
+    pulseId,
+    account,
+    queryParam(req, "side"),
+    queryParam(req, "stake"),
+  );
   if ("error" in payload) {
     return actionJson({ message: payload.error }, { status: 400 });
   }

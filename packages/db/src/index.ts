@@ -14,6 +14,7 @@ export {
   insertPulse,
   listOpenPulses,
   listRecentPulses,
+  updatePulseCrowdPct,
 } from "./pulses.js";
 export type { PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";
@@ -52,6 +53,7 @@ export {
   insertCrowdPosition,
   joinRoomMember,
   listCrowdPositionsForPulse,
+  refreshPulseCrowdFromPositions,
   listRoomMembers,
   listRoomsForFixture,
   walletToUserId,

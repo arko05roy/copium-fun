@@ -1,8 +1,9 @@
 "use client";
 
 import { useWalletConnection } from "@solana/react-hooks";
-import { Transaction } from "@solana/web3.js";
 import { useState } from "react";
+
+import { signAndSendActionTx } from "@/lib/sign-action-tx";
 
 type CopyButtonProps = {
   tradeId: string;
@@ -54,21 +55,7 @@ export function CopyButton({ tradeId, agentName, side, mode }: CopyButtonProps) 
         throw new Error(json.message ?? `${verb} tx build failed`);
       }
 
-      const tx = Transaction.from(Buffer.from(json.transaction, "base64"));
-      type LegacyWallet = {
-        sendTransaction?(signed: Transaction): Promise<string>;
-        signTransaction?(unsigned: Transaction): Promise<Transaction>;
-      };
-      const legacy = wallet as unknown as LegacyWallet;
-      const sig = legacy.sendTransaction
-        ? await legacy.sendTransaction(tx)
-        : legacy.signTransaction
-          ? await legacy.signTransaction(tx).then((signed) => {
-              if (!legacy.sendTransaction) throw new Error("wallet cannot send");
-              return legacy.sendTransaction(signed);
-            })
-          : null;
-      if (!sig) throw new Error("wallet cannot sign devnet tx");
+      const sig = await signAndSendActionTx(wallet, json.transaction);
       setResult(typeof sig === "string" ? sig : String(sig));
     } catch (e) {
       setError(e instanceof Error ? e.message : `${verb} failed`);

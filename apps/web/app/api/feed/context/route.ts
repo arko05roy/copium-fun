@@ -3,16 +3,9 @@ import { copiumGap } from "@copium/pulse-engine/copium-gap";
 import { detectStateAtCursor, isSimBundle } from "@copium/txline/sim";
 import { NextResponse } from "next/server";
 
-loadEnv();
+import { fetchTxlineLiveContext } from "@/lib/txline-live-context";
 
-function minuteFromState(gameState?: string): number | null {
-  if (!gameState) return null;
-  if (gameState === "H1") return 22;
-  if (gameState === "HT") return 45;
-  if (gameState === "H2") return 67;
-  const n = Number(gameState);
-  return Number.isFinite(n) ? n : null;
-}
+loadEnv();
 
 export async function GET() {
   try {
@@ -27,16 +20,31 @@ export async function GET() {
     let minute: number | null = null;
     let fixtureId = pulse?.fixture_id ?? null;
     let simSessionId: string | null = null;
+    let source: "txline" | "sim" = "sim";
 
-    const sim = await getLatestSimulatorSession();
-    if (sim?.bundle && isSimBundle(sim.bundle)) {
-      simSessionId = sim.id;
-      fixtureId = sim.fixture_id ?? fixtureId;
-      const state = detectStateAtCursor(sim.bundle, sim.cursor ?? 0);
-      scoreHome = state.goals[1] ?? 0;
-      scoreAway = state.goals[2] ?? 0;
-      phase = state.gameState ?? "—";
-      minute = minuteFromState(state.gameState);
+    if (fixtureId != null) {
+      const live = await fetchTxlineLiveContext(fixtureId);
+      if (live) {
+        scoreHome = live.scoreHome;
+        scoreAway = live.scoreAway;
+        phase = live.phase;
+        minute = live.minute;
+        source = "txline";
+      }
+    }
+
+    if (source === "sim") {
+      const sim = await getLatestSimulatorSession();
+      if (sim?.bundle && isSimBundle(sim.bundle)) {
+        simSessionId = sim.id;
+        fixtureId = sim.fixture_id ?? fixtureId;
+        const state = detectStateAtCursor(sim.bundle, sim.cursor ?? 0);
+        scoreHome = state.goals[1] ?? 0;
+        scoreAway = state.goals[2] ?? 0;
+        phase = state.gameState ?? "—";
+        minute =
+          phase === "H1" ? 22 : phase === "HT" ? 45 : phase === "H2" ? 67 : null;
+      }
     }
 
     return NextResponse.json({
@@ -53,6 +61,7 @@ export async function GET() {
         fixtureId,
         simSessionId,
         pulseQuestion: pulse?.question ?? null,
+        source,
       },
     });
   } catch (err) {
