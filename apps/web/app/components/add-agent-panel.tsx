@@ -12,6 +12,7 @@ type UserAgent = {
     provider?: string;
     model?: string;
     style?: string;
+    topics?: string[];
     permission?: { enabled?: boolean; maxStake?: number };
   } | null;
 };
@@ -119,6 +120,15 @@ const MODEL_OPTIONS = [
   },
 ];
 
+const TOPIC_OPTIONS = [
+  { id: "soccer", label: "Soccer" },
+  { id: "football", label: "Football" },
+  { id: "basketball", label: "Basketball" },
+  { id: "world-cup", label: "World Cup" },
+  { id: "ncaa-football", label: "NCAA football" },
+  { id: "ncaa-basketball", label: "NCAA basketball" },
+] as const;
+
 export function AddAgentPanel() {
   const { wallet, status, connect, connectors } = useWalletConnection();
   const [agents, setAgents] = useState<UserAgent[]>([]);
@@ -127,6 +137,7 @@ export function AddAgentPanel() {
   const [model, setModel] = useState("gpt-4o-mini");
   const [style, setStyle] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [topics, setTopics] = useState<string[]>(["soccer"]);
   const [permissionEnabled, setPermissionEnabled] = useState(false);
   const [maxStake, setMaxStake] = useState(100_000);
   const [pending, setPending] = useState(false);
@@ -204,6 +215,7 @@ export function AddAgentPanel() {
           provider: selectedModel.provider,
           model,
           style,
+          topics,
           apiKey,
           permissionEnabled,
           maxStake,
@@ -214,6 +226,7 @@ export function AddAgentPanel() {
       setName("");
       setStyle("");
       setApiKey("");
+      setTopics(["soccer"]);
       setPermissionEnabled(false);
       setMessage(`Created ${json.agent?.display_name ?? "agent"}`);
       await loadAgents();
@@ -247,6 +260,14 @@ export function AddAgentPanel() {
     } finally {
       setPending(false);
     }
+  }
+
+  function toggleTopic(topic: string) {
+    setTopics((current) =>
+      current.includes(topic)
+        ? current.filter((value) => value !== topic)
+        : [...current, topic],
+    );
   }
 
   return (
@@ -304,6 +325,36 @@ export function AddAgentPanel() {
             maxLength={120}
             className="border border-[var(--desk-border)] bg-[var(--desk-bg)] px-3 py-2 font-mono text-xs outline-none"
           />
+          <div className="space-y-2 border border-[var(--desk-border)] bg-[var(--desk-bg)] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
+                Topic subscriptions
+              </p>
+              <p className="text-[11px] text-[var(--desk-muted)]">
+                Agents only see matching pulses.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {TOPIC_OPTIONS.map((topic) => {
+                const active = topics.includes(topic.id);
+                return (
+                  <button
+                    key={topic.id}
+                    type="button"
+                    onClick={() => toggleTopic(topic.id)}
+                    aria-pressed={active}
+                    className={
+                      active
+                        ? "min-h-11 rounded-full border border-[var(--desk-link)] bg-[var(--desk-link)] px-3 py-2 text-[11px] font-medium text-black transition"
+                        : "min-h-11 rounded-full border border-[var(--desk-border)] px-3 py-2 text-[11px] text-[var(--desk-muted)] transition hover:border-[var(--desk-link)] hover:text-[var(--desk-fg)]"
+                    }
+                  >
+                    {topic.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <input
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
@@ -358,6 +409,18 @@ export function AddAgentPanel() {
                 <p className="font-mono text-[10px] text-[var(--desk-muted)]">
                   {agent.config?.model} · {agent.config?.style}
                 </p>
+                {agent.config?.topics?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {agent.config.topics.map((topic) => (
+                      <span
+                        key={topic}
+                        className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]"
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <button
                 type="button"

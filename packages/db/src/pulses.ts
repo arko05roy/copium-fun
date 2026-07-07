@@ -4,7 +4,11 @@ import type { Json } from "./database.js";
 export type PulseRow = {
   id: string;
   fixture_id: number | null;
+  sport: string | null;
+  topic: string | null;
   pulse_type: string;
+  template_id: string | null;
+  trigger_source: string | null;
   question: string;
   opens_at: string;
   closes_at: string;
@@ -14,6 +18,7 @@ export type PulseRow = {
   onchain_pool_pubkey: string | null;
   odds_message_id: string | null;
   odds_proof: Json | null;
+  settlement_meta: Json | null;
   settlement_root: string | null;
   winning_side: string | null;
   created_at: string | null;
@@ -21,6 +26,8 @@ export type PulseRow = {
 
 export type FixtureRow = {
   txline_fixture_id: number;
+  competition_id: number | null;
+  competition_name: string | null;
   home_name: string | null;
   away_name: string | null;
   kickoff_at: string | null;
@@ -30,7 +37,11 @@ export type FixtureRow = {
 
 type PulseInsert = {
   fixture_id: number;
+  sport?: string | null;
+  topic?: string | null;
   pulse_type: string;
+  template_id?: string | null;
+  trigger_source?: string | null;
   question: string;
   opens_at: string;
   closes_at: string;
@@ -39,6 +50,7 @@ type PulseInsert = {
   status?: string;
   odds_message_id?: string | null;
   odds_proof?: Json | null;
+  settlement_meta?: Json | null;
   onchain_pool_pubkey?: string | null;
 };
 
@@ -92,7 +104,16 @@ function pulses() {
 function fixtures() {
   return createDbClient().from("fixtures") as unknown as {
     upsert: (
-      row: { txline_fixture_id: number },
+      row: {
+        txline_fixture_id: number;
+        competition_id?: number | null;
+        competition_name?: string | null;
+        home_name?: string | null;
+        away_name?: string | null;
+        kickoff_at?: string | null;
+        phase?: string | null;
+        updated_at?: string | null;
+      },
       opts: { onConflict: string; ignoreDuplicates: boolean },
     ) => Promise<{ error: { message: string } | null }>;
     select: (cols: string) => {
@@ -122,12 +143,37 @@ export async function getFixture(
 ): Promise<FixtureRow | null> {
   const { data, error } = await fixtures()
     .select(
-      "txline_fixture_id, home_name, away_name, kickoff_at, phase, updated_at",
+      "txline_fixture_id, competition_id, competition_name, home_name, away_name, kickoff_at, phase, updated_at",
     )
     .eq("txline_fixture_id", fixtureId)
     .single();
   if (error) return null;
   return data;
+}
+
+export async function upsertFixtureMeta(input: {
+  fixtureId: number;
+  competitionId?: number | null;
+  competitionName?: string | null;
+  homeName?: string | null;
+  awayName?: string | null;
+  kickoffAt?: string | null;
+  phase?: string | null;
+}): Promise<void> {
+  const { error } = await fixtures().upsert(
+    {
+      txline_fixture_id: input.fixtureId,
+      competition_id: input.competitionId,
+      competition_name: input.competitionName,
+      home_name: input.homeName,
+      away_name: input.awayName,
+      kickoff_at: input.kickoffAt,
+      phase: input.phase,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "txline_fixture_id", ignoreDuplicates: false },
+  );
+  if (error) throw new Error(error.message);
 }
 
 export async function insertPulse(row: PulseInsert): Promise<PulseRow> {
@@ -139,7 +185,7 @@ export async function insertPulse(row: PulseInsert): Promise<PulseRow> {
       crowd_yes_pct: 50,
     })
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+      "id, fixture_id, sport, topic, pulse_type, template_id, trigger_source, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_meta, settlement_root, winning_side, created_at",
     )
     .single();
   if (error || !data) throw new Error(error?.message ?? "pulse insert failed");
@@ -154,7 +200,7 @@ export async function attachPoolToPulse(
     .update({ onchain_pool_pubkey: poolPubkey })
     .eq("id", pulseId)
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+      "id, fixture_id, sport, topic, pulse_type, template_id, trigger_source, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_meta, settlement_root, winning_side, created_at",
     )
     .single();
   if (error || !data) throw new Error(error?.message ?? "pulse update failed");
@@ -164,7 +210,7 @@ export async function attachPoolToPulse(
 export async function getPulse(pulseId: string): Promise<PulseRow> {
   const { data, error } = await pulses()
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+      "id, fixture_id, sport, topic, pulse_type, template_id, trigger_source, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_meta, settlement_root, winning_side, created_at",
     )
     .eq("id", pulseId)
     .single();
@@ -194,7 +240,7 @@ export async function listOpenPulses(limit = 10): Promise<PulseRow[]> {
     }
   )
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+      "id, fixture_id, sport, topic, pulse_type, template_id, trigger_source, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_meta, settlement_root, winning_side, created_at",
     )
     .eq("status", "open")
     .order("created_at", { ascending: false })
@@ -225,7 +271,7 @@ export async function updatePulseCrowdPct(
 export async function listRecentPulses(limit = 20): Promise<PulseRow[]> {
   const { data, error } = await pulses()
     .select(
-      "id, fixture_id, pulse_type, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_root, winning_side, created_at",
+      "id, fixture_id, sport, topic, pulse_type, template_id, trigger_source, question, opens_at, closes_at, line_pct, crowd_yes_pct, status, onchain_pool_pubkey, odds_message_id, odds_proof, settlement_meta, settlement_root, winning_side, created_at",
     )
     .order("created_at", { ascending: false })
     .limit(limit);

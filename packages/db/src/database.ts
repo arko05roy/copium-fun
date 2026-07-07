@@ -12,6 +12,8 @@ export type Database = {
       fixtures: {
         Row: {
           txline_fixture_id: number;
+          competition_id: number | null;
+          competition_name: string | null;
           home_name: string | null;
           away_name: string | null;
           kickoff_at: string | null;
@@ -20,6 +22,8 @@ export type Database = {
         };
         Insert: {
           txline_fixture_id: number;
+          competition_id?: number | null;
+          competition_name?: string | null;
           home_name?: string | null;
           away_name?: string | null;
           kickoff_at?: string | null;
@@ -32,7 +36,11 @@ export type Database = {
         Row: {
           id: string;
           fixture_id: number | null;
+          sport: string | null;
+          topic: string | null;
           pulse_type: string;
+          template_id: string | null;
+          trigger_source: string | null;
           question: string;
           opens_at: string;
           closes_at: string;
@@ -42,6 +50,7 @@ export type Database = {
           onchain_pool_pubkey: string | null;
           odds_message_id: string | null;
           odds_proof: Json | null;
+          settlement_meta: Json | null;
           settlement_root: string | null;
           winning_side: string | null;
           created_at: string | null;
@@ -49,7 +58,11 @@ export type Database = {
         Insert: {
           id?: string;
           fixture_id?: number | null;
+          sport?: string | null;
+          topic?: string | null;
           pulse_type: string;
+          template_id?: string | null;
+          trigger_source?: string | null;
           question: string;
           opens_at: string;
           closes_at: string;
@@ -59,6 +72,7 @@ export type Database = {
           onchain_pool_pubkey?: string | null;
           odds_message_id?: string | null;
           odds_proof?: Json | null;
+          settlement_meta?: Json | null;
           settlement_root?: string | null;
           winning_side?: string | null;
           created_at?: string | null;

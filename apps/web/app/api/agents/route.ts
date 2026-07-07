@@ -1,8 +1,10 @@
 import {
   AGENT_MODEL_OPTIONS,
+  AGENT_TOPIC_OPTIONS,
   createUserAgent,
   listUserAgents,
   loadEnv,
+  normalizeAgentTopics,
 } from "@copium/db";
 import { Keypair } from "@solana/web3.js";
 import { NextResponse } from "next/server";
@@ -36,6 +38,7 @@ export async function POST(req: Request) {
       provider?: string;
       model?: string;
       style?: string;
+      topics?: string[];
       apiKey?: string;
       permissionEnabled?: boolean;
       maxStake?: number;
@@ -45,6 +48,7 @@ export async function POST(req: Request) {
     const model = body.model?.trim() || "gpt-4o-mini";
     const provider = ALLOWED_MODELS.get(model);
     const style = body.style?.trim();
+    const topics = normalizeAgentTopics(body.topics);
     const apiKey = body.apiKey?.trim();
     if (!owner) return jsonError("owner required");
     if (!name) return jsonError("name required");
@@ -54,6 +58,11 @@ export async function POST(req: Request) {
     if (!provider || (body.provider && body.provider !== provider))
       return jsonError("unsupported model");
     if (!apiKey) return jsonError("apiKey required for web-created agents");
+    if ((body.topics?.length ?? 0) > 0 && topics.length === 0) {
+      return jsonError(
+        `topics must be one of: ${AGENT_TOPIC_OPTIONS.join(", ")}`,
+      );
+    }
 
     const keypair = Keypair.generate();
     const agent = await createUserAgent({
@@ -64,6 +73,7 @@ export async function POST(req: Request) {
       provider,
       model,
       style,
+      topics,
       source: "web",
       apiKey,
       permissionEnabled: Boolean(body.permissionEnabled),

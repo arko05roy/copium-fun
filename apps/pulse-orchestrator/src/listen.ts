@@ -1,14 +1,23 @@
 import { createServer, type Server } from "node:http";
 import { createSpawnTracker, type SpawnIntent } from "@copium/pulse-engine/spawn-handler";
-import { loadEnv, ORCHESTRATOR_META_KEY, SPAWN_LOG_KEY } from "@copium/txline";
+import {
+  loadEnv,
+  ORCHESTRATOR_META_KEY,
+  SPAWN_LOG_KEY,
+  startGuestSession,
+} from "@copium/txline";
 import type { DetectedEvent, OddsUpdate, ScoreUpdate } from "@copium/txline";
 import { Redis } from "ioredis";
+import { refreshFixtureCoverage } from "./fixture-meta.js";
 
 loadEnv();
 
 const REDIS_URL = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 const HEALTH_PORT = Number(process.env.PULSE_ORCHESTRATOR_PORT ?? 9091);
 const SPAWN_LOG_MAX = 100;
+const FIXTURE_REFRESH_MS = Number(
+  process.env.TXLINE_FIXTURE_REFRESH_MS ?? 5 * 60 * 1000,
+);
 
 type OrchestratorCounters = {
   eventsSeen: number;
@@ -92,9 +101,36 @@ export async function startListener(): Promise<{
 }> {
   const redis = new Redis(REDIS_URL);
   await redis.ping();
+  const apiToken = process.env.TXLINE_API_TOKEN?.trim();
+  if (!apiToken) {
+    throw new Error("TXLINE_API_TOKEN missing — run pnpm txline:subscribe");
+  }
 
   const sub = new Redis(REDIS_URL);
   const tracker = createSpawnTracker();
+  let fixtureRefreshTimer: NodeJS.Timeout | null = null;
+
+  const runFixtureRefresh = async (): Promise<void> => {
+    const { jwt, apiOrigin } = await startGuestSession();
+    const updated = await refreshFixtureCoverage({ apiOrigin, jwt, apiToken });
+    console.log(
+      JSON.stringify({
+        action: "fixture_coverage_refresh",
+        updated,
+        at: new Date().toISOString(),
+      }),
+    );
+  };
+
+  await runFixtureRefresh();
+  fixtureRefreshTimer = setInterval(() => {
+    void runFixtureRefresh().catch((err: unknown) => {
+      console.error(
+        "fixture coverage refresh:",
+        err instanceof Error ? err.message : err,
+      );
+    });
+  }, FIXTURE_REFRESH_MS);
 
   const onMessage = async (channel: string, message: string): Promise<void> => {
     let parsed: unknown;
@@ -180,6 +216,7 @@ export async function startListener(): Promise<{
   console.log(`pulse-orchestrator listen — health :${HEALTH_PORT}/health`);
 
   const stop = async (): Promise<void> => {
+    if (fixtureRefreshTimer) clearInterval(fixtureRefreshTimer);
     health.close();
     sub.disconnect();
     redis.disconnect();

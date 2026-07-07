@@ -1,6 +1,9 @@
 export type FeedPulse = {
   id: string;
   fixture_id: number | null;
+  sport: string | null;
+  topic: string | null;
+  template_id: string | null;
   question: string;
   opens_at: string;
   closes_at: string;
@@ -12,6 +15,7 @@ export type FeedPulse = {
   matchName: string;
   triggerLabel: string;
   createdBy: string;
+  settlementLabel: string;
   windowLabel: string;
   missedWindowCopy: string;
 };

@@ -4,6 +4,7 @@ import { stdin as input, stdout as output } from "node:process";
 import { loadEnv } from "@copium/txline";
 import {
   AGENT_MODEL_OPTIONS,
+  AGENT_TOPIC_OPTIONS,
   type AgentProvider,
   createAgentClaimCode,
   createUserAgent,
@@ -29,6 +30,14 @@ function hasFlag(flag: string): boolean {
   return process.argv.includes(flag);
 }
 
+function parseTopics(raw?: string): string[] | undefined {
+  if (!raw) return undefined;
+  return raw
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter((value) => AGENT_TOPIC_OPTIONS.includes(value as never));
+}
+
 async function askMissingAgentFields(defaults: {
   name?: string;
   provider?: AgentProvider;
@@ -37,6 +46,7 @@ async function askMissingAgentFields(defaults: {
   apiKey?: string;
   maxStake?: number;
   enabled?: boolean;
+  topics?: string[];
 }): Promise<{
   name: string;
   provider: AgentProvider;
@@ -45,6 +55,7 @@ async function askMissingAgentFields(defaults: {
   apiKey?: string;
   maxStake: number;
   enabled: boolean;
+  topics: string[];
 }> {
   const pipedAnswers = input.isTTY
     ? []
@@ -94,6 +105,16 @@ async function askMissingAgentFields(defaults: {
         ] ?? defaultOption);
     const style =
       defaults.style ?? (await ask("One-line trading style: ")).trim();
+    const topics =
+      defaults.topics ??
+      (
+        await ask(
+          `Topics [${AGENT_TOPIC_OPTIONS.join(", ")}] (${["soccer"].join(", ")}): `,
+        )
+      )
+        .split(",")
+        .map((value) => value.trim().toLowerCase())
+        .filter((value) => AGENT_TOPIC_OPTIONS.includes(value as never));
     const apiKey =
       defaults.apiKey ??
       (
@@ -120,6 +141,7 @@ async function askMissingAgentFields(defaults: {
       provider: selectedOption.provider,
       model: selectedOption.model,
       style,
+      topics: topics.length ? topics : ["soccer"],
       apiKey: apiKey || process.env[selectedOption.env]?.trim(),
       maxStake: Number(maxStakeRaw || defaults.maxStake || 100_000),
       enabled,
@@ -142,6 +164,7 @@ async function main(): Promise<void> {
       apiKey: argValue("--api-key"),
       maxStake: Number(argValue("--max-stake") ?? 100_000),
       enabled: hasFlag("--enable"),
+      topics: parseTopics(argValue("--topics")),
     });
     const keypair = Keypair.generate();
     const agent = await createUserAgent({
@@ -151,6 +174,7 @@ async function main(): Promise<void> {
       provider: answers.provider,
       model: answers.model,
       style: answers.style,
+      topics: answers.topics,
       source: "cli",
       apiKey: answers.apiKey,
       permissionEnabled: answers.enabled,
@@ -178,6 +202,7 @@ async function main(): Promise<void> {
       console.log(`Provider:   ${answers.provider}`);
       console.log(`Model:      ${answers.model}`);
       console.log(`Style:      ${answers.style}`);
+      console.log(`Topics:     ${answers.topics.join(", ")}`);
       console.log(`Permission: ${payload.permission}`);
       console.log("");
       console.log(`Claim code: ${payload.claimCode}`);
@@ -205,7 +230,7 @@ async function main(): Promise<void> {
   }
 
   throw new Error(
-    "usage: listen | execute-officer <pulseId> | create-agent --name <name> --style <one-line>",
+    "usage: listen | execute-officer <pulseId> | create-agent --name <name> --style <one-line> [--topics soccer,world-cup]",
   );
 }
 

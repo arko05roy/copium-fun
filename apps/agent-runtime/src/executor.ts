@@ -49,6 +49,7 @@ type AgentSpec = {
   name: string;
   row?: AgentRow;
   config?: UserAgentConfig;
+  topics?: string[];
   decide: (
     linePct: number,
     crowdYes: number,
@@ -60,11 +61,13 @@ const AGENTS: AgentSpec[] = [
   {
     slug: "officer-copium",
     name: "Officer Copium",
+    topics: ["soccer"],
     decide: (line, crowd) => officerDecision(line, crowd),
   },
   {
     slug: "quant",
     name: "The Quant",
+    topics: ["soccer"],
     decide: (line, crowd) => quantDecision(line, crowd),
   },
 ];
@@ -243,6 +246,7 @@ async function userAgentDecision(input: {
 }
 
 async function loadExecutableAgents(pulse: {
+  topic: string | null;
   question: string;
   line_pct: number | null;
   crowd_yes_pct: number | null;
@@ -262,6 +266,7 @@ async function loadExecutableAgents(pulse: {
           name: agent.display_name,
           row: agent,
           config,
+          topics: config.topics,
           decide: () => {
             throw new Error("user agent decisions are async");
           },
@@ -276,6 +281,13 @@ async function loadExecutableAgents(pulse: {
         };
       }),
   ] as AgentSpec[];
+}
+
+function agentSupportsTopic(agent: AgentSpec, topic: string | null): boolean {
+  if (!topic) return true;
+  const subscriptions = agent.topics ?? agent.config?.topics;
+  if (!subscriptions?.length) return true;
+  return subscriptions.includes(topic);
 }
 
 export async function executeAgentTrade(
@@ -302,6 +314,12 @@ export async function executeAgentTrade(
     pulse.crowd_yes_pct != null ? Number(pulse.crowd_yes_pct) : 50;
   if (agent.config && !agent.config.permission.enabled) {
     return { skipped: true, reason: `${agent.slug} permission off` };
+  }
+  if (!agentSupportsTopic(agent, pulse.topic)) {
+    return {
+      skipped: true,
+      reason: `${agent.slug} not subscribed to ${pulse.topic}`,
+    };
   }
 
   const decision =

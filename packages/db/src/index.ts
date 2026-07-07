@@ -15,12 +15,14 @@ export {
   insertPulse,
   listOpenPulses,
   listRecentPulses,
+  upsertFixtureMeta,
   updatePulseCrowdPct,
 } from "./pulses.js";
 export type { FixtureRow, PulseRow } from "./pulses.js";
 export type { SimSessionRow } from "./simulator.js";
 export {
   AGENT_MODEL_OPTIONS,
+  AGENT_TOPIC_OPTIONS,
   ensureAgent,
   createAgentClaimCode,
   createUserAgent,
@@ -35,6 +37,7 @@ export {
   listAgentTape,
   listUserAgents,
   normalizeAgentStyle,
+  normalizeAgentTopics,
   redeemAgentClaimCode,
   storeAgentApiKey,
   storeAgentSecrets,
@@ -43,6 +46,7 @@ export {
 export type {
   AgentRow,
   AgentProvider,
+  AgentTopic,
   AgentTradeRow,
   AgentTradeDetail,
   AgentTradeWithAgent,

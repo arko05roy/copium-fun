@@ -8,6 +8,15 @@ import { createDbClient } from "./client.js";
 
 const SUPPORTED_AGENT_PROVIDERS = ["openai", "anthropic", "groq"] as const;
 export type AgentProvider = (typeof SUPPORTED_AGENT_PROVIDERS)[number];
+export const AGENT_TOPIC_OPTIONS = [
+  "soccer",
+  "football",
+  "basketball",
+  "world-cup",
+  "ncaa-football",
+  "ncaa-basketball",
+] as const;
+export type AgentTopic = (typeof AGENT_TOPIC_OPTIONS)[number];
 
 export const AGENT_MODEL_OPTIONS: {
   label: string;
@@ -197,6 +206,7 @@ export type UserAgentConfig = {
   provider: AgentProvider;
   model: string;
   style: string;
+  topics?: string[];
   source: "cli" | "web";
   permission: {
     enabled: boolean;
@@ -476,6 +486,18 @@ export function normalizeAgentStyle(style: string): string {
   return style.trim().replace(/\s+/g, " ").slice(0, 120);
 }
 
+export function normalizeAgentTopics(topics?: string[]): string[] {
+  const unique = new Set<string>();
+  for (const topic of topics ?? []) {
+    const value = topic.trim().toLowerCase();
+    if (!value) continue;
+    if ((AGENT_TOPIC_OPTIONS as readonly string[]).includes(value)) {
+      unique.add(value);
+    }
+  }
+  return [...unique];
+}
+
 export function normalizeAgentSlug(name: string): string {
   const base = name
     .trim()
@@ -497,6 +519,7 @@ export async function createUserAgent(input: {
   provider: AgentProvider;
   model: string;
   style: string;
+  topics?: string[];
   source: "cli" | "web";
   apiKey?: string;
   walletSecret?: number[];
@@ -504,6 +527,7 @@ export async function createUserAgent(input: {
   maxStake?: number;
 }): Promise<AgentRow> {
   const style = normalizeAgentStyle(input.style);
+  const topics = normalizeAgentTopics(input.topics);
   if (!style) throw new Error("agent style required");
   if (!SUPPORTED_AGENT_PROVIDERS.includes(input.provider))
     throw new Error("unsupported provider");
@@ -517,6 +541,7 @@ export async function createUserAgent(input: {
       provider: input.provider,
       model: input.model.trim(),
       style,
+      topics,
       source: input.source,
       permission: {
         enabled: Boolean(input.permissionEnabled),
@@ -948,4 +973,22 @@ export async function listAgentPnl(): Promise<AgentPnlRow[]> {
   }
 
   return [...board.values()].sort((a, b) => b.pnl_usdt - a.pnl_usdt);
+}
+
+function demo(): void {
+  const topics = normalizeAgentTopics([
+    "Soccer",
+    "world-cup",
+    "unknown",
+    "soccer",
+  ]);
+  console.assert(topics.length === 2);
+  console.assert(topics[0] === "soccer");
+  console.assert(topics[1] === "world-cup");
+}
+
+import { pathToFileURL } from "node:url";
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  demo();
 }

@@ -1,4 +1,8 @@
-import { attachPoolToPulse, insertPulse, loadEnv as loadDbEnv } from "@copium/db";
+import {
+  attachPoolToPulse,
+  insertPulse,
+  loadEnv as loadDbEnv,
+} from "@copium/db";
 import { PULSE_WINDOW_SEC } from "@copium/pulse-engine/calibration";
 import { PULSE_CATALOG } from "@copium/pulse-engine/pulse-catalog";
 import { generateSpawnQuestion } from "@copium/pulse-engine/spawner-llm";
@@ -13,6 +17,7 @@ import {
   startGuestSession,
 } from "@copium/txline";
 import type { Redis } from "ioredis";
+import { ensureFixtureCoverageForFixture } from "./fixture-meta.js";
 
 loadEnv();
 loadDbEnv();
@@ -71,6 +76,12 @@ export async function executeSpawnPulse(
 
   try {
     const { jwt, apiOrigin } = await startGuestSession();
+    const fixtureMeta = await ensureFixtureCoverageForFixture({
+      apiOrigin,
+      jwt,
+      apiToken,
+      fixtureId: intent.fixtureId,
+    });
     const locked = await lockOddsSnapshot(
       apiOrigin,
       jwt,
@@ -92,13 +103,26 @@ export async function executeSpawnPulse(
 
     const row = await insertPulse({
       fixture_id: intent.fixtureId,
+      sport: fixtureMeta.sport,
+      topic: fixtureMeta.topic,
       pulse_type: intent.pulse.pulseType,
+      template_id: intent.pulse.pulseType,
+      trigger_source: intent.event.kind,
       question,
       opens_at: new Date(opensAtSec * 1000).toISOString(),
       closes_at: new Date(closesAtSec * 1000).toISOString(),
       line_pct: locked.linePct ?? intent.pulse.linePct ?? ctx.linePct ?? null,
       odds_message_id: locked.messageId,
       odds_proof: JSON.parse(JSON.stringify(locked.proof)),
+      settlement_meta: {
+        provider: "txline",
+        templateId: intent.pulse.pulseType,
+        eventKind: intent.event.kind,
+        fixtureId: intent.fixtureId,
+        competitionName: fixtureMeta.competitionName,
+        statKeys: [...catalog.statKeys],
+        settleNote: catalog.settleNote,
+      },
     });
 
     const authority = loadServiceKeypair();
@@ -119,6 +143,8 @@ export async function executeSpawnPulse(
         pulseId: row.id,
         poolPubkey: onchain.pool.toBase58(),
         fixtureId: intent.fixtureId,
+        sport: row.sport,
+        topic: row.topic,
         pulseType: intent.pulse.pulseType,
         linePct: locked.linePct ?? ctx.linePct,
         oddsMessageId: locked.messageId,

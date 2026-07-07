@@ -22,6 +22,7 @@ export function Feed() {
     useWalletConnection();
   const [pulses, setPulses] = useState<FeedPulse[]>([]);
   const [context, setContext] = useState<FeedContext | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<string>("all");
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,13 @@ export function Feed() {
   const load = useCallback(async () => {
     try {
       const [openRes, ctxRes] = await Promise.all([
-        fetch("/api/feed/open?limit=10"),
+        fetch(
+          `/api/feed/open?limit=10${
+            selectedTopic !== "all"
+              ? `&topic=${encodeURIComponent(selectedTopic)}`
+              : ""
+          }`
+        ),
         fetch("/api/feed/context"),
       ]);
       const openJson = (await openRes.json()) as {
@@ -53,7 +60,7 @@ export function Feed() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedTopic]);
 
   useEffect(() => {
     const first = setTimeout(() => void load(), 0);
@@ -65,6 +72,14 @@ export function Feed() {
   }, [load]);
 
   const current = pulses[index] ?? null;
+  const topicOptions = [
+    "all",
+    ...new Set(
+      pulses
+        .map((pulse) => pulse.topic ?? pulse.sport)
+        .filter((value): value is string => Boolean(value))
+    ),
+  ];
 
   function advance() {
     setIndex((i) => i + 1);
@@ -100,6 +115,43 @@ export function Feed() {
               One live Pulse per match moment: TxLINE triggers it, the crowd and
               agents take sides, then proof settles it.
             </p>
+            {current ? (
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <div className="mr-2 flex flex-wrap items-center gap-2">
+                  {topicOptions.map((topic) => {
+                    const active = selectedTopic === topic;
+                    return (
+                      <button
+                        key={topic}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTopic(topic);
+                          setIndex(0);
+                        }}
+                        className={
+                          active
+                            ? "rounded-full bg-[var(--feed-accent)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#071510]"
+                            : "rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-kicker)]"
+                        }
+                      >
+                        {topic === "all" ? "all live" : topic}
+                      </button>
+                    );
+                  })}
+                </div>
+                <span className="rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-kicker)]">
+                  {current.topic ?? current.sport ?? "live"}
+                </span>
+                {current.template_id ? (
+                  <span className="rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-muted)]">
+                    {current.template_id.replace(/_/g, " ")}
+                  </span>
+                ) : null}
+                <span className="text-xs text-[var(--feed-muted)]">
+                  {current.settlementLabel}
+                </span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-3">

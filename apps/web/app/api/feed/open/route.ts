@@ -9,6 +9,13 @@ function pulseTriggerLabel(pulseType: string): string {
   return "TxLINE odds or match event";
 }
 
+function settlementLabel(pulseType: string): string {
+  if (pulseType === "next_goal") return "Auto-settles from the next verified goal";
+  if (pulseType === "over_under_ht")
+    return "Auto-settles from verified first-half goal totals";
+  return "Auto-settles from verified TxLINE data";
+}
+
 function formatWindow(opensAt: string, closesAt: string): string {
   const seconds = Math.max(
     0,
@@ -28,22 +35,23 @@ async function matchNameForFixture(fixtureId: number | null): Promise<string> {
 }
 
 export async function GET(req: Request) {
-  const limit = Math.min(
-    20,
-    Math.max(1, Number(new URL(req.url).searchParams.get("limit") ?? 5))
-  );
+  const params = new URL(req.url).searchParams;
+  const limit = Math.min(20, Math.max(1, Number(params.get("limit") ?? 5)));
+  const topic = params.get("topic")?.trim().toLowerCase();
 
   try {
     const all = await listOpenPulses(limit * 3);
     const pulses = await Promise.all(
       all
         .filter((p) => p.odds_message_id)
+        .filter((p) => !topic || p.topic === topic)
         .slice(0, limit)
         .map(async (pulse) => ({
           ...pulse,
           matchName: await matchNameForFixture(pulse.fixture_id),
           triggerLabel: pulseTriggerLabel(pulse.pulse_type),
-          createdBy: "Spawner opened this Pulse from TxLINE data",
+          createdBy: "Officer Copium opened this pulse from TxLINE data",
+          settlementLabel: settlementLabel(pulse.pulse_type),
           windowLabel: formatWindow(pulse.opens_at, pulse.closes_at),
           missedWindowCopy:
             "If the timer hits zero, this Pulse locks. Copy or fade agents on the next open Pulse, then check proof and receipts after settlement.",

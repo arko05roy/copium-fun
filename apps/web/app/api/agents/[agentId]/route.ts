@@ -1,7 +1,9 @@
 import {
+  AGENT_TOPIC_OPTIONS,
   getAgentById,
   isUserAgentConfig,
   loadEnv,
+  normalizeAgentTopics,
   updateAgentConfig,
 } from "@copium/db";
 import { NextResponse } from "next/server";
@@ -18,6 +20,7 @@ export async function PATCH(
       owner?: string;
       permissionEnabled?: boolean;
       maxStake?: number;
+      topics?: string[];
     };
     const owner = body.owner?.trim();
     if (!owner)
@@ -38,8 +41,19 @@ export async function PATCH(
         { status: 403 }
       );
     }
+    const topics = normalizeAgentTopics(body.topics ?? agent.config.topics);
+    if ((body.topics?.length ?? 0) > 0 && topics.length === 0) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: `topics must be one of: ${AGENT_TOPIC_OPTIONS.join(", ")}`,
+        },
+        { status: 400 }
+      );
+    }
     const updated = await updateAgentConfig(agent.id, {
       ...agent.config,
+      topics,
       permission: {
         enabled: Boolean(body.permissionEnabled),
         maxStake: body.maxStake ?? agent.config.permission.maxStake,
