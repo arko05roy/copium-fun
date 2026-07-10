@@ -4,8 +4,9 @@
   "packageManager": "pnpm@10.20.0",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "node --import tsx scripts/dev-stack.ts",
     "dev:stack": "node --import tsx scripts/dev-stack.ts",
+    "dev:seed": "node --import tsx scripts/seed-dev-pulse.ts",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "db:migrate": "pnpm --filter @copium/db migrate",

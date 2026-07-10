@@ -28,6 +28,13 @@ const SERVICES: ServiceSpec[] = [
     port: Number(process.env.PULSE_ORCHESTRATOR_PORT ?? 9091),
   },
   {
+    name: "txline",
+    color: "\x1b[34m",
+    command: "pnpm",
+    args: ["txline:ingest"],
+    port: Number(process.env.TXLINE_INGEST_PORT ?? 9090),
+  },
+  {
     name: "agent",
     color: "\x1b[33m",
     command: "pnpm",
@@ -165,6 +172,19 @@ function startService(spec: ServiceSpec): void {
 
 async function main(): Promise<void> {
   await ensureRedis();
+  if (process.env.DEV_SEED_PULSE !== "false") {
+    const seed = await new Promise<number>((resolve) => {
+      const child = spawn("pnpm", ["dev:seed"], {
+        stdio: "inherit",
+        env: process.env,
+      });
+      child.once("exit", (code) => resolve(code ?? 1));
+      child.once("error", () => resolve(1));
+    });
+    if (seed !== 0) {
+      throw new Error("Could not seed the local development pulse.");
+    }
+  }
   log("[dev:stack] Starting web, orchestrator, agent, and settlement services...");
   let started = 0;
   for (const spec of SERVICES) {

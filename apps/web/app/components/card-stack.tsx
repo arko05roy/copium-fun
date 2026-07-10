@@ -18,6 +18,15 @@ function secondsLeft(closesAt: string): number {
   );
 }
 
+function formatRemaining(seconds: number): string {
+  if (seconds >= 3600) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${hours}h ${minutes.toString().padStart(2, "0")}m`;
+  }
+  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
+}
+
 function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
   const [remaining, setRemaining] = useState(() =>
     secondsLeft(pulse.closes_at)
@@ -37,8 +46,11 @@ function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
 
   return (
     <div className="flex h-full flex-col gap-5 text-[var(--feed-fg)]">
-      <div className="flex items-center justify-between">
-        <span className="text-5xl tabular-nums">{live ? remaining : "—"}s</span>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-[.22em] text-[var(--feed-kicker)]">Window remaining</p>
+          <span className="feed-display text-5xl tabular-nums">{live ? formatRemaining(remaining) : "—"}</span>
+        </div>
         <span className="text-[10px] uppercase tracking-[0.16em] text-[var(--feed-kicker)]">
           gap {gap.toFixed(0)}pp
         </span>
@@ -53,7 +65,7 @@ function PulseCardBody({ pulse, live }: { pulse: FeedPulse; live?: boolean }) {
         </p>
       </div>
 
-      <p className="text-2xl leading-snug line-clamp-6">{pulse.question}</p>
+        <p className="feed-display text-2xl leading-snug line-clamp-6">{pulse.question}</p>
 
       <div className="mt-auto space-y-3">
         <div className="relative h-3 overflow-hidden rounded-sm bg-[#0b1f14]">

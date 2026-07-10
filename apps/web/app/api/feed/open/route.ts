@@ -34,7 +34,7 @@ async function matchNameForFixture(fixtureId: number | null): Promise<string> {
   const fixture = await getFixture(fixtureId);
   if (fixture?.home_name && fixture.away_name)
     return `${fixture.home_name} vs ${fixture.away_name}`;
-  return `Fixture ${fixtureId}`;
+  return "Match details unavailable";
 }
 
 export async function GET(req: Request) {

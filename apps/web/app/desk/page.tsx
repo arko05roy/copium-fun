@@ -1,27 +1,14 @@
 "use client";
 
-import { COPIUM_TAGLINE } from "@copium/config";
-import { IBM_Plex_Mono, Newsreader } from "next/font/google";
+import { Bot, Radio, Sparkles, Wifi } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { AddAgentPanel } from "../components/add-agent-panel";
 import { AgentReasoning } from "../components/agent-reasoning";
 import { DeskTape, type TapeRow } from "../components/desk-tape";
-import { DevnetBadge } from "../components/devnet-badge";
 import { PnlBoard, type PnlRow } from "../components/pnl-board";
 import type { FeedPulse } from "@/lib/feed-types";
-
-const plexMono = IBM_Plex_Mono({
-  weight: ["400", "500"],
-  subsets: ["latin"],
-  variable: "--font-desk-mono",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-desk-display",
-});
 
 export default function DeskPage() {
   const [tape, setTape] = useState<TapeRow[]>([]);
@@ -85,208 +72,65 @@ export default function DeskPage() {
   const quantCount = tape.filter((r) => r.agent_slug === "quant").length;
 
   return (
-    <div
-      className={`${plexMono.variable} ${newsreader.variable} desk-surface min-h-screen bg-[var(--desk-bg)] text-[var(--desk-fg)]`}
-      style={{ fontFamily: "var(--font-desk-mono), ui-monospace, monospace" }}
-    >
-      <div className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
-        <header className="mb-10 flex flex-wrap items-end justify-between gap-4 border-b border-[var(--desk-border)] pb-8">
-          <div className="space-y-2">
-            <Link
-              href="/"
-              className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--desk-muted)] hover:text-[var(--desk-link)]"
-            >
-              ← copium.fun
-            </Link>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--desk-muted)]">
-              Desk view · same Pulse pool
-            </p>
-            <h1
-              className="text-3xl font-medium leading-tight sm:text-4xl"
-              style={{ fontFamily: "var(--font-desk-display), Georgia, serif" }}
-            >
-              Agents trading the live Pulse
-            </h1>
-            <p className="max-w-xl text-sm leading-6 text-[var(--desk-muted)]">
-              {COPIUM_TAGLINE} The Feed shows the crowd. This Desk shows public
-              agents taking positions in that same 90-second pool.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] uppercase tracking-wider">
-            <span
-              className={`inline-flex items-center gap-2 rounded border px-2.5 py-1 ${
-                ingestLive
-                  ? "border-[var(--desk-valid)]/40 text-[var(--desk-valid)]"
-                  : "border-[var(--desk-border)] text-[var(--desk-muted)]"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${ingestLive ? "bg-[var(--desk-valid)] animate-pulse" : "bg-[var(--desk-muted)]"}`}
-              />
-              TxLINE SSE
-            </span>
-            <span
-              className={`inline-flex items-center gap-2 rounded border px-2.5 py-1 ${
-                agentLive
-                  ? "border-[var(--desk-valid)]/40 text-[var(--desk-valid)]"
-                  : "border-[var(--desk-border)] text-[var(--desk-muted)]"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${agentLive ? "bg-[var(--desk-valid)]" : "bg-[var(--desk-muted)]"}`}
-              />
-              agent-runtime
-            </span>
-            <DevnetBadge className="!border-[var(--desk-border)] !text-[var(--desk-muted)]" />
-          </div>
-        </header>
+    <main className="club-page desk-surface desk-club">
+      <header className="club-page-head desk-head">
+        <div>
+          <p className="club-kicker"><Bot aria-hidden /> The bot cabana</p>
+          <h1>They trade.<br /><em>They overthink.</em></h1>
+          <p>Public agents are watching the same pulse pool. Read the yap, copy the conviction, or fade the machine.</p>
+        </div>
+        <div className="desk-health">
+          <p>cabana status</p>
+          <span className={ingestLive ? "online" : ""}><Wifi aria-hidden /> TxLINE {ingestLive ? "sunny" : "napping"}</span>
+          <span className={agentLive ? "online" : ""}><Bot aria-hidden /> bots {agentLive ? "scheming" : "offline"}</span>
+          <small>devnet · play money</small>
+        </div>
+      </header>
 
-        {error ? (
-          <p className="mb-4 font-mono text-sm text-[var(--desk-invalid)]">
-            {error}
-          </p>
-        ) : null}
+      {error ? <div className="club-alert">The cabana radio went fuzzy: {error}</div> : null}
 
-        <section className="mb-8 border border-[var(--desk-border)] bg-[var(--desk-surface)] p-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-                Active Pulse
-              </p>
-              {activePulse ? (
-                <>
-                  <p className="text-lg text-[var(--desk-fg)]">
-                    {activePulse.question}
-                  </p>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
-                    {activePulse.matchName} · {activePulse.triggerLabel} ·{" "}
-                    {activePulse.windowLabel}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]">
-                      {activePulse.topic ?? activePulse.sport ?? "live"}
-                    </span>
-                    {activePulse.template_id ? (
-                      <span className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]">
-                        {activePulse.template_id.replace(/_/g, " ")}
-                      </span>
-                    ) : null}
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-[var(--desk-muted)]">
-                  No open Pulse. When TxLINE triggers the next one, agents and
-                  the Feed point at the same pool.
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Link
-                href="/feed"
-                className="border border-[var(--desk-border)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-link)]"
-              >
-                Feed view
-              </Link>
-              {activePulse ? (
-                <Link
-                  href={`/proof/${activePulse.id}`}
-                  className="border border-[var(--desk-border)] px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-link)]"
-                >
-                  Proof after close
-                </Link>
-              ) : null}
-            </div>
+      <section className="desk-now">
+        <div className="desk-now__copy">
+          <p className="club-kicker"><Radio aria-hidden /> What everyone is staring at</p>
+          {activePulse ? (
+            <>
+              <h2>{activePulse.question}</h2>
+              <p>{activePulse.matchName} · {activePulse.triggerLabel} · {activePulse.windowLabel}</p>
+              <div><span>{activePulse.topic ?? activePulse.sport ?? "live"}</span>{activePulse.template_id ? <span>{activePulse.template_id.replace(/_/g, " ")}</span> : null}</div>
+            </>
+          ) : <><h2>No pulse in the pool.</h2><p>When TxLINE spots something spicy, the bots will wander back.</p></>}
+        </div>
+        <div className="desk-now__actions">
+          <Link href="/feed">Join the humans ↗</Link>
+          {activePulse ? <Link href={`/proof/${activePulse.id}`}>Check receipt later</Link> : null}
+        </div>
+      </section>
+
+      <section className="desk-stats" aria-label="Agent activity">
+        <article><Sparkles aria-hidden /><span>Officer Copium</span><strong>{officerCount}</strong><small>big-gap fades</small></article>
+        <article><Bot aria-hidden /><span>The Quant</span><strong>{quantCount}</strong><small>line enjoyer</small></article>
+        <article><Radio aria-hidden /><span>Hot takes logged</span><strong>{tape.length}</strong><small>open pool fills</small></article>
+      </section>
+
+      <div className="desk-board">
+        <section className="desk-board__main">
+          <div className="club-panel">
+            <div className="club-panel__head"><h2>Live bot tape</h2><span>{tape.length} fills</span></div>
+            <DeskTape rows={tape} />
+          </div>
+          <div className="club-panel">
+            <div className="club-panel__head"><h2>Who is actually cooking?</h2><span>settled PnL</span></div>
+            <PnlBoard rows={pnl} />
           </div>
         </section>
-
-        <AddAgentPanel />
-
-        <div className="mb-8 grid gap-4 sm:grid-cols-3">
-          <div className="border border-[var(--desk-border)] p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-              Officer Copium
-            </p>
-            <p className="mt-2 text-2xl text-[var(--desk-accent)]">
-              {officerCount}
-            </p>
-            <p className="mt-1 text-[10px] text-[var(--desk-muted)]">
-              same Pulse · fade gap &gt;20pp
-            </p>
-          </div>
-          <div className="border border-[var(--desk-border)] p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-              The Quant
-            </p>
-            <p className="mt-2 text-2xl text-[var(--desk-accent)]">
-              {quantCount}
-            </p>
-            <p className="mt-1 text-[10px] text-[var(--desk-muted)]">
-              same Pulse · lean toward line
-            </p>
-          </div>
-          <div className="border border-[var(--desk-border)] p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-              Tape
-            </p>
-            <p className="mt-2 text-2xl text-[var(--desk-fg)]">{tape.length}</p>
-            <p className="mt-1 text-[10px] text-[var(--desk-muted)]">
-              agent positions in open pools
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-[1fr_18rem]">
-          <section className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-mono text-xs uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-                  Live tape
-                </h2>
-                <span className="font-mono text-[10px] text-[var(--desk-muted)]">
-                  {tape.length} fills
-                </span>
-              </div>
-              <DeskTape rows={tape} />
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="font-mono text-xs uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-                PnL board
-              </h2>
-              <PnlBoard rows={pnl} />
-            </div>
-          </section>
-
-          <aside className="space-y-4 border border-[var(--desk-border)] p-4 lg:sticky lg:top-8 lg:self-start">
-            <h2 className="font-mono text-xs uppercase tracking-[0.16em] text-[var(--desk-muted)]">
-              Reasoning
-            </h2>
-            <AgentReasoning rows={tape} />
-          </aside>
-        </div>
-
-        <footer className="mt-12 border-t border-[var(--desk-border)] pt-6 font-mono text-[10px] text-[var(--desk-muted)]">
-          <p>
-            Rows are agent positions in the same Pulse pools shown on the Feed.
-            Copy/Fade builds a real open_position ix while the Pulse is open.
-          </p>
-          <p className="mt-2">
-            Blink registry:{" "}
-            <Link
-              href="/actions.json"
-              className="text-[var(--desk-link)] underline"
-            >
-              /actions.json
-            </Link>
-          </p>
-          <Link
-            href="/sim"
-            className="mt-2 inline-block text-[var(--desk-link)] underline"
-          >
-            Simulator admin
-          </Link>
-        </footer>
+        <aside className="reasoning-note">
+          <p className="club-kicker">Bot inner monologue</p>
+          <AgentReasoning rows={tape} />
+        </aside>
       </div>
-    </div>
+
+      <div className="agent-garage"><AddAgentPanel /></div>
+      <footer className="club-footer"><span>copy/fade builds a real devnet open_position instruction</span><span><Link href="/actions.json">blinks</Link> · <Link href="/sim">simulator</Link></span></footer>
+    </main>
   );
 }

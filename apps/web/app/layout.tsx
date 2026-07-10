@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Geist } from "next/font/google";
+import { Bricolage_Grotesque, DM_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./components/providers";
-import { cn } from "@/lib/utils";
+import { SiteNav } from "./components/site-nav";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const inter = Inter({
-  variable: "--font-inter",
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-club-body",
   subsets: ["latin"],
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fraunces = Fraunces({
+  variable: "--font-club-display",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-club-mono",
+  weight: ["400", "500"],
   subsets: ["latin"],
 });
 
@@ -33,12 +38,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
+    <html lang="en">
       <Providers>
         <body
           suppressHydrationWarning
-          className={`${inter.variable} ${geistMono.variable} antialiased`}
+          className={`${bricolage.variable} ${fraunces.variable} ${dmMono.variable} antialiased`}
         >
+          <SiteNav />
           {children}
         </body>
       </Providers>

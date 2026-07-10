@@ -1,28 +1,16 @@
 "use client";
 
-import { COPIUM_TAGLINE } from "@copium/config";
-import { useWalletConnection } from "@solana/react-hooks";
-import { Fraunces } from "next/font/google";
-import Link from "next/link";
+import { Flame, RefreshCw, Waves } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { BetPanel } from "./bet-panel";
 import { CardStack } from "./card-stack";
-import { DevnetBadge } from "./devnet-badge";
 import type { FeedContext, FeedPulse } from "@/lib/feed-types";
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-feed-display",
-  display: "swap",
-});
-
 export function Feed() {
-  const { wallet, status, connect, connectors, disconnect } =
-    useWalletConnection();
   const [pulses, setPulses] = useState<FeedPulse[]>([]);
   const [context, setContext] = useState<FeedContext | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<string>("all");
+  const [selectedTopic, setSelectedTopic] = useState("all");
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,215 +18,78 @@ export function Feed() {
   const load = useCallback(async () => {
     try {
       const [openRes, ctxRes] = await Promise.all([
-        fetch(
-          `/api/feed/open?limit=10${
-            selectedTopic !== "all"
-              ? `&topic=${encodeURIComponent(selectedTopic)}`
-              : ""
-          }`
-        ),
+        fetch(`/api/feed/open?limit=10${selectedTopic !== "all" ? `&topic=${encodeURIComponent(selectedTopic)}` : ""}`),
         fetch("/api/feed/context"),
       ]);
-      const openJson = (await openRes.json()) as {
-        ok?: boolean;
-        pulses?: FeedPulse[];
-        error?: string;
-      };
-      const ctxJson = (await ctxRes.json()) as {
-        ok?: boolean;
-        context?: FeedContext;
-      };
-      if (!openRes.ok || !openJson.ok || !openJson.pulses) {
-        throw new Error(openJson.error ?? "feed fetch failed");
-      }
-      setPulses(openJson.pulses);
-      setContext(ctxJson.context ?? null);
-      setIndex((i) => Math.min(i, Math.max(0, openJson.pulses!.length - 1)));
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "feed load failed");
-    } finally {
-      setLoading(false);
-    }
+      const openJson = (await openRes.json()) as { ok?: boolean; pulses?: FeedPulse[]; error?: string };
+      const ctxJson = (await ctxRes.json()) as { context?: FeedContext };
+      if (!openRes.ok || !openJson.ok || !openJson.pulses) throw new Error(openJson.error ?? "feed fetch failed");
+      setPulses(openJson.pulses); setContext(ctxJson.context ?? null);
+      setIndex((i) => Math.min(i, Math.max(0, openJson.pulses!.length - 1))); setError(null);
+    } catch (e) { setError(e instanceof Error ? e.message : "feed load failed"); }
+    finally { setLoading(false); }
   }, [selectedTopic]);
 
-  useEffect(() => {
-    const first = setTimeout(() => void load(), 0);
-    const id = setInterval(() => void load(), 5000);
-    return () => {
-      clearTimeout(first);
-      clearInterval(id);
-    };
-  }, [load]);
+  useEffect(() => { const first = setTimeout(() => void load(), 0); const id = setInterval(() => void load(), 5000); return () => { clearTimeout(first); clearInterval(id); }; }, [load]);
 
   const current = pulses[index] ?? null;
-  const topicOptions = [
-    "all",
-    ...new Set(
-      pulses
-        .map((pulse) => pulse.topic ?? pulse.sport)
-        .filter((value): value is string => Boolean(value))
-    ),
-  ];
-
-  function advance() {
-    setIndex((i) => i + 1);
-  }
-
-  async function handleSwipe(side: "yes" | "no") {
-    document.getElementById(`bet-${side}`)?.click();
-  }
-
-  const address = wallet?.account.address.toString();
+  const topics = ["all", ...new Set(pulses.map((p) => p.topic ?? p.sport).filter((v): v is string => Boolean(v)))];
+  const advance = () => setIndex((i) => i + 1);
 
   return (
-    <div
-      className={`feed-surface ${fraunces.variable} min-h-screen bg-[var(--feed-bg)] text-[var(--feed-fg)]`}
-      style={{ fontFamily: "var(--font-feed-display), Georgia, serif" }}
-    >
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-5 py-8 sm:px-8">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)] hover:text-[var(--feed-accent)]"
-              >
-                copium.fun
-              </Link>
-              <DevnetBadge />
-            </div>
-            <h1 className="text-2xl text-[var(--feed-fg)] sm:text-3xl">
-              {COPIUM_TAGLINE}
-            </h1>
-            <p className="max-w-2xl text-sm leading-6 text-[var(--feed-muted)]">
-              One live Pulse per match moment: TxLINE triggers it, the crowd and
-              agents take sides, then proof settles it.
-            </p>
-            {current ? (
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <div className="mr-2 flex flex-wrap items-center gap-2">
-                  {topicOptions.map((topic) => {
-                    const active = selectedTopic === topic;
-                    return (
-                      <button
-                        key={topic}
-                        type="button"
-                        onClick={() => {
-                          setSelectedTopic(topic);
-                          setIndex(0);
-                        }}
-                        className={
-                          active
-                            ? "rounded-full bg-[var(--feed-accent)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[#071510]"
-                            : "rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-kicker)]"
-                        }
-                      >
-                        {topic === "all" ? "all live" : topic}
-                      </button>
-                    );
-                  })}
-                </div>
-                <span className="rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-kicker)]">
-                  {current.topic ?? current.sport ?? "live"}
-                </span>
-                {current.template_id ? (
-                  <span className="rounded-full border border-[var(--feed-border)] px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-muted)]">
-                    {current.template_id.replace(/_/g, " ")}
-                  </span>
-                ) : null}
-                <span className="text-xs text-[var(--feed-muted)]">
-                  {current.settlementLabel}
-                </span>
-              </div>
-            ) : null}
-          </div>
+    <main className="club-page feed-club">
+      <header className="club-page-head feed-head">
+        <div>
+          <p className="club-kicker"><Waves aria-hidden /> The pulse pool</p>
+          <h1>Fresh takes,<br /><em>still warm.</em></h1>
+          <p>Swipe fast. These little markets evaporate in 90 seconds.</p>
+        </div>
+        <div className="match-bubble">
+          <span>{context?.matchName ?? "Waiting for kickoff"}</span>
+          <strong>{context?.score ?? "– : –"}</strong>
+          <small>{context ? `${context.minute != null ? `${context.minute}'` : context.phase} · ${context.source === "sim" ? "SIM" : "TXLINE"}` : "warming up"}</small>
+        </div>
+      </header>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {context ? (
-              <div className="rounded-xl border border-[var(--feed-border)] bg-[#0b1f14] px-4 py-2 text-right">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--feed-kicker)]">
-                  {context.matchName}
-                </p>
-                <p className="text-xl tabular-nums">{context.score}</p>
-                <p className="font-mono text-xs text-[var(--feed-accent)]">
-                  {context.minute != null
-                    ? `${context.minute}'`
-                    : context.phase}
-                  {context.source === "txline"
-                    ? " · TxLINE"
-                    : context.source === "sim"
-                      ? " · sim"
-                      : null}
-                </p>
-              </div>
-            ) : null}
+      <nav className="club-filters" aria-label="Market topics">
+        <span><Flame aria-hidden /> open now</span>
+        {topics.map((topic) => (
+          <button key={topic} className={selectedTopic === topic ? "active" : ""} onClick={() => { setSelectedTopic(topic); setIndex(0); }}>
+            {topic === "all" ? "everything" : topic}
+          </button>
+        ))}
+        <small><RefreshCw aria-hidden /> every 5s</small>
+      </nav>
 
-            {status === "connected" && address ? (
-              <div className="flex items-center gap-2">
-                <span className="max-w-[140px] truncate rounded-lg border border-[var(--feed-border)] px-3 py-2 font-mono text-[10px]">
-                  {address.slice(0, 4)}…{address.slice(-4)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => disconnect()}
-                  className="rounded-lg border border-[var(--feed-border)] px-3 py-2 text-xs text-[var(--feed-muted)] hover:text-[var(--feed-fg)]"
-                >
-                  Disconnect
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  const phantom = connectors.find((c) =>
-                    /phantom/i.test(c.name)
-                  );
-                  void connect(phantom?.id ?? connectors[0]?.id ?? "");
-                }}
-                className="rounded-lg bg-[var(--feed-accent)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#071510]"
-              >
-                Connect wallet
+      {error ? <div className="club-alert">Couldn’t refresh the pool: {error}</div> : null}
+      {loading ? (
+        <div className="club-empty"><span className="empty-orbit" /><h2>Skimming the pool…</h2></div>
+      ) : pulses.length === 0 ? (
+        <div className="club-empty"><span>nothing splashing rn</span><h2>The pool is suspiciously calm.</h2><p>Hang around. TxLINE will toss in the next match moment.</p></div>
+      ) : index >= pulses.length ? (
+        <div className="club-empty"><span>all caught up</span><h2>You cleared the pool.</h2><p>Fresh nonsense appears as the match moves.</p></div>
+      ) : (
+        <section className="feed-lounge">
+          <aside className="pulse-queue">
+            <div className="pulse-queue__head"><span>up next</span><strong>{pulses.length - index}</strong></div>
+            {pulses.slice(index).map((pulse, i) => (
+              <button key={pulse.id} className={i === 0 ? "selected" : ""} onClick={() => setIndex(index + i)}>
+                <span className="queue-dot" />
+                <span><b>{pulse.topic ?? pulse.sport ?? "match"}</b><small>{pulse.template_id?.replaceAll("_", " ") ?? "pulse"}</small></span>
+                <strong>{pulse.line_pct?.toFixed(0) ?? "50"}%</strong>
               </button>
-            )}
+            ))}
+          </aside>
+          <div className="swipe-cabana">
+            <div className="swipe-cabana__head"><span>grab + fling</span><span>{index + 1} / {pulses.length}</span></div>
+            <CardStack pulses={pulses} currentIndex={index} onSwipe={(side) => document.getElementById(`bet-${side}`)?.click()} />
+            <p>← no thanks · yeah sure →</p>
           </div>
-        </header>
+          <BetPanel pulse={current} onSuccess={() => { advance(); void load(); }} onSkip={advance} />
+        </section>
+      )}
 
-        {error ? (
-          <p className="text-sm text-[var(--feed-no)]">{error}</p>
-        ) : null}
-
-        {loading ? (
-          <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
-            Loading pulses…
-          </p>
-        ) : pulses.length === 0 ? (
-          <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
-            No open pulses — run the simulator or orchestrator to spawn one.
-          </p>
-        ) : index >= pulses.length ? (
-          <p className="py-20 text-center text-sm text-[var(--feed-muted)]">
-            You&apos;re through the deck. Closed Pulses cannot be voted on; copy
-            or fade an agent when the next TxLINE-triggered Pulse opens.
-          </p>
-        ) : (
-          <div className="grid flex-1 items-start gap-8 lg:grid-cols-2">
-            <CardStack
-              pulses={pulses}
-              currentIndex={index}
-              onSwipe={handleSwipe}
-            />
-            <BetPanel
-              pulse={current}
-              onSuccess={() => {
-                advance();
-                void load();
-              }}
-              onSkip={advance}
-            />
-          </div>
-        )}
-      </div>
-    </div>
+      <footer className="club-footer"><span>copium.fun · the takes are hot, the funds are fake</span><span>devnet · TxLINE · verified</span></footer>
+    </main>
   );
 }

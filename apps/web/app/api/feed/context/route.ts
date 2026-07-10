@@ -17,7 +17,7 @@ async function matchNameForFixture(fixtureId: number | null): Promise<string> {
   const fixture = await getFixture(fixtureId);
   if (fixture?.home_name && fixture.away_name)
     return `${fixture.home_name} vs ${fixture.away_name}`;
-  return `Fixture ${fixtureId}`;
+  return "Match details unavailable";
 }
 
 export async function GET() {
@@ -36,7 +36,13 @@ export async function GET() {
     let source: "txline" | "sim" = "sim";
 
     if (fixtureId != null) {
-      const live = await fetchTxlineLiveContext(fixtureId);
+      let live = null;
+      try {
+        live = await fetchTxlineLiveContext(fixtureId);
+      } catch {
+        // A newly listed fixture may have odds but no score timeline yet.
+        // Keep the feed context available and fall back to the neutral state.
+      }
       if (live) {
         scoreHome = live.scoreHome;
         scoreAway = live.scoreAway;
@@ -50,19 +56,23 @@ export async function GET() {
       const sim = await getLatestSimulatorSession();
       if (sim?.bundle && isSimBundle(sim.bundle)) {
         simSessionId = sim.id;
-        fixtureId = sim.fixture_id ?? fixtureId;
-        const state = detectStateAtCursor(sim.bundle, sim.cursor ?? 0);
-        scoreHome = state.goals[1] ?? 0;
-        scoreAway = state.goals[2] ?? 0;
-        phase = state.gameState ?? "—";
-        minute =
-          phase === "H1"
-            ? 22
-            : phase === "HT"
-              ? 45
-              : phase === "H2"
-                ? 67
-                : null;
+        // A simulator session is only a fallback for the pulse's fixture;
+        // never let an unrelated historical session relabel the live feed.
+        if (sim.fixture_id == null || sim.fixture_id === fixtureId) {
+          fixtureId = sim.fixture_id ?? fixtureId;
+          const state = detectStateAtCursor(sim.bundle, sim.cursor ?? 0);
+          scoreHome = state.goals[1] ?? 0;
+          scoreAway = state.goals[2] ?? 0;
+          phase = state.gameState ?? "—";
+          minute =
+            phase === "H1"
+              ? 22
+              : phase === "HT"
+                ? 45
+                : phase === "H2"
+                  ? 67
+                  : null;
+        }
       }
     }
 

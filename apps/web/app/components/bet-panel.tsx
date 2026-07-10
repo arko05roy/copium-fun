@@ -77,14 +77,16 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
   });
 
   return (
-    <div className="flex min-h-[32rem] flex-col gap-8 rounded-2xl border border-[var(--feed-border)] bg-[var(--feed-card)] p-8">
+    <div className="feed-panel feed-scanline flex min-h-[32rem] flex-col gap-7 rounded-2xl border border-[var(--feed-border)] p-7 sm:p-8">
       <div className="space-y-4">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">
-          Current Pulse · {pulse.matchName}
-        </p>
-        <h2 className="text-2xl leading-snug text-[var(--feed-fg)] sm:text-3xl">
+        <div className="flex items-center justify-between gap-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">Live market / {pulse.template_id?.replaceAll("_", " ") ?? "pulse"}</p>
+          <span className="flex items-center gap-2 font-mono text-[9px] uppercase tracking-[.16em] text-[var(--feed-accent)]"><i className="h-1.5 w-1.5 rounded-full bg-[var(--feed-accent)] shadow-[0_0_12px_var(--feed-accent)]" /> Open</span>
+        </div>
+        <h2 className="feed-display text-3xl leading-[1.08] text-[var(--feed-fg)] sm:text-4xl">
           {pulse.question}
         </h2>
+        <p className="text-sm text-[var(--feed-muted)]">{pulse.matchName}</p>
         <div className="grid gap-2 rounded-xl border border-[var(--feed-border)] bg-[#0b1f14] p-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--feed-muted)]">
           <span>{pulse.triggerLabel}</span>
           <span>{pulse.createdBy}</span>
@@ -102,33 +104,43 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-6">
+      <div className="grid grid-cols-2 gap-3">
         <button
           id="bet-yes"
           type="button"
           disabled={pending}
           onClick={() => void handlePick("yes")}
-          className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[var(--feed-accent)] bg-[var(--feed-accent)]/10 text-3xl text-[var(--feed-accent)] transition hover:scale-105 hover:bg-[var(--feed-accent)]/20 disabled:opacity-40"
+          className="flex h-16 items-center justify-center gap-3 rounded-xl border border-[var(--feed-accent)] bg-[var(--feed-accent)]/10 text-lg font-semibold text-[var(--feed-accent)] transition hover:bg-[var(--feed-accent)]/20 disabled:opacity-40"
           aria-label="Yes"
         >
-          ✓
+          <span>YES</span><span className="text-2xl font-normal">↗</span>
         </button>
         <button
           id="bet-no"
           type="button"
           disabled={pending}
           onClick={() => void handlePick("no")}
-          className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[var(--feed-no)] bg-[var(--feed-no)]/10 text-3xl text-[var(--feed-no)] transition hover:scale-105 hover:bg-[var(--feed-no)]/20 disabled:opacity-40"
+          className="flex h-16 items-center justify-center gap-3 rounded-xl border border-[var(--feed-no)] bg-[var(--feed-no)]/10 text-lg font-semibold text-[var(--feed-no)] transition hover:bg-[var(--feed-no)]/20 disabled:opacity-40"
           aria-label="No"
         >
-          ✕
+          <span>NO</span><span className="text-2xl font-normal">↘</span>
         </button>
       </div>
 
       <div className="space-y-3">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">
-          Amount
-        </p>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--feed-kicker)]">
+              Your stake
+            </p>
+            <p className="mt-1 text-xs text-[var(--feed-muted)]">
+              Choose the amount you want to commit to this Pulse.
+            </p>
+          </div>
+          <span className="font-mono text-sm font-semibold text-[var(--feed-fg)]">
+            {STAKE_OPTIONS.find((opt) => opt.micro === stake)?.label ?? "$0"}
+          </span>
+        </div>
         <div className="grid grid-cols-3 gap-3">
           {STAKE_OPTIONS.map((opt) => (
             <button
@@ -145,6 +157,9 @@ export function BetPanel({ pulse, onSuccess, onSkip }: BetPanelProps) {
             </button>
           ))}
         </div>
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--feed-muted)]">
+          Devnet USDC · no real funds · one stake per market
+        </p>
       </div>
 
       <button

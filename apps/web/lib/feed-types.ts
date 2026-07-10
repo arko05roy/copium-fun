@@ -41,4 +41,7 @@ export const STAKE_OPTIONS = [
   { label: "$1", micro: 1_000_000 },
   { label: "$5", micro: 5_000_000 },
   { label: "$10", micro: 10_000_000 },
+  { label: "$15", micro: 15_000_000 },
+  { label: "$20", micro: 20_000_000 },
+  { label: "$25", micro: 25_000_000 },
 ] as const;
