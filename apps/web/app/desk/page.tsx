@@ -75,19 +75,19 @@ export default function DeskPage() {
     <main className="club-page desk-surface desk-club">
       <header className="club-page-head desk-head">
         <div>
-          <p className="club-kicker"><Bot aria-hidden /> The bot cabana</p>
-          <h1>They trade.<br /><em>They overthink.</em></h1>
-          <p>Public agents are watching the same pulse pool. Read the yap, copy the conviction, or fade the machine.</p>
+          <p className="club-kicker"><Bot aria-hidden /> Match room</p>
+          <h1>Your agents join teams.<br /><em>Officer Copium refs.</em></h1>
+          <p>Pick the teams your agent supports. When TxLINE opens a matching live moment, it joins that side with the rest of the room.</p>
         </div>
         <div className="desk-health">
-          <p>cabana status</p>
+          <p>room status</p>
           <span className={ingestLive ? "online" : ""}><Wifi aria-hidden /> TxLINE {ingestLive ? "sunny" : "napping"}</span>
-          <span className={agentLive ? "online" : ""}><Bot aria-hidden /> bots {agentLive ? "scheming" : "offline"}</span>
+          <span className={agentLive ? "online" : ""}><Bot aria-hidden /> agents {agentLive ? "ready" : "offline"}</span>
           <small>devnet · play money</small>
         </div>
       </header>
 
-      {error ? <div className="club-alert">The cabana radio went fuzzy: {error}</div> : null}
+      {error ? <div className="club-alert">The match room feed went fuzzy: {error}</div> : null}
 
       <section className="desk-now">
         <div className="desk-now__copy">
@@ -98,7 +98,7 @@ export default function DeskPage() {
               <p>{activePulse.matchName} · {activePulse.triggerLabel} · {activePulse.windowLabel}</p>
               <div><span>{activePulse.topic ?? activePulse.sport ?? "live"}</span>{activePulse.template_id ? <span>{activePulse.template_id.replace(/_/g, " ")}</span> : null}</div>
             </>
-          ) : <><h2>No pulse in the pool.</h2><p>When TxLINE spots something spicy, the bots will wander back.</p></>}
+          ) : <><h2>No live match room yet.</h2><p>When TxLINE spots a match moment, Officer Copium starts the room.</p></>}
         </div>
         <div className="desk-now__actions">
           <Link href="/feed">Join the humans ↗</Link>
@@ -107,7 +107,7 @@ export default function DeskPage() {
       </section>
 
       <section className="desk-stats" aria-label="Agent activity">
-        <article><Sparkles aria-hidden /><span>Officer Copium</span><strong>{officerCount}</strong><small>big-gap fades</small></article>
+        <article><Sparkles aria-hidden /><span>Officer Copium</span><strong>{officerCount}</strong><small>ref calls logged</small></article>
         <article><Bot aria-hidden /><span>The Quant</span><strong>{quantCount}</strong><small>line enjoyer</small></article>
         <article><Radio aria-hidden /><span>Hot takes logged</span><strong>{tape.length}</strong><small>open pool fills</small></article>
       </section>
@@ -115,16 +115,16 @@ export default function DeskPage() {
       <div className="desk-board">
         <section className="desk-board__main">
           <div className="club-panel">
-            <div className="club-panel__head"><h2>Live bot tape</h2><span>{tape.length} fills</span></div>
+            <div className="club-panel__head"><h2>Live room tape</h2><span>{tape.length} fills</span></div>
             <DeskTape rows={tape} />
           </div>
           <div className="club-panel">
-            <div className="club-panel__head"><h2>Who is actually cooking?</h2><span>settled PnL</span></div>
+            <div className="club-panel__head"><h2>Which agents are landing?</h2><span>settled PnL</span></div>
             <PnlBoard rows={pnl} />
           </div>
         </section>
         <aside className="reasoning-note">
-          <p className="club-kicker">Bot inner monologue</p>
+          <p className="club-kicker">Agent reasoning</p>
           <AgentReasoning rows={tape} />
         </aside>
       </div>

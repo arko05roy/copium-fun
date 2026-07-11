@@ -13,6 +13,7 @@ import {
 import { TXLINE_DEVNET } from "@copium/config";
 import {
   ensureAgent,
+  getFixture,
   getAgentApiKey,
   getAgentWalletSecret,
   getPulse,
@@ -21,6 +22,7 @@ import {
   listAgentTape,
   listUserAgents,
   loadEnv as loadDbEnv,
+  teamMatchesFixture,
   type AgentRow,
   type UserAgentConfig,
 } from "@copium/db";
@@ -290,6 +292,17 @@ function agentSupportsTopic(agent: AgentSpec, topic: string | null): boolean {
   return subscriptions.includes(topic);
 }
 
+async function agentSupportsFixture(
+  agent: AgentSpec,
+  fixtureId: number | null,
+): Promise<boolean> {
+  const teams = agent.config?.teams ?? [];
+  if (!teams.length) return true;
+  if (fixtureId == null) return false;
+  const fixture = await getFixture(fixtureId);
+  return teams.some((team) => teamMatchesFixture(team, fixture));
+}
+
 export async function executeAgentTrade(
   pulseId: string,
   agent: AgentSpec,
@@ -319,6 +332,12 @@ export async function executeAgentTrade(
     return {
       skipped: true,
       reason: `${agent.slug} not subscribed to ${pulse.topic}`,
+    };
+  }
+  if (!(await agentSupportsFixture(agent, pulse.fixture_id))) {
+    return {
+      skipped: true,
+      reason: `${agent.slug} not on this fixture`,
     };
   }
 

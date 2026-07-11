@@ -2,10 +2,12 @@ import {
   AGENT_MODEL_OPTIONS,
   AGENT_TOPIC_OPTIONS,
   createUserAgent,
-  inferAgentTopics,
   listUserAgents,
   loadEnv,
+  normalizeAgentTeams,
   normalizeAgentTopics,
+  resolveAgentTopics,
+  type AgentTeam,
 } from "@copium/db";
 import { Keypair } from "@solana/web3.js";
 import { NextResponse } from "next/server";
@@ -40,6 +42,7 @@ export async function POST(req: Request) {
       model?: string;
       style?: string;
       topics?: string[];
+      teams?: AgentTeam[];
       apiKey?: string;
       permissionEnabled?: boolean;
       maxStake?: number;
@@ -50,9 +53,8 @@ export async function POST(req: Request) {
     const provider = ALLOWED_MODELS.get(model);
     const style = body.style?.trim();
     const topics = normalizeAgentTopics(body.topics);
-    const resolvedTopics = topics.length
-      ? topics
-      : inferAgentTopics({ name, style });
+    const teams = normalizeAgentTeams(body.teams);
+    const resolvedTopics = resolveAgentTopics({ name, style, topics, teams });
     const apiKey = body.apiKey?.trim();
     if (!owner) return jsonError("owner required");
     if (!name) return jsonError("name required");
@@ -78,6 +80,7 @@ export async function POST(req: Request) {
       model,
       style,
       topics: resolvedTopics,
+      teams,
       source: "web",
       apiKey,
       permissionEnabled: Boolean(body.permissionEnabled),

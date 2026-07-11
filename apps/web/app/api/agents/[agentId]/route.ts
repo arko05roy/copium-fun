@@ -3,8 +3,10 @@ import {
   getAgentById,
   isUserAgentConfig,
   loadEnv,
+  normalizeAgentTeams,
   normalizeAgentTopics,
   updateAgentConfig,
+  type AgentTeam,
 } from "@copium/db";
 import { NextResponse } from "next/server";
 
@@ -21,6 +23,7 @@ export async function PATCH(
       permissionEnabled?: boolean;
       maxStake?: number;
       topics?: string[];
+      teams?: AgentTeam[];
     };
     const owner = body.owner?.trim();
     if (!owner)
@@ -42,6 +45,7 @@ export async function PATCH(
       );
     }
     const topics = normalizeAgentTopics(body.topics ?? agent.config.topics);
+    const teams = normalizeAgentTeams(body.teams ?? agent.config.teams);
     if ((body.topics?.length ?? 0) > 0 && topics.length === 0) {
       return NextResponse.json(
         {
@@ -54,6 +58,7 @@ export async function PATCH(
     const updated = await updateAgentConfig(agent.id, {
       ...agent.config,
       topics,
+      teams,
       permission: {
         enabled: Boolean(body.permissionEnabled),
         maxStake: body.maxStake ?? agent.config.permission.maxStake,

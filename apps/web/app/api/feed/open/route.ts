@@ -53,7 +53,7 @@ export async function GET(req: Request) {
           ...pulse,
           matchName: await matchNameForFixture(pulse.fixture_id),
           triggerLabel: pulseTriggerLabel(pulse.pulse_type),
-          createdBy: "Officer Copium opened this pulse from TxLINE data",
+          createdBy: "Officer Copium started this room from TxLINE data",
           settlementLabel: settlementLabel(pulse.pulse_type),
           windowLabel: formatWindow(pulse.opens_at, pulse.closes_at),
           missedWindowCopy:

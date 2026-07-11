@@ -1,6 +1,8 @@
 "use client";
 
 import { useWalletConnection } from "@solana/react-hooks";
+import type { AgentTeam } from "@copium/db/teams";
+import { Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UserAgent = {
@@ -13,6 +15,7 @@ type UserAgent = {
     model?: string;
     style?: string;
     topics?: string[];
+    teams?: AgentTeam[];
     permission?: { enabled?: boolean; maxStake?: number };
   } | null;
 };
@@ -124,6 +127,7 @@ const TOPIC_OPTIONS = [
   { id: "soccer", label: "Soccer" },
   { id: "football", label: "Football" },
   { id: "basketball", label: "Basketball" },
+  { id: "valorant", label: "Valorant" },
   { id: "world-cup", label: "World Cup" },
   { id: "ncaa-football", label: "NCAA football" },
   { id: "ncaa-basketball", label: "NCAA basketball" },
@@ -158,8 +162,11 @@ export function AddAgentPanel() {
   const [model, setModel] = useState("gpt-4o-mini");
   const [style, setStyle] = useState("");
   const [apiKey, setApiKey] = useState("");
-  const [topics, setTopics] = useState<string[]>(["soccer"]);
-  const [topicsTouched, setTopicsTouched] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [teams, setTeams] = useState<AgentTeam[]>([]);
+  const [teamOptions, setTeamOptions] = useState<AgentTeam[]>([]);
+  const [teamQuery, setTeamQuery] = useState("");
+  const [teamsLoading, setTeamsLoading] = useState(false);
   const [permissionEnabled, setPermissionEnabled] = useState(false);
   const [maxStake, setMaxStake] = useState(100_000);
   const [pending, setPending] = useState(false);
@@ -170,7 +177,22 @@ export function AddAgentPanel() {
   const selectedModel =
     MODEL_OPTIONS.find((option) => option.model === model) ?? MODEL_OPTIONS[0]!;
   const suggestedTopics = useMemo(() => inferTopics(name, style), [name, style]);
-  const effectiveTopics = topicsTouched ? topics : suggestedTopics;
+  const activeTopics = topics;
+  const teamTopicKey = activeTopics.slice().sort().join(",");
+  const visibleTeams = useMemo(
+    () => teamOptions.filter((team) => activeTopics.includes(team.topic)),
+    [activeTopics, teamOptions],
+  );
+  const filteredTeams = useMemo(() => {
+    const query = teamQuery.trim().toLowerCase();
+    const matches = query
+      ? visibleTeams.filter((team) => {
+          const haystack = `${team.name} ${team.aliases.join(" ")}`.toLowerCase();
+          return haystack.includes(query);
+        })
+      : visibleTeams;
+    return matches.slice(0, query ? 24 : 10);
+  }, [teamQuery, visibleTeams]);
 
   const ensureWallet = useCallback(async () => {
     if (status === "connected" && owner) return owner;
@@ -190,6 +212,34 @@ export function AddAgentPanel() {
     const id = setTimeout(() => void loadAgents(), 0);
     return () => clearTimeout(id);
   }, [loadAgents]);
+
+  useEffect(() => {
+    if (activeTopics.length === 0) {
+      setTeamOptions([]);
+      setTeamsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    async function loadTeamOptions() {
+      setTeamsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/teams?topics=${encodeURIComponent(teamTopicKey)}`,
+        );
+      const json = (await res.json()) as {
+          ok?: boolean;
+          teams?: AgentTeam[];
+        };
+        if (!cancelled && json.ok) setTeamOptions(json.teams ?? []);
+      } finally {
+        if (!cancelled) setTeamsLoading(false);
+      }
+    }
+    void loadTeamOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [teamTopicKey]);
 
   async function submitClaim() {
     if (!claimCode.trim()) {
@@ -224,6 +274,10 @@ export function AddAgentPanel() {
       setError("name, one-line style, and API key are required");
       return;
     }
+    if (!activeTopics.length) {
+      setError("pick at least one topic");
+      return;
+    }
     const walletOwner = await ensureWallet();
     if (!walletOwner || pending) return;
     setPending(true);
@@ -239,7 +293,8 @@ export function AddAgentPanel() {
           provider: selectedModel.provider,
           model,
           style,
-          topics: effectiveTopics,
+          topics: activeTopics,
+          teams,
           apiKey,
           permissionEnabled,
           maxStake,
@@ -250,8 +305,9 @@ export function AddAgentPanel() {
       setName("");
       setStyle("");
       setApiKey("");
-      setTopics(["soccer"]);
-      setTopicsTouched(false);
+      setTopics([]);
+      setTeams([]);
+      setTeamQuery("");
       setPermissionEnabled(false);
       setMessage(`Created ${json.agent?.display_name ?? "agent"}`);
       await loadAgents();
@@ -288,12 +344,29 @@ export function AddAgentPanel() {
   }
 
   function toggleTopic(topic: string) {
-    setTopicsTouched(true);
     setTopics((current) => {
-      const base = topicsTouched ? current : effectiveTopics;
-      return base.includes(topic)
+      const base = current;
+      const next = base.includes(topic)
         ? base.filter((value) => value !== topic)
         : [...base, topic];
+      setTeams((currentTeams) =>
+        currentTeams.filter((team) => next.includes(team.topic)),
+      );
+      setTeamQuery("");
+      return next;
+    });
+  }
+
+  function toggleTeam(team: AgentTeam) {
+    setTeams((current) => {
+      const active = current.some(
+        (value) => value.topic === team.topic && value.slug === team.slug,
+      );
+      return active
+        ? current.filter(
+            (value) => value.topic !== team.topic || value.slug !== team.slug,
+          )
+        : [...current, team];
     });
   }
 
@@ -355,18 +428,18 @@ export function AddAgentPanel() {
           <div className="space-y-2 border border-[var(--desk-border)] bg-[var(--desk-bg)] p-3">
             <div className="flex items-center justify-between gap-3">
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
-                Topic subscriptions
+                Topics
               </p>
               <p className="text-[11px] text-[var(--desk-muted)]">
-                Agents only see matching pulses.
+                Pick sports first.
               </p>
             </div>
             <p className="text-[11px] text-[var(--desk-muted)]">
-              Suggested: {suggestedTopics.join(", ")}
+              Suggested from name/style: {suggestedTopics.join(", ")}
             </p>
             <div className="flex flex-wrap gap-2">
               {TOPIC_OPTIONS.map((topic) => {
-                const active = effectiveTopics.includes(topic.id);
+                const active = activeTopics.includes(topic.id);
                 return (
                   <button
                     key={topic.id}
@@ -375,11 +448,105 @@ export function AddAgentPanel() {
                     aria-pressed={active}
                     className={
                       active
-                        ? "min-h-11 rounded-full border border-[var(--desk-link)] bg-[var(--desk-link)] px-3 py-2 text-[11px] font-medium text-black transition"
-                        : "min-h-11 rounded-full border border-[var(--desk-border)] px-3 py-2 text-[11px] text-[var(--desk-muted)] transition hover:border-[var(--desk-link)] hover:text-[var(--desk-fg)]"
+                        ? "inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--desk-link)] bg-[var(--desk-link)] px-3 py-2 text-[11px] font-medium text-black transition"
+                        : "inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--desk-border)] px-3 py-2 text-[11px] text-[var(--desk-muted)] transition hover:border-[var(--desk-link)] hover:text-[var(--desk-fg)]"
                     }
                   >
+                    <span
+                      className={
+                        active
+                          ? "inline-flex h-4 w-4 items-center justify-center rounded-full border border-black/25 bg-black/10"
+                          : "inline-flex h-4 w-4 items-center justify-center rounded-full border border-[var(--desk-border)]"
+                      }
+                    >
+                      {active ? <Check size={12} strokeWidth={3} /> : null}
+                    </span>
                     {topic.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="space-y-2 border border-[var(--desk-border)] bg-[var(--desk-bg)] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--desk-muted)]">
+                Teams
+              </p>
+              <p className="text-[11px] text-[var(--desk-muted)]">
+                Search, then choose.
+              </p>
+            </div>
+            {teams.length ? (
+              <div className="flex flex-wrap gap-2">
+                {teams.map((team) => (
+                  <button
+                    key={`selected-${team.topic}:${team.slug}`}
+                    type="button"
+                    onClick={() => toggleTeam(team)}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--desk-link)] bg-[var(--desk-link)] px-3 py-2 text-[11px] font-medium text-black transition"
+                  >
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-black/25 bg-black/10">
+                      <Check size={12} strokeWidth={3} />
+                    </span>
+                    {team.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <input
+              value={teamQuery}
+              onChange={(e) => setTeamQuery(e.target.value)}
+              placeholder={
+                activeTopics.length
+                  ? "Search teams"
+                  : "Pick a topic first"
+              }
+              disabled={!activeTopics.length || teamsLoading}
+              className="w-full border border-[var(--desk-border)] bg-[var(--desk-bg)] px-3 py-2 font-mono text-xs outline-none disabled:opacity-50"
+            />
+            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+              {teamsLoading ? (
+                <span className="block text-[11px] text-[var(--desk-muted)]">
+                  Loading teams...
+                </span>
+              ) : null}
+              {!teamsLoading && !visibleTeams.length ? (
+                <span className="block text-[11px] text-[var(--desk-muted)]">
+                  No team source yet for this topic.
+                </span>
+              ) : null}
+              {!teamsLoading && visibleTeams.length > 0 && !filteredTeams.length ? (
+                <span className="block text-[11px] text-[var(--desk-muted)]">
+                  No teams match that search.
+                </span>
+              ) : null}
+              {filteredTeams.map((team) => {
+                const active = teams.some(
+                  (value) =>
+                    value.topic === team.topic && value.slug === team.slug,
+                );
+                return (
+                  <button
+                    key={`${team.topic}:${team.slug}`}
+                    type="button"
+                    onClick={() => toggleTeam(team)}
+                    aria-pressed={active}
+                    className={
+                      active
+                        ? "flex w-full items-center justify-between gap-3 border border-[var(--desk-link)] bg-[var(--desk-link)] px-3 py-2 text-left text-[11px] font-medium text-black transition"
+                        : "flex w-full items-center justify-between gap-3 border border-[var(--desk-border)] px-3 py-2 text-left text-[11px] text-[var(--desk-muted)] transition hover:border-[var(--desk-link)] hover:text-[var(--desk-fg)]"
+                    }
+                  >
+                    <span>{team.name}</span>
+                    <span
+                      className={
+                        active
+                          ? "inline-flex h-4 w-4 items-center justify-center rounded-full border border-black/25 bg-black/10"
+                          : "inline-flex h-4 w-4 items-center justify-center rounded-full border border-[var(--desk-border)]"
+                      }
+                    >
+                      {active ? <Check size={12} strokeWidth={3} /> : null}
+                    </span>
                   </button>
                 );
               })}
@@ -447,6 +614,18 @@ export function AddAgentPanel() {
                         className="rounded-full border border-[var(--desk-border)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-muted)]"
                       >
                         {topic}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                {agent.config?.teams?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {agent.config.teams.map((team) => (
+                      <span
+                        key={`${team.topic}:${team.slug}`}
+                        className="rounded-full border border-[var(--desk-link)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[var(--desk-link)]"
+                      >
+                        {team.name}
                       </span>
                     ))}
                   </div>

@@ -6,6 +6,10 @@ import {
 } from "node:crypto";
 import { createDbClient } from "./client.js";
 import { getFixture } from "./pulses.js";
+import {
+  normalizeAgentTeams,
+  type AgentTeam,
+} from "./teams.js";
 
 const SUPPORTED_AGENT_PROVIDERS = ["openai", "anthropic", "groq"] as const;
 export type AgentProvider = (typeof SUPPORTED_AGENT_PROVIDERS)[number];
@@ -16,6 +20,7 @@ export const AGENT_TOPIC_OPTIONS = [
   "world-cup",
   "ncaa-football",
   "ncaa-basketball",
+  "valorant",
 ] as const;
 export type AgentTopic = (typeof AGENT_TOPIC_OPTIONS)[number];
 
@@ -208,6 +213,7 @@ export type UserAgentConfig = {
   model: string;
   style: string;
   topics?: string[];
+  teams?: AgentTeam[];
   source: "cli" | "web";
   permission: {
     enabled: boolean;
@@ -532,9 +538,12 @@ export function resolveAgentTopics(input: {
   name?: string;
   style?: string;
   topics?: string[];
+  teams?: AgentTeam[];
 }): string[] {
   const explicit = normalizeAgentTopics(input.topics);
   if (explicit.length) return explicit;
+  const teamTopics = normalizeAgentTopics(input.teams?.map((team) => team.topic));
+  if (teamTopics.length) return teamTopics;
   return inferAgentTopics(input);
 }
 
@@ -560,6 +569,7 @@ export async function createUserAgent(input: {
   model: string;
   style: string;
   topics?: string[];
+  teams?: AgentTeam[];
   source: "cli" | "web";
   apiKey?: string;
   walletSecret?: number[];
@@ -571,7 +581,9 @@ export async function createUserAgent(input: {
     name: input.name,
     style,
     topics: input.topics,
+    teams: input.teams,
   });
+  const teams = normalizeAgentTeams(input.teams);
   if (!style) throw new Error("agent style required");
   if (!SUPPORTED_AGENT_PROVIDERS.includes(input.provider))
     throw new Error("unsupported provider");
@@ -586,6 +598,7 @@ export async function createUserAgent(input: {
       model: input.model.trim(),
       style,
       topics,
+      teams,
       source: input.source,
       permission: {
         enabled: Boolean(input.permissionEnabled),
@@ -720,7 +733,9 @@ export async function redeemAgentClaimCode(
       name: agent.display_name,
       style: agent.config.style,
       topics: agent.config.topics,
+      teams: agent.config.teams,
     }),
+    teams: normalizeAgentTeams(agent.config.teams),
     ownerWallet: wallet,
   };
   const updated = await updateAgentConfig(agent.id, nextConfig);

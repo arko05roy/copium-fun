@@ -45,6 +45,10 @@ export {
   storeAgentSecrets,
   updateAgentConfig,
 } from "./agents.js";
+export {
+  normalizeAgentTeams,
+  teamMatchesFixture,
+} from "./teams.js";
 export type {
   AgentRow,
   AgentProvider,
@@ -55,6 +59,7 @@ export type {
   AgentPnlRow,
   UserAgentConfig,
 } from "./agents.js";
+export type { AgentTeam, TeamSlug } from "./teams.js";
 export {
   getProofBundle,
   insertProofBundle,
