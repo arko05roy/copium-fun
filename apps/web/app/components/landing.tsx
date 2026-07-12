@@ -51,31 +51,31 @@ type Pick = "YES" | "NO" | "SKIP";
 
 const predictions = [
   {
-    question: "Will Brazil take the next shot?",
+    question: "Will Argentina score the next goal?",
     category: "NEXT PLAY",
     time: "00:18",
-    context: "Brazil have taken 3 of the last 4 shots.",
+    context: "Argentina have taken 4 of the last 5 attempts.",
     stat: "74%",
     multiplier: "1.8×",
-    player: "Vinícius Júnior",
+    player: "Lionel Messi",
   },
   {
     question: "Will the next event be a corner?",
     category: "5 MIN WINDOW",
     time: "00:14",
-    context: "Morocco are pressing with 7 players in the final third.",
+    context: "Egypt are protecting a two-goal lead with 20 minutes left.",
     stat: "61%",
     multiplier: "2.1×",
     player: "Match event",
   },
   {
-    question: "Will Vinícius score before 70:00?",
+    question: "Will Messi score before 90:00?",
     category: "PLAYER",
     time: "00:21",
     context: "2 shots on target · 0.72 expected goals tonight.",
     stat: "48%",
     multiplier: "2.6×",
-    player: "Vinícius Júnior",
+    player: "Lionel Messi",
   },
   {
     question: "Will the next whistle be for a foul?",
@@ -101,7 +101,7 @@ const people = [
 type FantasyPlayer = {
   id: number;
   name: string;
-  team: "BRA" | "MAR";
+  team: "ARG" | "EGY";
   role: "GK" | "DEF" | "MID" | "FWD";
   credits: number;
   form: string;
@@ -110,8 +110,8 @@ type FantasyPlayer = {
 const fantasyPlayers: FantasyPlayer[] = [
   {
     id: 1,
-    name: "Alisson",
-    team: "BRA",
+    name: "Emiliano Martínez",
+    team: "ARG",
     role: "GK",
     credits: 8.5,
     form: "7.2",
@@ -119,8 +119,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 2,
-    name: "Yassine Bounou",
-    team: "MAR",
+    name: "Mohamed El Shenawy",
+    team: "EGY",
     role: "GK",
     credits: 8.5,
     form: "6.8",
@@ -128,8 +128,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 3,
-    name: "Marquinhos",
-    team: "BRA",
+    name: "Cristian Romero",
+    team: "ARG",
     role: "DEF",
     credits: 9,
     form: "7.6",
@@ -137,8 +137,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 4,
-    name: "Éder Militão",
-    team: "BRA",
+    name: "Nicolás Otamendi",
+    team: "ARG",
     role: "DEF",
     credits: 9,
     form: "7.4",
@@ -146,8 +146,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 5,
-    name: "Gabriel Magalhães",
-    team: "BRA",
+    name: "Nahuel Molina",
+    team: "ARG",
     role: "DEF",
     credits: 8,
     form: "7.0",
@@ -155,8 +155,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 6,
-    name: "Achraf Hakimi",
-    team: "MAR",
+    name: "Yasser Ibrahim",
+    team: "EGY",
     role: "DEF",
     credits: 8.5,
     form: "7.3",
@@ -164,8 +164,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 7,
-    name: "Nayef Aguerd",
-    team: "MAR",
+    name: "Ahmed Hegazi",
+    team: "EGY",
     role: "DEF",
     credits: 8,
     form: "7.1",
@@ -173,8 +173,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 8,
-    name: "Bruno Guimarães",
-    team: "BRA",
+    name: "Enzo Fernández",
+    team: "ARG",
     role: "MID",
     credits: 8.5,
     form: "7.5",
@@ -182,8 +182,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 9,
-    name: "Lucas Paquetá",
-    team: "BRA",
+    name: "Alexis Mac Allister",
+    team: "ARG",
     role: "MID",
     credits: 8,
     form: "7.2",
@@ -191,8 +191,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 10,
-    name: "Ismael Saibari",
-    team: "MAR",
+    name: "Mostafa Zico",
+    team: "EGY",
     role: "MID",
     credits: 9.5,
     form: "8.0",
@@ -200,8 +200,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 11,
-    name: "Sofyan Amrabat",
-    team: "MAR",
+    name: "Hamdy Fathy",
+    team: "EGY",
     role: "MID",
     credits: 9,
     form: "7.8",
@@ -209,8 +209,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 12,
-    name: "Brahim Díaz",
-    team: "MAR",
+    name: "Trézéguet",
+    team: "EGY",
     role: "MID",
     credits: 9,
     form: "7.9",
@@ -218,8 +218,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 13,
-    name: "Vinícius Júnior",
-    team: "BRA",
+    name: "Lionel Messi",
+    team: "ARG",
     role: "FWD",
     credits: 10,
     form: "8.4",
@@ -227,8 +227,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 14,
-    name: "Rodrygo",
-    team: "BRA",
+    name: "Julián Álvarez",
+    team: "ARG",
     role: "FWD",
     credits: 8.5,
     form: "7.1",
@@ -236,8 +236,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 15,
-    name: "Youssef En-Nesyri",
-    team: "MAR",
+    name: "Mohamed Salah",
+    team: "EGY",
     role: "FWD",
     credits: 10,
     form: "8.2",
@@ -245,8 +245,8 @@ const fantasyPlayers: FantasyPlayer[] = [
   },
   {
     id: 16,
-    name: "Eliesse Ben Seghir",
-    team: "MAR",
+    name: "Mostafa Mohamed",
+    team: "EGY",
     role: "FWD",
     credits: 8,
     form: "7.0",
@@ -258,15 +258,15 @@ function TeamBadge({
   team,
   small = false,
 }: {
-  team: "BRA" | "MAR";
+  team: "ARG" | "EGY";
   small?: boolean;
 }) {
   return (
     <span
       className={`team-badge team-badge--${team.toLowerCase()} ${small ? "is-small" : ""}`}
-      aria-label={team === "BRA" ? "Brazil" : "Morocco"}
+      aria-label={team === "ARG" ? "Argentina" : "Egypt"}
     >
-      {team === "BRA" ? "B" : "M"}
+      {team === "ARG" ? "A" : "E"}
     </span>
   );
 }
@@ -328,7 +328,7 @@ export function Dashboard() {
       showToast(`${pick} locked · +${card === 0 ? 80 : 40} pts`);
     } else showToast("Skipped · no points lost");
     setCard((v) => (v + 1) % predictions.length);
-    setTxCursor((cursor) => (cursor + 1) % 10);
+    setTxCursor((cursor) => (cursor + 1) % (txFrame?.totalFrames ?? 11));
   }
 
   return (
@@ -563,7 +563,7 @@ function Home({
         tabIndex={0}
         role="button"
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onOpen()}
-        aria-label="Open Brazil versus Morocco"
+        aria-label="Open Argentina versus Egypt"
       >
         <div className="stadium-light stadium-light--one" />
         <div className="stadium-light stadium-light--two" />
@@ -575,26 +575,26 @@ function Home({
         </div>
         <div className="hero-match__body">
           <div className="club-side">
-            <TeamBadge team="BRA" />
+            <TeamBadge team="ARG" />
             <div>
-              <strong>{frame?.fixture.home.name ?? "Brazil"}</strong>
+              <strong>{frame?.fixture.home.name ?? "Argentina"}</strong>
               <small>HOME</small>
             </div>
           </div>
           <div className="score">
-            <small>{frame?.fixture.group ?? "WORLD CUP · GROUP C"}</small>
+            <small>{frame?.fixture.stage ?? "WORLD CUP · ROUND OF 16"}</small>
             <strong>
-              {frame?.context.scoreHome ?? 1} <i>—</i>{" "}
-              {frame?.context.scoreAway ?? 1}
+              {frame?.context.scoreHome ?? 0} <i>—</i>{" "}
+              {frame?.context.scoreAway ?? 2}
             </strong>
             <span>{frame?.context.minute ?? 63}:00</span>
           </div>
           <div className="club-side club-side--away">
             <div>
-              <strong>{frame?.fixture.away.name ?? "Morocco"}</strong>
+              <strong>{frame?.fixture.away.name ?? "Egypt"}</strong>
               <small>AWAY</small>
             </div>
-            <TeamBadge team="MAR" />
+            <TeamBadge team="EGY" />
           </div>
         </div>
         <div className="hero-match__bottom">
@@ -630,19 +630,71 @@ function Home({
         </button>
       </section>
       <div className="match-grid">
-        <MiniMatch
-          teams="Argentina · Netherlands"
-          score="2 — 1"
-          minute="71′"
-          players="2.1K"
-          color="gold"
+        <WorldCupMatchCard
+          home="Brazil"
+          away="Norway"
+          homeCode="🇧🇷"
+          awayCode="🇳🇴"
+          homeScore="1"
+          awayScore="2"
+          date="Mon, 6 Jul"
         />
-        <MiniMatch
-          teams="Mexico · South Africa"
-          score="2 — 0"
-          minute="FT"
-          players="1.4K"
-          color="red"
+        <WorldCupMatchCard
+          home="Mexico"
+          away="England"
+          homeCode="🇲🇽"
+          awayCode="🏴"
+          homeScore="2"
+          awayScore="3"
+          date="Mon, 6 Jul"
+        />
+        <WorldCupMatchCard
+          home="Portugal"
+          away="Spain"
+          homeCode="🇵🇹"
+          awayCode="🇪🇸"
+          homeScore="0"
+          awayScore="1"
+          date="Tue, 7 Jul"
+        />
+        <WorldCupMatchCard
+          home="USA"
+          away="Belgium"
+          homeCode="🇺🇸"
+          awayCode="🇧🇪"
+          homeScore="1"
+          awayScore="4"
+          date="Tue, 7 Jul"
+        />
+        <WorldCupMatchCard
+          home="Argentina"
+          away="Egypt"
+          homeCode="🇦🇷"
+          awayCode="🇪🇬"
+          homeScore={String(frame?.context.scoreHome ?? 0)}
+          awayScore={String(frame?.context.scoreAway ?? 2)}
+          date={
+            frame?.scoreUpdate.GameState === "F"
+              ? "Tue, 7 Jul"
+              : `Tue, 7 Jul · ${frame?.context.minute ?? 74}′`
+          }
+          status={
+            frame?.scoreUpdate.GameState === "F"
+              ? "FT"
+              : `LIVE · ${frame?.context.minute ?? 74}′`
+          }
+          selected
+          onOpen={onOpen}
+        />
+        <WorldCupMatchCard
+          home="Switzerland"
+          away="Colombia"
+          homeCode="🇨🇭"
+          awayCode="🇨🇴"
+          homeScore="0 (4)"
+          awayScore="0 (3)"
+          date="Wed, 8 Jul"
+          status="FT (P)"
         />
         <button className="room-callout" onClick={onRooms}>
           <div>
@@ -666,9 +718,9 @@ function Home({
         </div>
         <div className="rivalry-score">
           <div>
-            <TeamBadge team="BRA" small />
+            <TeamBadge team="ARG" small />
             <span>
-              <strong>Brazil</strong>
+              <strong>Argentina</strong>
               <small>12.8K supporters</small>
             </span>
           </div>
@@ -682,15 +734,67 @@ function Home({
             46<small>%</small>
           </strong>
           <div>
-            <TeamBadge team="MAR" small />
+            <TeamBadge team="EGY" small />
             <span>
-              <strong>Morocco</strong>
+              <strong>Egypt</strong>
               <small>11.3K supporters</small>
             </span>
           </div>
         </div>
       </section>
     </div>
+  );
+}
+
+function WorldCupMatchCard({
+  home,
+  away,
+  homeCode,
+  awayCode,
+  homeScore,
+  awayScore,
+  date,
+  status = "FT",
+  selected = false,
+  onOpen,
+}: {
+  home: string;
+  away: string;
+  homeCode: string;
+  awayCode: string;
+  homeScore: string;
+  awayScore: string;
+  date: string;
+  status?: string;
+  selected?: boolean;
+  onOpen?: () => void;
+}) {
+  return (
+    <button
+      className={`wc-match-card ${selected ? "is-selected" : ""}`}
+      onClick={onOpen}
+    >
+      <header>
+        <span>ROUND OF 16</span>
+        <strong>{status}</strong>
+      </header>
+      <div className="wc-match-card__date">{date}</div>
+      <div className="wc-match-card__team">
+        <span>{homeCode}</span>
+        <b>{home}</b>
+        <strong>{homeScore}</strong>
+      </div>
+      <div className="wc-match-card__team">
+        <span>{awayCode}</span>
+        <b>{away}</b>
+        <strong>{awayScore}</strong>
+      </div>
+      {selected && (
+        <small className="wc-match-card__cta">
+          Open prediction room <ArrowRight />
+        </small>
+      )}
+    </button>
   );
 }
 
@@ -748,34 +852,34 @@ function Lobby({
       <section className="lobby-banner">
         <div className="lobby-banner__top">
           <LivePill minute={frame?.context.minute} />
-          <span>WORLD CUP 2026 · {frame?.fixture.group ?? "GROUP C"}</span>
+          <span>WORLD CUP 2026 · {frame?.fixture.stage ?? "ROUND OF 16"}</span>
         </div>
         <div className="lobby-teams">
           <div>
-            <TeamBadge team="BRA" />
-            <strong>{frame?.fixture.home.name ?? "Brazil"}</strong>
+            <TeamBadge team="ARG" />
+            <strong>{frame?.fixture.home.name ?? "Argentina"}</strong>
           </div>
           <span>
             <strong>
-              {frame?.context.scoreHome ?? 1} — {frame?.context.scoreAway ?? 1}
+              {frame?.context.scoreHome ?? 0} — {frame?.context.scoreAway ?? 2}
             </strong>
             <small>{frame?.context.minute ?? 63}:00</small>
           </span>
           <div>
-            <TeamBadge team="MAR" />
-            <strong>{frame?.fixture.away.name ?? "Morocco"}</strong>
+            <TeamBadge team="EGY" />
+            <strong>{frame?.fixture.away.name ?? "Egypt"}</strong>
           </div>
         </div>
         <div className="match-ticker">
           <span>
-            <b>21′</b> GOAL · I. Saibari
+            <b>15′</b> GOAL · Y. Ibrahim
           </span>
           <span>
-            <b>32′</b> GOAL · Vinícius Júnior
+            <b>67′</b> GOAL · Mostafa Zico
           </span>
           <span>
             <b>{frame?.context.minute ?? 63}′</b>{" "}
-            {frame?.context.lastEvent ?? "Brazil pressure"}
+            {frame?.context.lastEvent ?? "Argentina pressure"}
           </span>
         </div>
       </section>
@@ -917,19 +1021,19 @@ function Play({
           <X />
         </button>
         <div>
-          <TeamBadge team="BRA" small />
+          <TeamBadge team="ARG" small />
           <span>
             <b>
-              {frame?.fixture.home.name ?? "Brazil"}{" "}
-              {frame?.context.scoreHome ?? 1} — {frame?.context.scoreAway ?? 1}{" "}
-              {frame?.fixture.away.name ?? "Morocco"}
+              {frame?.fixture.home.name ?? "Argentina"}{" "}
+              {frame?.context.scoreHome ?? 0} — {frame?.context.scoreAway ?? 2}{" "}
+              {frame?.fixture.away.name ?? "Egypt"}
             </b>
             <small>
               TXLINE-SHAPED REPLAY · UNVERIFIED · {frame?.context.minute ?? 63}
               :00 · SEQ {frame?.scoreUpdate.Seq ?? 7}
             </small>
           </span>
-          <TeamBadge team="MAR" small />
+          <TeamBadge team="EGY" small />
         </div>
         <button onClick={onLeaders}>
           <Leaderboard />
@@ -1156,8 +1260,8 @@ function FantasyTeam({
             </span>
             <h1>Your XI is scoring.</h1>
             <p>
-              Brazil {frame?.context.scoreHome ?? 1} —{" "}
-              {frame?.context.scoreAway ?? 1} Morocco · Group C
+              Argentina {frame?.context.scoreHome ?? 0} —{" "}
+              {frame?.context.scoreAway ?? 2} Egypt · Round of 16
             </p>
           </div>
           <div>
@@ -1323,7 +1427,9 @@ function FantasyTeam({
     <div className="standard-screen fantasy-builder">
       <div className="fantasy-title">
         <div>
-          <span className="eyebrow">WORLD CUP FANTASY · BRA vs MAR</span>
+          <span className="eyebrow">
+            WORLD CUP FANTASY · ARG vs EGY · ROUND OF 16
+          </span>
           <h1>Build your XI.</h1>
           <p>Choose 11 players. Maximum 7 from one club.</p>
         </div>
@@ -1467,7 +1573,7 @@ function Rooms({
               <b>JUST CREATED</b>
             </header>
             <h2>{name}</h2>
-            <p>Brazil vs Morocco · World Cup Group C</p>
+            <p>Argentina vs Egypt · World Cup Round of 16</p>
             <div className="room-pot">
               <span>
                 <small>PRIZE POOL</small>
@@ -1576,8 +1682,7 @@ function Leaders({ points }: { points: number }) {
           <span className="eyebrow">WORLD CUP COMPETITION</span>
           <h1>Leaderboard</h1>
           <p>
-            Brazil 1 — 1 Morocco · TxLINE-shaped local replay · unverified ·
-            63:00
+            Argentina 3 — 2 Egypt · Round of 16 · TxLINE-shaped local replay
           </p>
         </div>
         <div className="rank-card">
@@ -1625,26 +1730,26 @@ function Leaders({ points }: { points: number }) {
       <section className="supporter-board">
         <div>
           <span className="eyebrow">TEAM RIVALRY</span>
-          <h2>You’re playing for Brazil.</h2>
+          <h2>You’re playing for Argentina.</h2>
           <p>
             Your predictions have contributed <strong>320 points.</strong>
           </p>
         </div>
         <div className="supporter-meter">
           <span>
-            <TeamBadge team="BRA" small />
-            <b>Brazil</b>
+            <TeamBadge team="ARG" small />
+            <b>Argentina</b>
             <strong>54%</strong>
           </span>
           <i>
             <b />
           </i>
           <span>
-            <TeamBadge team="MAR" small />
-            <b>Morocco</b>
+            <TeamBadge team="EGY" small />
+            <b>Egypt</b>
             <strong>46%</strong>
           </span>
-          <p>Brazil supporters lead by 8% · 24.1K playing</p>
+          <p>Argentina supporters lead by 8% · 24.1K playing</p>
         </div>
       </section>
     </div>
@@ -1694,7 +1799,7 @@ function Wallet({
             <button>View all</button>
           </div>
           {[
-            ["Trophy", "Brazil vs Morocco", "Prediction winnings", "+$9.20"],
+            ["Trophy", "Argentina vs Egypt", "Prediction winnings", "+$9.20"],
             ["Goal", "Argentina vs Netherlands", "Match entry", "−$5.00"],
             ["Plus", "Balance added", "Today, 6:40 PM", "+$10.00"],
             [
@@ -1735,7 +1840,7 @@ function Profile() {
         <span>AK</span>
         <div>
           <h1>Arko Roy</h1>
-          <p>@arkoplays · Brazil supporter</p>
+          <p>@arkoplays · Argentina supporter</p>
         </div>
         <button>
           <Settings2 /> Edit profile
@@ -1877,7 +1982,7 @@ function RoomSheet({
         Match
         <button className="sheet-select">
           <span>
-            Brazil vs Morocco<small>World Cup · replay available</small>
+            Argentina vs Egypt<small>World Cup · replay available</small>
           </span>
           <ChevronRight />
         </button>

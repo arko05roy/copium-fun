@@ -76,18 +76,18 @@ type SportsDbTeam = {
   strBadge?: string;
 };
 
-const FIXTURE_ID = 20_260_013;
-const BASE_TS = Date.parse("2026-06-13T22:00:00Z");
+const FIXTURE_ID = 20_260_095;
+const BASE_TS = Date.parse("2026-07-07T16:00:00Z");
 
 const fallbackFixture: WorldCupFixture = {
   fixtureId: FIXTURE_ID,
   competition: "World Cup 2026",
-  stage: "Group stage · Matchday 3",
-  group: "Group C",
-  home: { name: "Brazil", code: "BRA" },
-  away: { name: "Morocco", code: "MAR" },
-  stadium: "New York / New Jersey",
-  kickoff: "2026-06-13T22:00:00Z",
+  stage: "Round of 16",
+  group: "Knockout stage",
+  home: { name: "Argentina", code: "ARG" },
+  away: { name: "Egypt", code: "EGY" },
+  stadium: "Atlanta",
+  kickoff: "2026-07-07T16:00:00Z",
 };
 
 const replay: Array<{
@@ -108,133 +108,145 @@ const replay: Array<{
     home: 0,
     away: 0,
     action: { Type: "kick_off" },
-    line: 56,
-    question: "Will Brazil take the first shot?",
-    trend: "Brazil start as 56% favourites",
-    crowd: 64,
+    line: 68,
+    question: "Will Argentina take the first shot?",
+    trend: "Argentina begin the knockout tie on the front foot",
+    crowd: 71,
     payout: 1.7,
   },
   {
-    minute: 9,
+    minute: 15,
     phase: "H1",
     home: 0,
     away: 0,
     action: {
-      Type: "shot",
-      Participant: 1,
-      Player: "Vinícius Júnior",
-      Data: { Outcome: "Blocked" },
+      Type: "goal",
+      Participant: 2,
+      Player: "Yasser Ibrahim",
     },
-    line: 58,
-    question: "Will the next shot be on target?",
-    trend: "Three attempts in the opening nine minutes",
-    crowd: 61,
-    payout: 1.9,
-  },
-  {
-    minute: 21,
-    phase: "H1",
-    home: 0,
-    away: 1,
-    action: { Type: "goal", Participant: 2, Player: "Ismael Saibari" },
-    line: 43,
-    question: "Will Brazil equalise before halftime?",
-    trend: "Morocco lead after Saibari’s 21st-minute goal",
-    crowd: 72,
-    payout: 2.1,
-  },
-  {
-    minute: 27,
-    phase: "H1",
-    home: 0,
-    away: 1,
-    action: { Type: "corner", Participant: 1 },
-    line: 47,
-    question: "Will Brazil score from this spell of pressure?",
-    trend: "Brazil have won two corners since conceding",
-    crowd: 68,
+    line: 52,
+    question: "Will Argentina equalise before halftime?",
+    trend: "Yasser Ibrahim has put Egypt ahead after 15 minutes",
+    crowd: 69,
     payout: 2.0,
   },
   {
-    minute: 32,
+    minute: 33,
     phase: "H1",
-    home: 1,
+    home: 0,
     away: 1,
-    action: { Type: "goal", Participant: 1, Player: "Vinícius Júnior" },
-    line: 59,
-    question: "Will Brazil score the next goal?",
-    trend: "Vinícius has levelled the match at 1–1",
-    crowd: 66,
-    payout: 1.8,
+    action: {
+      Type: "shot",
+      Participant: 1,
+      Player: "Lionel Messi",
+      Data: { Outcome: "OnTarget" },
+    },
+    line: 57,
+    question: "Will Argentina score before halftime?",
+    trend: "Messi has forced Egypt’s first save",
+    crowd: 73,
+    payout: 1.9,
   },
   {
     minute: 45,
     phase: "HT",
-    home: 1,
+    home: 0,
     away: 1,
     action: { Type: "comment", Data: { Text: "Halftime" } },
-    line: 55,
-    question: "Will the match have a winner?",
-    trend: "Level at halftime with eight total attempts",
-    crowd: 74,
-    payout: 1.9,
-  },
-  {
-    minute: 63,
-    phase: "H2",
-    home: 1,
-    away: 1,
-    action: {
-      Type: "shot",
-      Participant: 1,
-      Player: "Rodrygo",
-      Data: { Outcome: "OnTarget" },
-    },
-    line: 61,
-    question: "Will Brazil take the next shot?",
-    trend: "Brazil have taken 3 of the last 4 shots",
-    crowd: 74,
+    line: 54,
+    question: "Will Argentina turn the tie around?",
+    trend: "Egypt lead 1–0 at halftime",
+    crowd: 76,
     payout: 1.8,
   },
   {
-    minute: 68,
+    minute: 58,
     phase: "H2",
-    home: 1,
+    home: 0,
     away: 1,
-    action: {
-      Type: "free_kick",
-      Participant: 2,
-      Data: { FreeKickType: "Danger" },
-    },
-    line: 57,
-    question: "Will Morocco’s next attempt be on target?",
-    trend: "Morocco have a dangerous free kick",
-    crowd: 48,
+    action: { Type: "corner", Participant: 1 },
+    line: 60,
+    question: "Will Argentina score from this pressure?",
+    trend: "Argentina have taken four of the last five attempts",
+    crowd: 71,
+    payout: 1.9,
+  },
+  {
+    minute: 67,
+    phase: "H2",
+    home: 0,
+    away: 2,
+    action: { Type: "goal", Participant: 2, Player: "Mostafa Zico" },
+    line: 31,
+    question: "Will Argentina score before 75:00?",
+    trend: "Mostafa Zico has doubled Egypt’s lead",
+    crowd: 64,
     payout: 2.4,
   },
   {
     minute: 74,
     phase: "H2",
-    home: 1,
-    away: 1,
-    action: { Type: "corner", Participant: 2 },
-    line: 53,
-    question: "Will the next goal arrive before 80:00?",
-    trend: "The momentum has swung toward Morocco",
-    crowd: 57,
-    payout: 2.2,
+    home: 0,
+    away: 2,
+    action: {
+      Type: "shot",
+      Participant: 1,
+      Player: "Lionel Messi",
+      Data: { Outcome: "OnTarget" },
+    },
+    line: 42,
+    question: "Will Argentina score the next goal?",
+    trend: "Messi is pulling Argentina back into the tie",
+    crowd: 78,
+    payout: 1.9,
   },
   {
-    minute: 90,
-    phase: "F",
+    minute: 79,
+    phase: "H2",
     home: 1,
-    away: 1,
+    away: 2,
+    action: { Type: "goal", Participant: 1, Player: "Cristian Romero" },
+    line: 55,
+    question: "Will Argentina equalise before 90:00?",
+    trend: "Romero has made it 2–1 with eleven minutes left",
+    crowd: 82,
+    payout: 1.8,
+  },
+  {
+    minute: 83,
+    phase: "H2",
+    home: 2,
+    away: 2,
+    action: { Type: "goal", Participant: 1, Player: "Lionel Messi" },
+    line: 69,
+    question: "Will Argentina complete the comeback?",
+    trend: "Messi has levelled a breathless knockout tie",
+    crowd: 86,
+    payout: 1.7,
+  },
+  {
+    minute: 93,
+    phase: "H2",
+    home: 3,
+    away: 2,
+    action: { Type: "goal", Participant: 1, Player: "Enzo Fernández" },
+    line: 94,
+    question: "Will Argentina hold the lead?",
+    trend: "Enzo Fernández has scored in stoppage time",
+    crowd: 93,
+    payout: 1.2,
+  },
+  {
+    minute: 96,
+    phase: "F",
+    home: 3,
+    away: 2,
     action: { Type: "comment", Data: { Text: "Full time" } },
-    line: 50,
-    question: "Did the match finish level?",
-    trend: "Full time · Brazil 1–1 Morocco",
-    crowd: 50,
-    payout: 2.0,
+    line: 100,
+    question: "Did Argentina win 3–2?",
+    trend: "Full time · Argentina 3–2 Egypt",
+    crowd: 100,
+    payout: 1.0,
   },
 ];
 
@@ -269,7 +281,7 @@ export async function getWorldCupFixture(): Promise<{
     if (!response.ok) throw new Error("fixture source unavailable");
     const body = (await response.json()) as { matches?: OpenFootballMatch[] };
     const match = body.matches?.find(
-      (item) => item.team1 === "Brazil" && item.team2 === "Morocco"
+      (item) => item.team1 === "Argentina" && item.team2 === "Egypt"
     );
     if (!match) throw new Error("fixture not found");
     const [homeTeam, awayTeam] = await Promise.all([
@@ -292,8 +304,8 @@ export async function getWorldCupFixture(): Promise<{
           code: awayTeam?.strTeamShort ?? fallbackFixture.away.code,
           badge: awayTeam?.strBadge,
         },
-        stage: `${match.group ?? "Group C"} · ${match.round ?? "Group stage"}`,
-        group: match.group ?? "Group C",
+        stage: match.round ?? "Round of 16",
+        group: match.group ?? "Knockout stage",
         stadium: match.ground ?? fallbackFixture.stadium,
         kickoff: `${match.date ?? "2026-06-13"} · ${match.time ?? "18:00 UTC-4"}`,
       },
@@ -307,14 +319,18 @@ export async function getWorldCupFixture(): Promise<{
   }
 }
 
-function actionLabel(action: TxLineScoreUpdate["Action"]): string {
+function actionLabel(
+  action: TxLineScoreUpdate["Action"],
+  fixture: WorldCupFixture
+): string {
   if (!action) return "Match update";
   if (action.Type === "goal") return `GOAL · ${action.Player}`;
   if (action.Type === "shot")
     return `${action.Player ?? "Shot"} · ${String(action.Data?.Outcome ?? "attempt")}`;
   if (action.Type === "corner")
-    return `Corner · ${action.Participant === 1 ? "Brazil" : "Morocco"}`;
-  if (action.Type === "free_kick") return `Dangerous free kick · Morocco`;
+    return `Corner · ${action.Participant === 1 ? fixture.home.name : fixture.away.name}`;
+  if (action.Type === "free_kick")
+    return `Dangerous free kick · ${action.Participant === 1 ? fixture.home.name : fixture.away.name}`;
   if (action.Type === "kick_off") return "Kick-off";
   return String(action.Data?.Text ?? "Match update");
 }
@@ -374,7 +390,7 @@ export async function getWorldCupTxLineFrame(
       scoreAway: point.away,
       minute: point.minute,
       phase: point.phase,
-      lastEvent: actionLabel(point.action),
+      lastEvent: actionLabel(point.action, fixture),
       nextQuestion: point.question,
       trend: point.trend,
       crowdYesPct: point.crowd,

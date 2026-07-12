@@ -57,21 +57,24 @@ export function MarketingLanding() {
         >
           <article className="hero-ticket">
             <header>
-              <span>TXLINE-SHAPED REPLAY · 63:00</span>
-              <span>WORLD CUP 2026 · GROUP C</span>
+              <span>FULL-TIME · TUE, 7 JUL</span>
+              <span>WORLD CUP 2026 · ROUND OF 16</span>
             </header>
             <div className="hero-score">
               <span>
-                <b>B</b>Brazil
+                <b>A</b>Argentina
               </span>
-              <strong>1 — 1</strong>
+              <strong>3 — 2</strong>
               <span>
-                <b>M</b>Morocco
+                <b>E</b>Egypt
               </span>
             </div>
             <small>NEXT PLAY</small>
-            <h2>Will Brazil take the next shot?</h2>
-            <p>Brazil have taken 3 of the last 4 shots.</p>
+            <h2>Can you call the comeback before it happens?</h2>
+            <p>
+              Replay Romero 79′, Messi 83′ and Enzo 90+3′ through TxLINE-shaped
+              match frames.
+            </p>
             <div className="hero-ticket-stakes">
               <span>PLAY FOR</span>
               <b>$1</b>
