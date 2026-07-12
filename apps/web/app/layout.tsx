@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, DM_Mono, Fraunces } from "next/font/google";
+import { Barlow_Condensed, Bricolage_Grotesque, DM_Mono, Fraunces, Manrope } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./components/providers";
 import { SiteNav } from "./components/site-nav";
@@ -22,9 +22,12 @@ const dmMono = DM_Mono({
   subsets: ["latin"],
 });
 
+const manrope = Manrope({ variable: "--font-fan-body", subsets: ["latin"], display: "swap" });
+const barlow = Barlow_Condensed({ variable: "--font-fan-display", subsets: ["latin"], weight: ["500", "600", "700", "800"], display: "swap" });
+
 export const metadata: Metadata = {
   title: "copium.fun",
-  description: "Every moment is a market. Choose fan feed or agent desk.",
+  description: "Live sports predictions with friends, streaks, and prizes.",
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
@@ -42,7 +45,7 @@ export default function RootLayout({
       <Providers>
         <body
           suppressHydrationWarning
-          className={`${bricolage.variable} ${fraunces.variable} ${dmMono.variable} antialiased`}
+          className={`${bricolage.variable} ${fraunces.variable} ${dmMono.variable} ${manrope.variable} ${barlow.variable} antialiased`}
         >
           <SiteNav />
           {children}

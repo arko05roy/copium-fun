@@ -13,29 +13,45 @@ const links = [
 
 export function SiteNav() {
   const pathname = usePathname();
-  const { wallet, status, connect, connectors, disconnect } = useWalletConnection();
+  const { wallet, status, connect, connectors, disconnect } =
+    useWalletConnection();
   const address = wallet?.account.address.toString();
 
   const connectWallet = () => {
-    const preferred = connectors.find((connector) => /phantom/i.test(connector.name));
+    const preferred = connectors.find((connector) =>
+      /phantom/i.test(connector.name)
+    );
     void connect(preferred?.id ?? connectors[0]?.id ?? "");
   };
 
-  if (pathname.startsWith("/sim")) return null;
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/sim")
+  )
+    return null;
 
   return (
     <header className="site-nav">
       <div className="site-nav__inner">
         <Link href="/" className="site-nav__brand" aria-label="copium.fun home">
-          <span className="site-nav__mark"><Waves aria-hidden /></span>
-          <span>copium<span>.fun</span></span>
+          <span className="site-nav__mark">
+            <Waves aria-hidden />
+          </span>
+          <span>
+            copium<span>.fun</span>
+          </span>
         </Link>
 
         <nav className="site-nav__links" aria-label="Primary navigation">
           {links.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(`${href}/`);
             return (
-              <Link key={href} href={href} className={active ? "is-active" : ""}>
+              <Link
+                key={href}
+                href={href}
+                className={active ? "is-active" : ""}
+              >
                 <Icon aria-hidden />
                 <span>{label}</span>
               </Link>
@@ -44,7 +60,9 @@ export function SiteNav() {
         </nav>
 
         <div className="site-nav__account">
-          <span className="site-nav__network"><i /> splash zone · devnet</span>
+          <span className="site-nav__network">
+            <i /> splash zone · devnet
+          </span>
           {status === "connected" && address ? (
             <button onClick={() => disconnect()} title="Disconnect wallet">
               {address.slice(0, 4)}…{address.slice(-4)}

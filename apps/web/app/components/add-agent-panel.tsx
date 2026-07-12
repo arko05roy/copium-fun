@@ -148,7 +148,7 @@ function inferTopics(name: string, style: string): string[] {
   if (/\bfootball\b|nfl|touchdown|quarterback|field goal/.test(text)) {
     return ["football"];
   }
-  if (/soccer|goal|futbol|premier league|champions league/.test(text)) {
+  if (/soccer|goal|futbol|world cup|international/.test(text)) {
     return ["soccer"];
   }
   return ["soccer"];

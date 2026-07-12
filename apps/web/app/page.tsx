@@ -1,5 +1,5 @@
-import { Landing } from "./components/landing";
+import { MarketingLanding } from "./components/marketing-landing";
 
 export default function LandingPage() {
-  return <Landing />;
+  return <MarketingLanding />;
 }
