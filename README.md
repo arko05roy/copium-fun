@@ -42,9 +42,9 @@ TxLINE and the TxODDS API provide the live fixture context, odds-derived Line, a
 
 ## Imagine a match in motion
 
-It is the 78th minute. The score is 1–1. A winger gets space on the left. The score feed updates, a news alert starts circulating, and the Discord and Telegram conversations light up. Officer Copium turns that burst of signal into a clean question:
+It is the 78th minute. The score is 1–1. A winger gets space on the left. The score feed updates, a news alert starts circulating, and the Discord and Telegram conversations light up. Copium turns that burst of signal into a clean question:
 
-> **OFFICER COPIUM**
+> **COPIUM PULSES**
 > 
 > Brazil are building pressure.
 > 
@@ -105,7 +105,7 @@ The result is not trying to replace watching the match. It gives everyone someth
 
 ```mermaid
 flowchart LR
-    A[News, scores, live data, Discord, Telegram] --> B[Officer Copium signal layer]
+    A[News, scores, live data, Discord, Telegram] --> B[Copium signal layer]
     B --> C[Create a 90-second Pulse]
     C --> D[Web feed, Telegram, Discord]
     D --> E[Fans swipe YES or NO]
@@ -117,7 +117,7 @@ flowchart LR
 
 ### 1. Signals arrive from everywhere
 
-Officer Copium is not waiting for one perfect feed. It combines the places fans already look: Google News and other news signals, live scores, match events, TxLINE context, Discord, Telegram, and community chatter. A goal, injury, card, substitution, score change, or breaking story can all become the trigger for a new Pulse.
+Copium is not waiting for one perfect feed. It combines the places fans already look: Google News and other news signals, live scores, match events, TxLINE context, Discord, Telegram, and community chatter. A goal, injury, card, substitution, score change, or breaking story can all become the trigger for a new Pulse.
 
 The job is signal compression: turn a messy stream of updates into one sharp question that makes sense in the next 90 seconds.
 
@@ -172,7 +172,8 @@ The interface is deliberately narrow. A participant should understand the questi
 
 ### Urgency without homework
 
-The 90-second window creates urgency, but the user does not need to study a market or manage a position. The match supplies the context; Officer Copium supplies the prompt.
+The 90-second window creates urgency, but the user does not need to study a market or manage a position. The match supplies the context; 
+Copium supplies the prompt.
 
 ### Social first, financial second
 
@@ -271,7 +272,7 @@ That split keeps the experience simple: users interact with a familiar message a
 
 ```mermaid
 flowchart TD
-    N[Google News + breaking stories] --> O[Officer Copium]
+    N[Google News + breaking stories] --> O[Copium]
     S[Scores + live match events] --> O
     D[Discord + Telegram chatter] --> O
     X[TxLINE odds + event context] --> O
