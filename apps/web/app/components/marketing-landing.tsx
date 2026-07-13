@@ -57,8 +57,8 @@ export function MarketingLanding() {
         >
           <article className="hero-ticket">
             <header>
-              <span>FULL-TIME · TUE, 7 JUL</span>
-              <span>WORLD CUP 2026 · ROUND OF 16</span>
+              <span>FULL-TIME · SAT, 4 JUL</span>
+              <span>WORLD CUP 2026 · ROUND OF 32</span>
             </header>
             <div className="hero-score">
               <span>
@@ -66,14 +66,14 @@ export function MarketingLanding() {
               </span>
               <strong>3 — 2</strong>
               <span>
-                <b>E</b>Egypt
+                <b>CV</b>Cape Verde
               </span>
             </div>
-            <small>NEXT PLAY</small>
-            <h2>Can you call the comeback before it happens?</h2>
+            <small>AFTER EXTRA TIME</small>
+            <h2>Argentina edge Cape Verde 3–2.</h2>
             <p>
-              Replay Romero 79′, Messi 83′ and Enzo 90+3′ through TxLINE-shaped
-              match frames.
+              Messi 29′, Lisandro Martínez 92′ and a Diney own goal at 111′
+              settled a five-goal classic.
             </p>
             <div className="hero-ticket-stakes">
               <span>PLAY FOR</span>
