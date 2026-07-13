@@ -4,19 +4,35 @@
 
 # copium.fun
 
-**Your group chat has takes. Now it has a scoreboard.**
+<p align="center">
+  <strong>Your group chat has takes. Now it has a scoreboard.</strong>
+</p>
 
 copium.fun is a live sports prediction game that turns every match into an ongoing competition between friends, fans, and communities.
 
-During a match, Copium identifies important moments and turns them into **Pulses**: 90-second YES/NO prediction markets such as “Will the next attack produce a shot?”, “Will Brazil score before half-time?”, or “Will this player receive a card?” On the web, each Pulse appears in a Tinder-style card stack: swipe right for **YES**, swipe left for **NO**, and watch the moment unfold. The same position can be taken directly from a Telegram or Discord group by adding the Copium bot, so the game lives inside the conversation instead of pulling fans away from it.
+> **Watch the match → swipe on the moment → build your streak → beat the room → keep the receipt.**
 
-TxLINE and the TxODDS API provide the live fixture context, odds-derived Line, and event data used to create and resolve Pulses. Solana devnet records the position and settlement, turning a passing prediction into a shareable receipt with an inspectable outcome.
+## One match, three ways to play
 
-Every correct prediction earns points, extends a streak, and moves the player up the global leaderboard. Fans can create private rooms for a fixture, invite friends, and compete on their own room leaderboard. For a longer strategic game, they can also build a fantasy XI within a fixed budget, select a captain and vice-captain for scoring multipliers, and follow player performance throughout the same live match.
+### ⚡ Swipe on live Pulses
+
+During a match, Copium identifies important moments and turns them into **Pulses**: 90-second YES/NO prediction markets such as “Will the next attack produce a shot?”, “Will Brazil score before half-time?”, or “Will this player receive a card?”
+
+On the web, each Pulse appears in a Tinder-style card stack: swipe right for **YES**, swipe left for **NO**, and watch the moment unfold. The same position can be taken directly from a Telegram or Discord group by adding the Copium bot, so the game lives inside the conversation instead of pulling fans away from it.
+
+### 🏆 Compete with friends and the world
+
+Every correct prediction earns points, extends a streak, and moves the player up the global leaderboard. Fans can create private rooms for a fixture, invite friends, and compete on their own room leaderboard.
+
+### ⚽ Build your Fantasy XI
+
+For a longer strategic game, players can build a fantasy XI within a fixed budget, select a captain and vice-captain for scoring multipliers, and follow player performance throughout the same live match.
 
 Pulse play rewards instinct in the moment. Fantasy rewards an understanding of the whole match. Rooms, streaks, leaderboards, and receipts turn both into an experience people want to replay with the same friends at the next kickoff.
 
-> **Watch the match → swipe on the moment → build your streak → beat the room → keep the receipt.**
+## 🔗 Resolved with live data, settled on Solana
+
+TxLINE and the TxODDS API provide the live fixture context, odds-derived Line, and event data used to create and resolve Pulses. Solana devnet records the position and settlement, turning a passing prediction into a shareable receipt with an inspectable outcome.
 
 ## The experience at a glance
 
