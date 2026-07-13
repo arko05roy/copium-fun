@@ -36,6 +36,9 @@ export const CardStack = ({
   const [cards, setCards] = useState(items);
 
   useEffect(() => {
+    // The stack owns a reordered copy while swiping/auto-flipping; sync it when
+    // the parent replaces the source list.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCards(items);
   }, [items]);
 
@@ -70,7 +73,7 @@ export const CardStack = ({
             }}
             className={cn(
               "absolute inset-x-0 top-0 flex h-[30rem] flex-col justify-between rounded-3xl border p-6 shadow-xl",
-              cardClassName,
+              cardClassName
             )}
             style={{ transformOrigin: "top center" }}
             animate={{

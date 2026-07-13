@@ -291,7 +291,9 @@ function TeamBadge({
   return (
     <span
       className={`team-badge team-badge--${team.toLowerCase()} ${small ? "is-small" : ""}`}
-      aria-label={team === "ARG" ? "Argentina" : isCapeVerde ? "Cape Verde" : "Egypt"}
+      aria-label={
+        team === "ARG" ? "Argentina" : isCapeVerde ? "Cape Verde" : "Egypt"
+      }
     >
       {team === "ARG" ? "A" : isCapeVerde ? "CV" : "E"}
     </span>
@@ -465,8 +467,8 @@ export function Dashboard() {
           {screen === "fantasy" && (
             <FantasyTeam showToast={showToast} frame={txFrame} />
           )}
-          {screen === "rooms" && (
-            selectedRoom ? (
+          {screen === "rooms" &&
+            (selectedRoom ? (
               <RoomDetail
                 room={selectedRoom}
                 onBack={() => setSelectedRoom(null)}
@@ -491,8 +493,7 @@ export function Dashboard() {
                   showToast(`Invite link copied · ${room.code}`);
                 }}
               />
-            )
-          )}
+            ))}
           {screen === "leaders" && <Leaders points={points} />}
           {screen === "wallet" && (
             <Wallet balance={balance} onTopup={() => setTopupOpen(true)} />
@@ -866,37 +867,6 @@ function WorldCupMatchCard({
           Open prediction room <ArrowRight />
         </small>
       )}
-    </button>
-  );
-}
-
-function MiniMatch({
-  teams,
-  score,
-  minute,
-  players,
-  color,
-}: {
-  teams: string;
-  score: string;
-  minute: string;
-  players: string;
-  color: string;
-}) {
-  return (
-    <button className={`mini-match mini-match--${color}`}>
-      <div>
-        <LivePill />
-        <span>{players} playing</span>
-      </div>
-      <p>{teams}</p>
-      <strong>{score}</strong>
-      <footer>
-        <span>{minute}</span>
-        <b>
-          Open match <ArrowRight />
-        </b>
-      </footer>
     </button>
   );
 }
@@ -1279,6 +1249,7 @@ function FantasyTeam({
   const [stage, setStage] = useState<"select" | "leaders" | "live">("select");
   const [captain, setCaptain] = useState<number | null>(null);
   const [vice, setVice] = useState<number | null>(null);
+  const [leaderMode, setLeaderMode] = useState<"captain" | "vice">("captain");
   const chosen = fantasyPlayers.filter((player) =>
     selected.includes(player.id)
   );
@@ -1290,30 +1261,46 @@ function FantasyTeam({
     }),
     {}
   );
-  const validTeam =
-    selected.length === 11 &&
-    (counts.GK || 0) >= 1 &&
-    (counts.DEF || 0) >= 3 &&
-    (counts.MID || 0) >= 3 &&
-    (counts.FWD || 0) >= 1;
-  const score = chosen.reduce(
-    (sum, player) =>
-      sum +
-      player.points *
-        (player.id === captain ? 2 : player.id === vice ? 1.5 : 1),
-    0
-  );
+  const validTeam = selected.length === 11;
   const minute = frame?.context.minute ?? 63;
   const livePoints: Record<number, number> = {
-    1: 4, 2: 2, 3: 2, 4: 2, 5: 1, 6: 5, 7: 5, 8: 4,
-    9: 3, 10: 8, 11: 7, 12: 10, 13: 3, 14: 2, 15: 18, 16: 6,
+    1: 4,
+    2: 2,
+    3: 2,
+    4: 2,
+    5: 1,
+    6: 5,
+    7: 5,
+    8: 4,
+    9: 3,
+    10: 8,
+    11: 7,
+    12: 10,
+    13: 3,
+    14: 2,
+    15: 18,
+    16: 6,
   };
   const liveNotes: Record<number, string> = {
-    1: "3 saves", 3: "2 tackles", 4: "4 clearances", 6: "Clean sheet", 7: "5 clearances",
-    8: "2 chances", 10: "Assist", 11: "3 recoveries", 12: "Goal · 51′", 13: "1 shot", 14: "2 shots", 15: "2 goals", 16: "On target",
+    1: "3 saves",
+    3: "2 tackles",
+    4: "4 clearances",
+    6: "Clean sheet",
+    7: "5 clearances",
+    8: "2 chances",
+    10: "Assist",
+    11: "3 recoveries",
+    12: "Goal · 51′",
+    13: "1 shot",
+    14: "2 shots",
+    15: "2 goals",
+    16: "On target",
   };
   const liveScore = chosen.reduce(
-    (sum, player) => sum + livePoints[player.id] * (player.id === captain ? 2 : player.id === vice ? 1.5 : 1),
+    (sum, player) =>
+      sum +
+      livePoints[player.id] *
+        (player.id === captain ? 2 : player.id === vice ? 1.5 : 1),
     0
   );
 
@@ -1334,23 +1321,64 @@ function FantasyTeam({
     setSelected((current) => [...current, player.id]);
   }
 
+  function assignCaptain(playerId: number) {
+    setCaptain(playerId);
+    if (vice === playerId) setVice(null);
+    setLeaderMode("vice");
+    showToast("Captain selected · now choose your vice-captain");
+  }
+
+  function assignVice(playerId: number) {
+    setVice(playerId);
+    if (captain === playerId) setCaptain(null);
+    setLeaderMode("captain");
+    showToast("Vice-captain selected");
+  }
+
+  function assignActiveLeader(playerId: number) {
+    if (leaderMode === "captain") assignCaptain(playerId);
+    else assignVice(playerId);
+  }
+
   if (stage === "live")
     return (
       <div className="standard-screen fantasy-live">
         <section className="fantasy-matchboard" aria-label="Live match score">
-          <header><span><i /> LIVE · {minute}′</span><span>WORLD CUP · ROUND OF 16</span></header>
+          <header>
+            <span>
+              <i /> LIVE · {minute}′
+            </span>
+            <span>WORLD CUP · ROUND OF 16</span>
+          </header>
           <div className="fantasy-matchboard__score">
-            <div><TeamBadge team="ARG" /><strong>Argentina</strong></div>
-            <b><em>{frame?.context.scoreHome ?? 0}</em><small>—</small><em>{frame?.context.scoreAway ?? 2}</em></b>
-            <div><strong>Egypt</strong><TeamBadge team="EGY" /></div>
+            <div>
+              <TeamBadge team="ARG" />
+              <strong>Argentina</strong>
+            </div>
+            <b>
+              <em>{frame?.context.scoreHome ?? 0}</em>
+              <small>—</small>
+              <em>{frame?.context.scoreAway ?? 2}</em>
+            </b>
+            <div>
+              <strong>Egypt</strong>
+              <TeamBadge team="EGY" />
+            </div>
           </div>
-          <footer><span>18′ Mohamed Salah</span><span>51′ Trézéguet · Salah assist</span><small>Second half · replay feed</small></footer>
+          <footer>
+            <span>18′ Mohamed Salah</span>
+            <span>51′ Trézéguet · Salah assist</span>
+            <small>Second half · replay feed</small>
+          </footer>
         </section>
         <div className="fantasy-live__head">
           <div>
             <span className="eyebrow">YOUR MATCHDAY · LIVE SCORING</span>
             <h1>{liveScore} points and climbing.</h1>
-            <p>Your Egypt stack is carrying the second half. Salah is your top scorer with 18 live points.</p>
+            <p>
+              Your Egypt stack is carrying the second half. Salah is your top
+              scorer with 18 live points.
+            </p>
           </div>
           <div>
             <small>LIVE RANK</small>
@@ -1397,13 +1425,13 @@ function FantasyTeam({
           <aside className="fantasy-scorecard">
             <span>LIVE FANTASY POINTS</span>
             <strong>{liveScore}</strong>
-            <p><b>+14</b> since half-time · Prize line is 96 pts</p>
+            <p>
+              <b>+14</b> since half-time · Prize line is 96 pts
+            </p>
             <div>
               <span>
                 <small>Captain bonus</small>
-                <b>
-                  +{captain ? livePoints[captain] || 0 : 0}
-                </b>
+                <b>+{captain ? livePoints[captain] || 0 : 0}</b>
               </span>
               <span>
                 <small>Players in action</small>
@@ -1419,30 +1447,106 @@ function FantasyTeam({
             </button>
           </aside>
           <aside className="fantasy-live-feed">
-            <header><span className="eyebrow">MATCH PULSE</span><b>Just now</b></header>
-            <article><i className="is-goal"><Goal /></i><span><strong>51′ Egypt double the lead</strong><small>Trézéguet finishes Salah’s cutback.</small></span></article>
-            <article><i><Sparkles /></i><span><strong>+10 · Trézéguet</strong><small>Goal points added to your XI.</small></span></article>
-            <article><i><Star /></i><span><strong>+18 · Salah</strong><small>Goal, assist and bonus points.</small></span></article>
+            <header>
+              <span className="eyebrow">MATCH PULSE</span>
+              <b>Just now</b>
+            </header>
+            <article>
+              <i className="is-goal">
+                <Goal />
+              </i>
+              <span>
+                <strong>51′ Egypt double the lead</strong>
+                <small>Trézéguet finishes Salah’s cutback.</small>
+              </span>
+            </article>
+            <article>
+              <i>
+                <Sparkles />
+              </i>
+              <span>
+                <strong>+10 · Trézéguet</strong>
+                <small>Goal points added to your XI.</small>
+              </span>
+            </article>
+            <article>
+              <i>
+                <Star />
+              </i>
+              <span>
+                <strong>+18 · Salah</strong>
+                <small>Goal, assist and bonus points.</small>
+              </span>
+            </article>
             <footer>Next scoring refresh at {minute + 1}′</footer>
           </aside>
         </div>
         <div className="fantasy-live-detail-grid">
           <section className="fantasy-live-ledger">
-            <header><div><span className="eyebrow">YOUR SCORING LEDGER</span><h2>Every point, accounted for.</h2></div><span>Live through {minute}′</span></header>
-            <div className="fantasy-live-ledger__labels"><span>Player</span><span>Match action</span><span>Live pts</span></div>
-            {chosen.sort((a, b) => (livePoints[b.id] || 0) - (livePoints[a.id] || 0)).map((player) => (
-              <div className="fantasy-live-ledger__row" key={player.id}>
-                <span><i className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}>{player.name.slice(0, 2).toUpperCase()}</i><b>{player.name}<small>{player.role} · {player.team}</small></b></span>
-                <span>{liveNotes[player.id] || "In play"}</span>
-                <strong>+{livePoints[player.id] || 0}{player.id === captain ? " ×2" : player.id === vice ? " ×1.5" : ""}</strong>
+            <header>
+              <div>
+                <span className="eyebrow">YOUR SCORING LEDGER</span>
+                <h2>Every point, accounted for.</h2>
               </div>
-            ))}
+              <span>Live through {minute}′</span>
+            </header>
+            <div className="fantasy-live-ledger__labels">
+              <span>Player</span>
+              <span>Match action</span>
+              <span>Live pts</span>
+            </div>
+            {chosen
+              .sort((a, b) => (livePoints[b.id] || 0) - (livePoints[a.id] || 0))
+              .map((player) => (
+                <div className="fantasy-live-ledger__row" key={player.id}>
+                  <span>
+                    <i
+                      className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}
+                    >
+                      {player.name.slice(0, 2).toUpperCase()}
+                    </i>
+                    <b>
+                      {player.name}
+                      <small>
+                        {player.role} · {player.team}
+                      </small>
+                    </b>
+                  </span>
+                  <span>{liveNotes[player.id] || "In play"}</span>
+                  <strong>
+                    +{livePoints[player.id] || 0}
+                    {player.id === captain
+                      ? " ×2"
+                      : player.id === vice
+                        ? " ×1.5"
+                        : ""}
+                  </strong>
+                </div>
+              ))}
           </section>
           <aside className="fantasy-rank-panel">
-            <span className="eyebrow">CONTEST POSITION</span><h2>Inside the prize line.</h2>
-            <div className="fantasy-rank-panel__rank"><span>YOUR RANK</span><strong>#84</strong><b>↑ 16 this half</b></div>
-            <div className="fantasy-rank-panel__track"><span>Your score <b>{liveScore}</b></span><i><b style={{ width: `${Math.min(100, liveScore)}%` }} /></i><span>Prize line <b>96</b></span></div>
-            <p>Keep an eye on Salah and Trézéguet—both are still on the pitch with 27 minutes to play.</p>
+            <span className="eyebrow">CONTEST POSITION</span>
+            <h2>Inside the prize line.</h2>
+            <div className="fantasy-rank-panel__rank">
+              <span>YOUR RANK</span>
+              <strong>#84</strong>
+              <b>↑ 16 this half</b>
+            </div>
+            <div className="fantasy-rank-panel__track">
+              <span>
+                Your score <b>{liveScore}</b>
+              </span>
+              <i>
+                <b style={{ width: `${Math.min(100, liveScore)}%` }} />
+              </i>
+              <span>
+                Prize line <b>96</b>
+              </span>
+            </div>
+            <p>
+              Keep an eye on Salah and Trézéguet—both are still on the pitch
+              with 27 minutes to play.
+            </p>
           </aside>
         </div>
       </div>
@@ -1470,6 +1574,31 @@ function FantasyTeam({
           </div>
         </div>
         <FantasySteps stage="leaders" />
+        <div
+          className="fantasy-leader-picker"
+          aria-label="Leader selection mode"
+        >
+          <div>
+            <span className="eyebrow">ASSIGN A ROLE</span>
+            <strong>Choose a role, then select a player.</strong>
+          </div>
+          <div role="group" aria-label="Choose leader role">
+            <button
+              type="button"
+              className={leaderMode === "captain" ? "active" : ""}
+              onClick={() => setLeaderMode("captain")}
+            >
+              Captain <small>2× pts</small>
+            </button>
+            <button
+              type="button"
+              className={leaderMode === "vice" ? "active" : ""}
+              onClick={() => setLeaderMode("vice")}
+            >
+              Vice-captain <small>1.5× pts</small>
+            </button>
+          </div>
+        </div>
         <div className="captain-grid">
           {chosen.map((player) => (
             <article
@@ -1477,6 +1606,13 @@ function FantasyTeam({
                 captain === player.id || vice === player.id ? "is-leader" : ""
               }
               key={player.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => assignActiveLeader(player.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ")
+                  assignActiveLeader(player.id);
+              }}
             >
               <span
                 className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}
@@ -1490,20 +1626,24 @@ function FantasyTeam({
                 </small>
               </div>
               <button
+                type="button"
                 className={captain === player.id ? "active" : ""}
-                onClick={() => {
-                  setCaptain(player.id);
-                  if (vice === player.id) setVice(null);
+                onClick={(event) => {
+                  event.stopPropagation();
+                  assignCaptain(player.id);
                 }}
+                aria-pressed={captain === player.id}
               >
                 C
               </button>
               <button
+                type="button"
                 className={vice === player.id ? "active" : ""}
-                onClick={() => {
-                  setVice(player.id);
-                  if (captain === player.id) setCaptain(null);
+                onClick={(event) => {
+                  event.stopPropagation();
+                  assignVice(player.id);
                 }}
+                aria-pressed={vice === player.id}
               >
                 VC
               </button>
@@ -1564,48 +1704,143 @@ function FantasyTeam({
         </div>
       </div>
       <section className="fantasy-contest-strip" aria-label="Contest details">
-        <span><small>CONTEST</small><b>Sunday Main Event</b></span>
-        <span><small>ENTRY</small><b>$5.00</b></span>
-        <span><small>PRIZE POOL</small><b>$20,000</b></span>
-        <span><small>LINE-UPS LOCK</small><b><Clock3 /> 18:00 IST</b></span>
+        <span>
+          <small>CONTEST</small>
+          <b>Sunday Main Event</b>
+        </span>
+        <span>
+          <small>ENTRY</small>
+          <b>$5.00</b>
+        </span>
+        <span>
+          <small>PRIZE POOL</small>
+          <b>$20,000</b>
+        </span>
+        <span>
+          <small>LINE-UPS LOCK</small>
+          <b>
+            <Clock3 /> 18:00 IST
+          </b>
+        </span>
       </section>
       <FantasySteps stage="select" />
       <div className="fantasy-builder-layout">
         <div className="fantasy-player-picker">
           <div className="squad-rule">
-            <span className={(counts.GK || 0) >= 1 ? "done" : ""}>GK {counts.GK || 0}/1+</span>
-            <span className={(counts.DEF || 0) >= 3 ? "done" : ""}>DEF {counts.DEF || 0}/3+</span>
-            <span className={(counts.MID || 0) >= 3 ? "done" : ""}>MID {counts.MID || 0}/3+</span>
-            <span className={(counts.FWD || 0) >= 1 ? "done" : ""}>FWD {counts.FWD || 0}/1+</span>
+            <span className={(counts.GK || 0) > 0 ? "done" : ""}>
+              GK · {counts.GK || 0}
+            </span>
+            <span className={(counts.DEF || 0) > 0 ? "done" : ""}>
+              DEF · {counts.DEF || 0}
+            </span>
+            <span className={(counts.MID || 0) > 0 ? "done" : ""}>
+              MID · {counts.MID || 0}
+            </span>
+            <span className={(counts.FWD || 0) > 0 ? "done" : ""}>
+              FWD · {counts.FWD || 0}
+            </span>
           </div>
           <div className="fantasy-tabs">
             {(["ALL", "GK", "DEF", "MID", "FWD"] as const).map((item) => (
-              <button className={role === item ? "active" : ""} onClick={() => setRole(item)} key={item}>
+              <button
+                className={role === item ? "active" : ""}
+                onClick={() => setRole(item)}
+                key={item}
+              >
                 {item === "ALL" ? "All players" : item}
               </button>
             ))}
           </div>
           <section className="player-table">
-            <header><span>Player</span><span>Form</span><span>Season pts</span><span>Credits</span><span>Select</span></header>
-            {fantasyPlayers.filter((player) => role === "ALL" || player.role === role).map((player) => {
-              const picked = selected.includes(player.id);
-              return (
-                <button className={picked ? "selected" : ""} onClick={() => togglePlayer(player)} key={player.id}>
-                  <span className="fantasy-person"><i className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}>{player.name.slice(0, 2).toUpperCase()}</i><b>{player.name}<small>{player.team} · {player.role}</small></b></span>
-                  <span>{player.form}</span><span>{player.points}</span><span>{player.credits}</span><span className="add-player">{picked ? <Check /> : <Plus />}</span>
-                </button>
-              );
-            })}
+            <header>
+              <span>Player</span>
+              <span>Form</span>
+              <span>Season pts</span>
+              <span>Credits</span>
+              <span>Select</span>
+            </header>
+            {fantasyPlayers
+              .filter((player) => role === "ALL" || player.role === role)
+              .map((player) => {
+                const picked = selected.includes(player.id);
+                return (
+                  <button
+                    className={picked ? "selected" : ""}
+                    onClick={() => togglePlayer(player)}
+                    key={player.id}
+                  >
+                    <span className="fantasy-person">
+                      <i
+                        className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}
+                      >
+                        {player.name.slice(0, 2).toUpperCase()}
+                      </i>
+                      <b>
+                        {player.name}
+                        <small>
+                          {player.team} · {player.role}
+                        </small>
+                      </b>
+                    </span>
+                    <span>{player.form}</span>
+                    <span>{player.points}</span>
+                    <span>{player.credits}</span>
+                    <span className="add-player">
+                      {picked ? <Check /> : <Plus />}
+                    </span>
+                  </button>
+                );
+              })}
           </section>
         </div>
         <aside className="fantasy-selection-panel">
-          <header><div><span className="eyebrow">YOUR SUBMISSION</span><h2>Squad check</h2></div><span>{selected.length}/11</span></header>
-          <div className="fantasy-formation"><span>FORMATION</span><b>{counts.DEF || 0}-{counts.MID || 0}-{counts.FWD || 0}</b><small>GK · {counts.GK || 0}</small></div>
-          <div className="fantasy-selected-list">
-            {chosen.map((player) => <button onClick={() => togglePlayer(player)} key={player.id}><i className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}>{player.name.slice(0, 2).toUpperCase()}</i><span><b>{player.name}</b><small>{player.role} · {player.credits} credits</small></span><X /></button>)}
-            {Array.from({ length: 11 - selected.length }).map((_, index) => <span className="fantasy-open-slot" key={index}>Open squad slot</span>)}
+          <header>
+            <div>
+              <span className="eyebrow">YOUR SUBMISSION</span>
+              <h2>Squad check</h2>
+            </div>
+            <span>{selected.length}/11</span>
+          </header>
+          <div className="fantasy-formation">
+            <span>FORMATION</span>
+            <b>
+              {counts.DEF || 0}-{counts.MID || 0}-{counts.FWD || 0}
+            </b>
+            <small>GK · {counts.GK || 0}</small>
           </div>
-          <footer><span><small>ARGENTINA</small><b>{chosen.filter((player) => player.team === "ARG").length}/7</b></span><span><small>EGYPT</small><b>{chosen.filter((player) => player.team === "EGY").length}/7</b></span></footer>
+          <div className="fantasy-selected-list">
+            {chosen.map((player) => (
+              <button onClick={() => togglePlayer(player)} key={player.id}>
+                <i
+                  className={`fantasy-avatar fantasy-avatar--${player.team.toLowerCase()}`}
+                >
+                  {player.name.slice(0, 2).toUpperCase()}
+                </i>
+                <span>
+                  <b>{player.name}</b>
+                  <small>
+                    {player.role} · {player.credits} credits
+                  </small>
+                </span>
+                <X />
+              </button>
+            ))}
+            {Array.from({ length: 11 - selected.length }).map((_, index) => (
+              <span className="fantasy-open-slot" key={index}>
+                Open squad slot
+              </span>
+            ))}
+          </div>
+          <footer>
+            <span>
+              <small>ARGENTINA</small>
+              <b>{chosen.filter((player) => player.team === "ARG").length}/7</b>
+            </span>
+            <span>
+              <small>EGYPT</small>
+              <b>{chosen.filter((player) => player.team === "EGY").length}/7</b>
+            </span>
+          </footer>
         </aside>
       </div>
       <div className="fantasy-dock">
@@ -1637,7 +1872,16 @@ function FantasyTeam({
 function FantasySteps({ stage }: { stage: "select" | "leaders" | "live" }) {
   const steps = ["Build XI", "Name leaders", "Matchday live"];
   const active = stage === "select" ? 0 : stage === "leaders" ? 1 : 2;
-  return <div className="fantasy-steps" aria-label="Fantasy entry progress">{steps.map((label, index) => <span className={index <= active ? "is-active" : ""} key={label}><i>{index + 1}</i>{label}</span>)}</div>;
+  return (
+    <div className="fantasy-steps" aria-label="Fantasy entry progress">
+      {steps.map((label, index) => (
+        <span className={index <= active ? "is-active" : ""} key={label}>
+          <i>{index + 1}</i>
+          {label}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function Rooms({
@@ -1683,22 +1927,49 @@ function Rooms({
             transition={{ delay: index * 0.06 }}
           >
             <header>
-              <span><LockKeyhole /> PRIVATE · {room.members.length}/10</span>
+              <span>
+                <LockKeyhole /> PRIVATE · {room.members.length}/10
+              </span>
               <b>{index === 0 ? "YOUR ROOM" : "LIVE SOON"}</b>
             </header>
             <h2>{room.name}</h2>
             <p>{room.match}</p>
             <div className="room-passport">
-              <span><small>INVITE CODE</small><strong>{room.code}</strong></span>
-              <span><small>SHARE LINK</small><b>copium.fun/room/{room.slug}</b></span>
+              <span>
+                <small>INVITE CODE</small>
+                <strong>{room.code}</strong>
+              </span>
+              <span>
+                <small>SHARE LINK</small>
+                <b>copium.fun/room/{room.slug}</b>
+              </span>
             </div>
             <div className="room-pot">
-              <span><small>PRIZE POOL</small><strong>{room.pool}</strong></span>
-              <span><small>ENTRY</small><strong>{room.entry}</strong></span>
-              <span><small>STATUS</small><strong>{room.status}</strong></span>
+              <span>
+                <small>PRIZE POOL</small>
+                <strong>{room.pool}</strong>
+              </span>
+              <span>
+                <small>ENTRY</small>
+                <strong>{room.entry}</strong>
+              </span>
+              <span>
+                <small>STATUS</small>
+                <strong>{room.status}</strong>
+              </span>
             </div>
-            <div className="room-members">{room.members.map((member) => <span key={member}>{member}</span>)}</div>
-            <button className="room-enter" onClick={(event) => { event.stopPropagation(); onCopy(room); }}>
+            <div className="room-members">
+              {room.members.map((member) => (
+                <span key={member}>{member}</span>
+              ))}
+            </div>
+            <button
+              className="room-enter"
+              onClick={(event) => {
+                event.stopPropagation();
+                onCopy(room);
+              }}
+            >
               Copy invite link <Copy />
             </button>
           </motion.article>
@@ -1757,11 +2028,17 @@ function RoomDetail({
 
   return (
     <div className="standard-screen room-detail">
-      <button className="back-link" onClick={onBack}><ArrowLeft /> All rooms</button>
+      <button className="back-link" onClick={onBack}>
+        <ArrowLeft /> All rooms
+      </button>
       <section className={`room-detail-hero room-detail-hero--${room.tone}`}>
         <div className="room-detail-hero__top">
-          <span className="eyebrow"><LockKeyhole /> PRIVATE ROOM</span>
-          <span className="room-live-dot"><i /> {room.status}</span>
+          <span className="eyebrow">
+            <LockKeyhole /> PRIVATE ROOM
+          </span>
+          <span className="room-live-dot">
+            <i /> {room.status}
+          </span>
         </div>
         <div className="room-detail-hero__body">
           <div>
@@ -1771,109 +2048,227 @@ function RoomDetail({
           <div className="room-code-block">
             <small>INVITE CODE</small>
             <strong>{room.code}</strong>
-            <button onClick={onCopy}><Copy /> Copy link</button>
+            <button onClick={onCopy}>
+              <Copy /> Copy link
+            </button>
           </div>
         </div>
         <div className="room-detail-hero__footer">
-          <span><small>PRIZE POOL</small><b>{room.pool}</b></span>
-          <span><small>ENTRY</small><b>{room.entry}</b></span>
-          <span><small>PLAYERS</small><b>{room.members.length}/10</b></span>
-          <button className="primary-action" onClick={onJoin}>Join room <ArrowRight /></button>
+          <span>
+            <small>PRIZE POOL</small>
+            <b>{room.pool}</b>
+          </span>
+          <span>
+            <small>ENTRY</small>
+            <b>{room.entry}</b>
+          </span>
+          <span>
+            <small>PLAYERS</small>
+            <b>{room.members.length}/10</b>
+          </span>
+          <button className="primary-action" onClick={onJoin}>
+            Join room <ArrowRight />
+          </button>
         </div>
       </section>
 
       {isNewRoom ? (
         <>
-        <div className="room-detail-grid room-detail-grid--new">
-          <section className="room-board-panel room-empty-panel">
-            <span className="room-empty-mark"><Users /></span>
-            <span className="eyebrow">WAITING ROOM</span>
-            <h2>Your room is ready.</h2>
-            <p>Invite your crew to unlock standings and room activity. The board will come alive after the first pick.</p>
-            <button className="room-cta" onClick={onCopy}>Copy invite link <Copy /></button>
-          </section>
-          <section className="room-board-panel room-config-panel">
-            <header className="room-panel-heading room-config-heading">
-              <div><span className="eyebrow">HOST CONTROLS</span><h2>Room setup</h2></div>
-              <Settings2 />
+          <div className="room-detail-grid room-detail-grid--new">
+            <section className="room-board-panel room-empty-panel">
+              <span className="room-empty-mark">
+                <Users />
+              </span>
+              <span className="eyebrow">WAITING ROOM</span>
+              <h2>Your room is ready.</h2>
+              <p>
+                Invite your crew to unlock standings and room activity. The
+                board will come alive after the first pick.
+              </p>
+              <button className="room-cta" onClick={onCopy}>
+                Copy invite link <Copy />
+              </button>
+            </section>
+            <section className="room-board-panel room-config-panel">
+              <header className="room-panel-heading room-config-heading">
+                <div>
+                  <span className="eyebrow">HOST CONTROLS</span>
+                  <h2>Room setup</h2>
+                </div>
+                <Settings2 />
+              </header>
+              <p className="room-config-intro">
+                You control how people join, what they play for, and when this
+                room starts.
+              </p>
+              <span className="room-config-section">FOUNDATION</span>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Room name</strong>
+                  <small>Shown on every invite and leaderboard</small>
+                </span>
+                <b className="room-config-value room-config-value--text">
+                  {room.name}
+                </b>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Match</strong>
+                  <small>Argentina vs Egypt · Round of 16</small>
+                </span>
+                <b className="room-config-value room-config-value--text">
+                  Edit
+                </b>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Entry fee</strong>
+                  <small>Each player pays on join</small>
+                </span>
+                <b className="room-config-value">{room.entry}</b>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Player limit</strong>
+                  <small>Keep the room intimate</small>
+                </span>
+                <b className="room-config-value">10</b>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Room access</strong>
+                  <small>Invite code only</small>
+                </span>
+                <b className="room-config-value">
+                  <LockKeyhole />
+                </b>
+                <ChevronRight />
+              </button>
+              <span className="room-config-section">INVITES &amp; SAFETY</span>
+              <button className="room-config-row room-config-row--quiet">
+                <span className="room-config-copy">
+                  <strong>Manage invites</strong>
+                  <small>Regenerate or share your code</small>
+                </span>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row">
+                <span className="room-config-copy">
+                  <strong>Join approval</strong>
+                  <small>
+                    Let people join immediately with the invite code
+                  </small>
+                </span>
+                <b className="room-config-value room-config-value--text">
+                  Open
+                </b>
+                <ChevronRight />
+              </button>
+              <button className="room-config-row room-config-row--danger">
+                <span className="room-config-copy">
+                  <strong>Close room</strong>
+                  <small>Stops new joins and keeps your invite history</small>
+                </span>
+                <ChevronRight />
+              </button>
+            </section>
+          </div>
+          <section
+            className="room-empty-leaderboard"
+            aria-labelledby="room-leaderboard-title"
+          >
+            <header>
+              <div>
+                <span className="eyebrow">ROOM LEADERBOARD</span>
+                <h2 id="room-leaderboard-title">First to the board.</h2>
+              </div>
+              <span>Resets with this room</span>
             </header>
-            <p className="room-config-intro">You control how people join, what they play for, and when this room starts.</p>
-            <span className="room-config-section">FOUNDATION</span>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Room name</strong><small>Shown on every invite and leaderboard</small></span>
-              <b className="room-config-value room-config-value--text">{room.name}</b><ChevronRight />
-            </button>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Match</strong><small>Argentina vs Egypt · Round of 16</small></span>
-              <b className="room-config-value room-config-value--text">Edit</b><ChevronRight />
-            </button>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Entry fee</strong><small>Each player pays on join</small></span>
-              <b className="room-config-value">{room.entry}</b><ChevronRight />
-            </button>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Player limit</strong><small>Keep the room intimate</small></span>
-              <b className="room-config-value">10</b><ChevronRight />
-            </button>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Room access</strong><small>Invite code only</small></span>
-              <b className="room-config-value"><LockKeyhole /></b><ChevronRight />
-            </button>
-            <span className="room-config-section">INVITES &amp; SAFETY</span>
-            <button className="room-config-row room-config-row--quiet">
-              <span className="room-config-copy"><strong>Manage invites</strong><small>Regenerate or share your code</small></span>
-              <ChevronRight />
-            </button>
-            <button className="room-config-row">
-              <span className="room-config-copy"><strong>Join approval</strong><small>Let people join immediately with the invite code</small></span>
-              <b className="room-config-value room-config-value--text">Open</b><ChevronRight />
-            </button>
-            <button className="room-config-row room-config-row--danger">
-              <span className="room-config-copy"><strong>Close room</strong><small>Stops new joins and keeps your invite history</small></span>
-              <ChevronRight />
-            </button>
-          </section>
-        </div>
-        <section className="room-empty-leaderboard" aria-labelledby="room-leaderboard-title">
-          <header>
-            <div>
-              <span className="eyebrow">ROOM LEADERBOARD</span>
-              <h2 id="room-leaderboard-title">First to the board.</h2>
+            <div className="room-empty-leaderboard__labels" aria-hidden="true">
+              <span>Rank</span>
+              <span>Player</span>
+              <span>Points</span>
+              <span>Form</span>
             </div>
-            <span>Resets with this room</span>
-          </header>
-          <div className="room-empty-leaderboard__labels" aria-hidden="true">
-            <span>Rank</span><span>Player</span><span>Points</span><span>Form</span>
-          </div>
-          <div className="room-empty-leaderboard__body">
-            <span><Trophy /></span>
-            <strong>No players have joined yet.</strong>
-            <p>Share the invite code to start the leaderboard. Scores appear after each player’s first pick.</p>
-            <button className="room-cta" onClick={onCopy}>Copy invite link <Copy /></button>
-          </div>
-        </section>
+            <div className="room-empty-leaderboard__body">
+              <span>
+                <Trophy />
+              </span>
+              <strong>No players have joined yet.</strong>
+              <p>
+                Share the invite code to start the leaderboard. Scores appear
+                after each player’s first pick.
+              </p>
+              <button className="room-cta" onClick={onCopy}>
+                Copy invite link <Copy />
+              </button>
+            </div>
+          </section>
         </>
       ) : (
         <div className="room-detail-grid">
           <section className="room-board-panel">
             <header className="room-panel-heading">
-              <div><span className="eyebrow">LIVE STANDINGS</span><h2>Who’s hot</h2></div>
+              <div>
+                <span className="eyebrow">LIVE STANDINGS</span>
+                <h2>Who’s hot</h2>
+              </div>
               <span>Updates after every pick</span>
             </header>
             <div className="room-standing-list">
               {standings.map(([initials, name, score, rank]) => (
-                <div className={name === "You" ? "room-standing is-you" : "room-standing"} key={name}>
-                  <b>{rank}</b><span>{initials}</span><strong>{name}{name === "You" && <small>YOU</small>}</strong><em>{score}</em>
+                <div
+                  className={
+                    name === "You" ? "room-standing is-you" : "room-standing"
+                  }
+                  key={name}
+                >
+                  <b>{rank}</b>
+                  <span>{initials}</span>
+                  <strong>
+                    {name}
+                    {name === "You" && <small>YOU</small>}
+                  </strong>
+                  <em>{score}</em>
                 </div>
               ))}
             </div>
           </section>
           <section className="room-board-panel room-activity-panel">
-            <header className="room-panel-heading"><div><span className="eyebrow">ROOM TAPE</span><h2>Recent plays</h2></div></header>
-            {["Riya called YES on the next corner", "You moved into second place", "Sam joined the room"].map((item, index) => (
-              <div className="room-tape-row" key={item}><i>{index === 0 ? <Flame /> : index === 1 ? <Trophy /> : <Users />}</i><span>{item}<small>{index === 0 ? "now" : `${index + 1}m ago`}</small></span></div>
+            <header className="room-panel-heading">
+              <div>
+                <span className="eyebrow">ROOM TAPE</span>
+                <h2>Recent plays</h2>
+              </div>
+            </header>
+            {[
+              "Riya called YES on the next corner",
+              "You moved into second place",
+              "Sam joined the room",
+            ].map((item, index) => (
+              <div className="room-tape-row" key={item}>
+                <i>
+                  {index === 0 ? (
+                    <Flame />
+                  ) : index === 1 ? (
+                    <Trophy />
+                  ) : (
+                    <Users />
+                  )}
+                </i>
+                <span>
+                  {item}
+                  <small>{index === 0 ? "now" : `${index + 1}m ago`}</small>
+                </span>
+              </div>
             ))}
-            <button className="room-cta" onClick={onJoin}>Join the action <ArrowRight /></button>
+            <button className="room-cta" onClick={onJoin}>
+              Join the action <ArrowRight />
+            </button>
           </section>
         </div>
       )}
@@ -2253,17 +2648,24 @@ function JoinRoomSheet({
   }
 
   return (
-    <Sheet title={joining ? "Joining room" : "Enter room code"} onClose={onClose}>
+    <Sheet
+      title={joining ? "Joining room" : "Enter room code"}
+      onClose={onClose}
+    >
       {joining ? (
         <div className="joining-state" role="status" aria-live="polite">
-          <div className="joining-orbit"><Users /></div>
+          <div className="joining-orbit">
+            <Users />
+          </div>
           <strong>Opening {room?.name}</strong>
           <p>Checking the invite and bringing you into the room.</p>
           <i />
         </div>
       ) : (
         <>
-          <p className="sheet-copy">Use the six-digit code from your friend’s invite.</p>
+          <p className="sheet-copy">
+            Use the six-digit code from your friend’s invite.
+          </p>
           <label className="code-label">
             Invite code
             <input
@@ -2283,11 +2685,21 @@ function JoinRoomSheet({
             <div className="join-preview">
               <span className="eyebrow">ROOM FOUND</span>
               <strong>{room.name}</strong>
-              <small>{room.members.length} players · {room.pool} pool · {room.status}</small>
+              <small>
+                {room.members.length} players · {room.pool} pool · {room.status}
+              </small>
             </div>
           )}
-          {error && <p className="sheet-error" id="join-error">{error}</p>}
-          <button className="primary-action" onClick={join} disabled={code.length !== 6}>
+          {error && (
+            <p className="sheet-error" id="join-error">
+              {error}
+            </p>
+          )}
+          <button
+            className="primary-action"
+            onClick={join}
+            disabled={code.length !== 6}
+          >
             Join room <ArrowRight />
           </button>
         </>

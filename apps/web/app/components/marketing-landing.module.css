@@ -1,0 +1,88 @@
+.demo {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: clamp(36px, 7vw, 112px);
+  padding: clamp(72px, 9vw, 128px) max(24px, 9vw);
+  border-top: 1px solid #14221d;
+  background: #172b23;
+  color: #f4f1e8;
+}
+
+.demoHeading h2 {
+  max-width: 430px;
+  margin: 16px 0 18px;
+  font-family: var(--font-fan-display), Impact, sans-serif;
+  font-size: clamp(48px, 5vw, 78px);
+  font-weight: 700;
+  line-height: 0.84;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.demoHeading > p:last-child {
+  max-width: 315px;
+  margin: 0;
+  color: #b7c9bd;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.demoFrame {
+  position: relative;
+  padding: 9px;
+  border: 1px solid #b5df62;
+  background: #0b1511;
+  box-shadow: 13px 13px 0 #b5df62;
+}
+
+.demoFrame::before {
+  content: "DEMO REPLAY";
+  position: absolute;
+  top: -31px;
+  right: -1px;
+  padding: 8px 10px;
+  background: #b5df62;
+  color: #14221d;
+  font-family: var(--font-club-mono), monospace;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.demoFrame iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background: #0b1511;
+}
+
+@media (max-width: 840px) {
+  .demo {
+    grid-template-columns: 1fr;
+  }
+
+  .demoHeading h2 {
+    max-width: 560px;
+  }
+
+  .demoHeading > p:last-child {
+    max-width: 460px;
+  }
+
+  .demoFrame {
+    margin-top: 12px;
+  }
+}
+
+@media (max-width: 540px) {
+  .demo {
+    padding-top: 82px;
+  }
+
+  .demoFrame {
+    padding: 5px;
+    box-shadow: 7px 7px 0 #b5df62;
+  }
+}

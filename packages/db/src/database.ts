@@ -295,6 +295,18 @@ export type Database = {
           Database["public"]["Tables"]["copy_subscriptions"]["Insert"]
         >;
       };
+      waitlist_signups: {
+        Row: {
+          email: string;
+          created_at: string;
+        };
+        Insert: {
+          email: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["waitlist_signups"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

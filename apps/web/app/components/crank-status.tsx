@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 type CrankStatusProps = {
   pulse: {
     status: string | null;
@@ -25,7 +29,8 @@ export function CrankStatus({
   validateValid,
   verifyTx,
 }: CrankStatusProps) {
-  const closed = new Date(pulse.closes_at).getTime() <= Date.now();
+  const [now] = useState(() => Date.now());
+  const closed = new Date(pulse.closes_at).getTime() <= now;
   const steps: Step[] = [
     {
       label: "Pulse window closed",
@@ -56,7 +61,7 @@ export function CrankStatus({
       label: "Pulse marked settled",
       detail: pulse.winning_side
         ? `winner: ${pulse.winning_side.toUpperCase()}`
-        : pulse.status ?? "open",
+        : (pulse.status ?? "open"),
       done: pulse.status === "settled" && Boolean(pulse.winning_side),
     },
     {
@@ -82,7 +87,9 @@ export function CrankStatus({
           </span>
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3">
             <div className="space-y-0.5">
-              <p className="font-mono text-sm text-[var(--proof-fg)]">{step.label}</p>
+              <p className="font-mono text-sm text-[var(--proof-fg)]">
+                {step.label}
+              </p>
               <p className="font-mono text-xs text-[var(--proof-muted)] break-all">
                 {step.detail}
               </p>

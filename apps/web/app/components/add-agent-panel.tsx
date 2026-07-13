@@ -176,18 +176,22 @@ export function AddAgentPanel() {
   const owner = wallet?.account.address.toString();
   const selectedModel =
     MODEL_OPTIONS.find((option) => option.model === model) ?? MODEL_OPTIONS[0]!;
-  const suggestedTopics = useMemo(() => inferTopics(name, style), [name, style]);
+  const suggestedTopics = useMemo(
+    () => inferTopics(name, style),
+    [name, style]
+  );
   const activeTopics = topics;
   const teamTopicKey = activeTopics.slice().sort().join(",");
   const visibleTeams = useMemo(
     () => teamOptions.filter((team) => activeTopics.includes(team.topic)),
-    [activeTopics, teamOptions],
+    [activeTopics, teamOptions]
   );
   const filteredTeams = useMemo(() => {
     const query = teamQuery.trim().toLowerCase();
     const matches = query
       ? visibleTeams.filter((team) => {
-          const haystack = `${team.name} ${team.aliases.join(" ")}`.toLowerCase();
+          const haystack =
+            `${team.name} ${team.aliases.join(" ")}`.toLowerCase();
           return haystack.includes(query);
         })
       : visibleTeams;
@@ -214,19 +218,22 @@ export function AddAgentPanel() {
   }, [loadAgents]);
 
   useEffect(() => {
-    if (activeTopics.length === 0) {
-      setTeamOptions([]);
-      setTeamsLoading(false);
-      return;
-    }
     let cancelled = false;
     async function loadTeamOptions() {
+      if (activeTopics.length === 0) {
+        await Promise.resolve();
+        if (!cancelled) {
+          setTeamOptions([]);
+          setTeamsLoading(false);
+        }
+        return;
+      }
       setTeamsLoading(true);
       try {
         const res = await fetch(
-          `/api/teams?topics=${encodeURIComponent(teamTopicKey)}`,
+          `/api/teams?topics=${encodeURIComponent(teamTopicKey)}`
         );
-      const json = (await res.json()) as {
+        const json = (await res.json()) as {
           ok?: boolean;
           teams?: AgentTeam[];
         };
@@ -239,7 +246,7 @@ export function AddAgentPanel() {
     return () => {
       cancelled = true;
     };
-  }, [teamTopicKey]);
+  }, [activeTopics.length, teamTopicKey]);
 
   async function submitClaim() {
     if (!claimCode.trim()) {
@@ -350,7 +357,7 @@ export function AddAgentPanel() {
         ? base.filter((value) => value !== topic)
         : [...base, topic];
       setTeams((currentTeams) =>
-        currentTeams.filter((team) => next.includes(team.topic)),
+        currentTeams.filter((team) => next.includes(team.topic))
       );
       setTeamQuery("");
       return next;
@@ -360,11 +367,11 @@ export function AddAgentPanel() {
   function toggleTeam(team: AgentTeam) {
     setTeams((current) => {
       const active = current.some(
-        (value) => value.topic === team.topic && value.slug === team.slug,
+        (value) => value.topic === team.topic && value.slug === team.slug
       );
       return active
         ? current.filter(
-            (value) => value.topic !== team.topic || value.slug !== team.slug,
+            (value) => value.topic !== team.topic || value.slug !== team.slug
           )
         : [...current, team];
     });
@@ -497,9 +504,7 @@ export function AddAgentPanel() {
               value={teamQuery}
               onChange={(e) => setTeamQuery(e.target.value)}
               placeholder={
-                activeTopics.length
-                  ? "Search teams"
-                  : "Pick a topic first"
+                activeTopics.length ? "Search teams" : "Pick a topic first"
               }
               disabled={!activeTopics.length || teamsLoading}
               className="w-full border border-[var(--desk-border)] bg-[var(--desk-bg)] px-3 py-2 font-mono text-xs outline-none disabled:opacity-50"
@@ -515,7 +520,9 @@ export function AddAgentPanel() {
                   No team source yet for this topic.
                 </span>
               ) : null}
-              {!teamsLoading && visibleTeams.length > 0 && !filteredTeams.length ? (
+              {!teamsLoading &&
+              visibleTeams.length > 0 &&
+              !filteredTeams.length ? (
                 <span className="block text-[11px] text-[var(--desk-muted)]">
                   No teams match that search.
                 </span>
@@ -523,7 +530,7 @@ export function AddAgentPanel() {
               {filteredTeams.map((team) => {
                 const active = teams.some(
                   (value) =>
-                    value.topic === team.topic && value.slug === team.slug,
+                    value.topic === team.topic && value.slug === team.slug
                 );
                 return (
                   <button
