@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   description: "Settled Pulse proofs — TxLINE-attested bundles on Solana devnet.",
 };
 
+// This authenticated product surface is protected by the waitlist proxy. Keep
+// it request-time only so a marketing deployment never queries Supabase while
+// generating static pages.
+export const dynamic = "force-dynamic";
+
 function oddsRootHex(oddsProof: unknown): string | null {
   if (!oddsProof || typeof oddsProof !== "object") return null;
   const summary = (oddsProof as { summary?: { oddsSubTreeRoot?: number[] } }).summary;
