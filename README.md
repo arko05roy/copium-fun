@@ -4,17 +4,25 @@
 
 # copium.fun
 
-**Every moment is a market.**
+**Your group chat has takes. Now it has a scoreboard.**
 
-copium.fun is a live sports prediction playground that turns the internet’s constant stream of match signals into something you can actually play.
+copium.fun is a live sports prediction game that turns every match into an ongoing competition between friends, fans, and communities.
 
-Officer Copium watches the places where sports moments surface first—news feeds, score updates, live match data, Discord, Telegram, and other community signals. When the noise becomes a playable moment, it spins up a Pulse: a simple YES/NO question with a 90-second window. The Pulse can land in the web feed, a Telegram group, or a Discord conversation. People swipe left or right, pick a side, and see who actually called the moment. When the window closes, the result is settled on Solana devnet and turned into a shareable receipt.
+During a match, Copium identifies important moments and turns them into **Pulses**: 90-second YES/NO prediction markets such as “Will the next attack produce a shot?”, “Will Brazil score before half-time?”, or “Will this player receive a card?” On the web, each Pulse appears in a Tinder-style card stack: swipe right for **YES**, swipe left for **NO**, and watch the moment unfold. The same position can be taken directly from a Telegram or Discord group by adding the Copium bot, so the game lives inside the conversation instead of pulling fans away from it.
 
-Alongside the rapid-fire Pulse game, copium.fun also lets fans build a fantasy XI, choose a captain and vice-captain, enter match contests, chase streaks, and climb live leaderboards. It is the faster, messier, more social layer on top of a live match.
+TxLINE and the TxODDS API provide the live fixture context, odds-derived Line, and event data used to create and resolve Pulses. Solana devnet records the position and settlement, turning a passing prediction into a shareable receipt with an inspectable outcome.
 
-It is the fastest path from **“did you see that?”** to **“called it.”**—and from **“I know ball”** to a lineup that has to prove it.
+Every correct prediction earns points, extends a streak, and moves the player up the global leaderboard. Fans can create private rooms for a fixture, invite friends, and compete on their own room leaderboard. For a longer strategic game, they can also build a fantasy XI within a fixed budget, select a captain and vice-captain for scoring multipliers, and follow player performance throughout the same live match.
 
-> News breaks → signals converge → Officer Copium opens a Pulse → fans pick or build a lineup → the moment settles → receipts and leaderboards prove who was right.
+Pulse play rewards instinct in the moment. Fantasy rewards an understanding of the whole match. Rooms, streaks, leaderboards, and receipts turn both into an experience people want to replay with the same friends at the next kickoff.
+
+> **Watch the match → swipe on the moment → build your streak → beat the room → keep the receipt.**
+
+## The experience at a glance
+
+| Before the match | During the match | After the moment |
+|---|---|---|
+| Join a fixture, create a private room, invite friends, and build a fantasy XI | Swipe on 90-second Pulses from the web, Telegram, or Discord while fantasy points update live | Extend a streak, move up global and room leaderboards, and share a receipt backed by the settlement record |
 
 ## Imagine a match in motion
 
@@ -205,7 +213,7 @@ The same match can therefore be experienced in several modes: as a Pulse in the 
 
 They settle seasons. copium.fun settles the moment.
 
-## Why TxLINE and Solana matter
+## Why TxLINE, TxODDS, and Solana matter
 
 The product is intentionally simple for the person making a pick. The underlying system keeps the result auditable.
 
@@ -214,12 +222,28 @@ The product is intentionally simple for the person making a pick. The underlying
 | **Google News and news signals** | Surfaces breaking stories and context that can become a playable match moment | The system only sees events after they have already become obvious in a score feed |
 | **Live scores and match data** | Supplies the fixture, score, minute, player action, and event state behind the question | No reliable clock or event context for the 90-second window |
 | **Discord + Telegram** | Distributes Pulses into communities where fans are already reacting | Fans have to leave the conversation to discover the next moment |
-| **TxLINE / TxODDS** | Supplies live match signals, odds context, and the verification path used when a Pulse resolves | The Pulse has no trusted Line or settlement reference |
+| **TxLINE / TxODDS API** | Supplies fixture state, live match signals, odds context, historical events, and the verification path used when a Pulse resolves | Copium cannot create timely Pulses, compare Crowd against Line, or resolve outcomes against a reliable reference |
 | **Solana devnet** | Records Pulse pools, positions, settlement, and receipt-linked transactions | Picks remain an off-chain poll with no shared settlement state |
 | **Anchor program** | Holds the binary Pulse lifecycle: create, open, lock, settle, and withdraw | There is no on-chain market lifecycle |
 | **Next.js web app** | Provides the feed, swipe UI, rooms, proof pages, and receipt pages | No rich interface for browsing, picking, or verifying |
 
 The important design choice is that the social interaction stays lightweight while the settlement record stays inspectable.
+
+TxLINE is embedded in the product loop rather than exposed as a separate data screen. Its live context determines which moments are playable, its odds data creates the Line shown beside the Crowd, and its event history provides the reference used during resolution. copium.fun turns those signals into repeat interactions across the web, Telegram, Discord, private rooms, fantasy contests, and leaderboards.
+
+### TxLINE integration map
+
+| Integration surface | Where it is used | Role in the product |
+|---|---|---|
+| Authentication and API access | [`packages/txline/src/auth.ts`](packages/txline/src/auth.ts), [`packages/txline/src/env.ts`](packages/txline/src/env.ts) | Starts the TxLINE guest session and provides authenticated access to live sports data |
+| Fixtures and live snapshots | [`packages/txline/src/snapshot.ts`](packages/txline/src/snapshot.ts), [`apps/web/lib/txline-live-context.ts`](apps/web/lib/txline-live-context.ts) | Supplies the fixtures, score, clock, and current match context visible in the product |
+| Live event ingestion | [`packages/txline/src/sse.ts`](packages/txline/src/sse.ts), [`apps/txline-ingest/src/index.ts`](apps/txline-ingest/src/index.ts) | Streams match and odds updates into the Pulse pipeline |
+| Pulse detection and creation | [`packages/txline/src/detect.ts`](packages/txline/src/detect.ts), [`apps/pulse-orchestrator/src/spawn.ts`](apps/pulse-orchestrator/src/spawn.ts) | Converts meaningful TxLINE updates into short-lived, match-aware Pulses |
+| Crowd vs Line | [`packages/pulse-engine/src/spawner-llm.ts`](packages/pulse-engine/src/spawner-llm.ts), [`apps/agent-runtime/src/agents/officer.ts`](apps/agent-runtime/src/agents/officer.ts) | Turns odds-derived probability into the Line users compare their collective picks against |
+| Outcome resolution | [`packages/settlement/src/score.ts`](packages/settlement/src/score.ts), [`packages/settlement/src/fetch-odds.ts`](packages/settlement/src/fetch-odds.ts) | Fetches the event timeline and validation data used to determine the winning side |
+| Settlement execution | [`apps/settlement-worker/src/phase-a.ts`](apps/settlement-worker/src/phase-a.ts), [`apps/settlement-worker/src/phase-b.ts`](apps/settlement-worker/src/phase-b.ts) | Carries the verified result through the two-phase settlement flow and receipt creation |
+
+The boundary is deliberate: TxLINE and TxODDS supply the live sports truth; Copium turns that truth into a social game; Solana preserves the resulting positions and settlement state.
 
 ### What is deliberately off-chain
 
